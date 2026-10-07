@@ -1,8 +1,11 @@
 require "ISUI/ISCollapsableWindow"
 require "ISUI/ISButton"
+require "ISUI/ISComboBox"
 require "ISUI/ISTextEntryBox"
+require "ISUI/ISInventoryPaneContextMenu"
 require "RadioCom/ISUIRadio/ISSliderPanel"
 require "PVADS/PVADS_Calibrator"
+require "PVADS_GaelWeaponCatalog"
 
 -- Companion to the stock calibrator. Both windows write to the same user profile.
 local Cal = PVADS.Calibrator
@@ -19,6 +22,22 @@ local FIELDS = {
     {"pipRetY", "PiP reticle Y", 0.005}, {"pipDepth", "PiP depth", 0.002},
 }
 local RANGES = { 1, 5, 20 }
+local WEAPONS = PVADS_GaelWeaponCatalog or {}
+
+local function findOwned(container, itemId)
+    if not container then return nil end
+    local items = container:getItems()
+    if not items then return nil end
+    for i = 0, items:size() - 1 do
+        local item = items:get(i)
+        if item:getFullType() == itemId then return item end
+        if instanceof(item, "InventoryContainer") then
+            local found = findOwned(item:getInventory(), itemId)
+            if found then return found end
+        end
+    end
+    return nil
+end
 
 local function selected()
     local pl = getSpecificPlayer(0)
@@ -63,6 +82,19 @@ function PVADSGaelSliderWindow:createChildren()
     ISCollapsableWindow.createChildren(self)
     local y = self:titleBarHeight() + 7
     local bh = getTextManager():getFontHeight(UIFont.Small) + 7
+    local prev = ISButton:new(82, y, 30, bh, "<", self, PVADSGaelSliderWindow.onPrevWeapon)
+    prev:initialise(); self:addChild(prev)
+    self.weaponCombo = ISComboBox:new(116, y, 446, bh, self, PVADSGaelSliderWindow.onWeaponChosen)
+    self.weaponCombo:initialise(); self.weaponCombo:instantiate()
+    self.weaponCombo:setEditable(true)
+    for _, weapon in ipairs(WEAPONS) do
+        self.weaponCombo:addOptionWithData(string.format("#%d %s [%s]", weapon[1], weapon[3], weapon[2]), weapon[2])
+    end
+    self:addChild(self.weaponCombo)
+    local next = ISButton:new(566, y, 30, bh, ">", self, PVADSGaelSliderWindow.onNextWeapon)
+    next:initialise(); self:addChild(next)
+    self.weaponY = y + 3
+    y = y + bh + 23
     for i, field in ipairs(FIELDS) do
         if i == 12 then y = y + 16; self.pipY = y - 13 end
         local entry = ISTextEntryBox:new(string.format("%.5f", current(field)), 117, y, 83, bh)
@@ -101,6 +133,50 @@ function PVADSGaelSliderWindow:createChildren()
     self.infoY = y + bh + 10
     self:setHeight(self.infoY + 48)
 end
+
+function PVADSGaelSliderWindow:equipSelected()
+    if not PVADS.Settings.developer then return end
+    local pl = getSpecificPlayer(0)
+    if not pl then return end
+    local itemId = self.weaponCombo:getSelectedData()
+    if not itemId then return end
+    local item = findOwned(pl:getInventory(), itemId)
+    if not item then
+        if not ScriptManager.instance:getItem(itemId) then
+            self.message = "Item unavailable: " .. itemId
+            return
+        end
+        item = pl:getInventory():AddItem(itemId)
+    end
+    if not item or not instanceof(item, "HandWeapon") or not item:isAimedFirearm() then
+        self.message = "ADS firearm unavailable: " .. itemId
+        return
+    end
+    PVADS.Controller.forceADS = true
+    if pl:getPrimaryHandItem() ~= item then
+        ISInventoryPaneContextMenu.equipWeapon(item, true, item:isTwoHandWeapon(), pl:getPlayerNum())
+        self.message = "Equipping " .. itemId .. "; hold Ctrl to aim"
+    else
+        PVADS.Controller.refresh(true)
+        self.message = "Ready: " .. itemId .. "; hold Ctrl to aim"
+    end
+end
+
+function PVADSGaelSliderWindow:onWeaponChosen()
+    self:equipSelected()
+end
+
+function PVADSGaelSliderWindow:stepWeapon(delta)
+    local count = #WEAPONS
+    if count == 0 then return end
+    local index = self.weaponCombo:getSelected()
+    if not index or index < 1 then index = 1 end
+    self.weaponCombo:setSelected((index - 1 + delta + count) % count + 1)
+    self:equipSelected()
+end
+
+function PVADSGaelSliderWindow:onPrevWeapon() self:stepWeapon(-1) end
+function PVADSGaelSliderWindow:onNextWeapon() self:stepWeapon(1) end
 
 function PVADSGaelSliderWindow:onSlide(amount, slider)
     local row = self.rows[slider.pvRow]
@@ -181,7 +257,14 @@ function PVADSGaelSliderWindow:render()
     ISCollapsableWindow.render(self)
     if self.isCollapsed then return end
     local key = selected()
-    if key ~= self.lastKey then self.lastKey = key; self:onCenter() end
+    if key ~= self.lastKey then
+        self.lastKey = key
+        self:onCenter()
+        local itemId = key and string.match(key, "^[^|]+")
+        if itemId then self.weaponCombo:setSelectedData(itemId) end
+    end
+    self:drawText("Weapon", 8, self.weaponY, 1, 1, 1, 1, UIFont.Small)
+    self:drawText("Hold Ctrl to aim; V toggles ADS. Selecting a weapon enables Hold ADS.", 8, self.weaponY + 22, 0.7, 0.85, 1, 1, UIFont.Small)
     if self.pipY then self:drawText("Picture-in-picture (scopes / red dots)", 8, self.pipY, 0.55, 0.85, 1, 1, UIFont.Small) end
     for _, row in ipairs(self.rows) do
         self:drawText(row.field[2], 8, row.y + 3, 1, 1, 1, 1, UIFont.Small)

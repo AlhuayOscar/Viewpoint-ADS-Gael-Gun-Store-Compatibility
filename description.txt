@@ -1,6 +1,9 @@
+[h1]Calibration HUD[/h1]
+The right-side panel includes a searchable weapon selector with left/right arrows. Selection equips or grants the firearm and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.
+
 [h1]Weapon status[/h1]
-47 pistols manually verified (45 saved calibrations, 2 verified defaults). 32 revolvers pending.
-Manual = saved personal calibration; Verified default = checked in game without a personal offset; Profile = included calibration awaiting individual confirmation; Pending = not yet verified.
+47 pistols manually verified (45 saved calibrations, 2 verified defaults). 31 revolvers with saved manual profiles; 1 still without a saved profile.
+Manual = saved personal calibration; Verified default = checked in game without a personal offset; Profile = included calibration awaiting individual confirmation; Pending = no saved calibration.
 Name | Iron Sights | Red Dot Sight | Other Optics
 ACE21 (Base.ACE21) | Manual | - | -
 ACE23 (Base.ACE23) | Manual | - | -
@@ -10,6 +13,7 @@ AK47 (Base.AK47) | Manual | - | -
 AK74 (Base.AK74) | Manual | - | -
 AK_minidrako (Base.AK_minidrako) | Manual | - | -
 AKM (Base.AKM) | Manual | Manual | -
+Anaconda 44 (Base.Anaconda) | Manual | - | -
 AR-10 (Base.AR10) | Manual | - | -
 AssaultRifle (Base.AssaultRifle) | Manual | - | -
 AssaultRifle2 (Base.AssaultRifle2) | Manual | - | -
@@ -19,6 +23,8 @@ Automag calibre .44 (Base.Automag44) | Manual | - | -
 Automag calibre .50AE (Base.Automag50AE) | Manual | - | -
 Beretta_PX4 (Base.Beretta_PX4) | Manual | - | -
 BrowningHP Pistol (Base.BrowningHP) | Manual | - | -
+ColtNavy1851 38 (Base.ColtNavy1851) | Manual | - | -
+ColtPeacemaker1873 45 (Base.ColtPeacemaker1873) | Manual | - | -
 Coonan-357 (Base.Coonan357) | Manual | - | -
 crafted Bow (Base.Bow_crafted) | Profile | - | -
 Crossbow (Base.Crossbow) | Profile | - | -
@@ -42,8 +48,8 @@ Glock43 (Base.Glock43) | Manual | - | -
 Glock_tactical (Base.Glock_tactical) | Manual | - | -
 GSH-18 (Base.GSH18) | Manual | - | -
 HK-MK23 (Base.HKMK23) | Manual | - | -
-Hunting Bow (Base.Bow_hunting) | Profile | - | -
 Hunting Bow (Base.Bow_compbound) | Profile | - | -
+Hunting Bow (Base.Bow_hunting) | Profile | - | -
 Hunting Crossbow (Base.Crossbow_hunting) | Profile | - | -
 Jericho-941 (Base.Jericho941) | Manual | - | -
 Kark98 (Base.Kark98) | Manual | - | -
@@ -63,6 +69,8 @@ MosinNagant1891 (Base.MosinNagant1891) | Manual | - | -
 MP1911 Marccenary (Base.MP1911) | Manual | - | -
 MP5 (Base.MP5) | Profile | - | -
 MP5K (Base.MP5K) | Profile | - | -
+MP_R8 357 (Base.MP_R8) | Manual | - | -
+Nagant_M1895 22LR (Base.Nagant_M1895) | Manual | - | -
 OTS33 (Base.OTS_33) | Manual | - | -
 P220 (Base.P220) | Manual | - | -
 P220 Elite (Base.P220_Elite) | Manual | - | -
@@ -72,61 +80,57 @@ Pistol (Base.Pistol) | Manual | - | -
 pistol shotgun (Base.pistol_shotgun) | Manual | - | -
 Pistol2 (Base.Pistol2) | Manual | - | -
 Pistol3 (Base.Pistol3) | Manual | - | -
+Python .357 (Base.Python357) | Manual | - | -
 Remington870 (Base.Remington870) | Profile | - | -
 Remington870 Short (Base.Remington870_Short) | Profile | - | -
+Revolver (Base.Revolver) | Manual | - | -
+Revolver38 (Base.Revolver38) | Manual | - | -
+Revolver666 22LR (Base.Revolver666) | Manual | - | -
+Revolver_long (Base.Revolver_long) | Manual | - | -
+Revolver_short (Base.Revolver_short) | Manual | - | -
+Rhino20DS 357 (Base.Rhino20DS) | Manual | - | -
+Rhino60DS (Base.Rhino60DS) | Manual | - | -
 RPG7 (Base.RPG7) | Profile | - | -
+RSH12 308 (Base.RSH12) | Manual | - | -
+Ruger357 45 (Base.Ruger357) | Manual | - | -
+S&W M&P 12 (Base.SWMP_12) | Profile | - | -
 Samurai kendo (Base.Samurai_kendo) | Manual | - | -
 Scar-H (Base.ScarH) | Manual | - | -
 ScarL (Base.ScarL) | Manual | - | -
+Schofield1875 44 (Base.Schofield1875) | Manual | - | -
+ScrapRevolver 9mm (Base.ScrapRevolver) | Manual | - | -
 Shotgun (Base.Shotgun) | Profile | - | -
 SKS (Base.SKS) | Manual | - | -
 SKS Carbine (Base.SKS_carbine) | Manual | - | -
 SKS Carbine short (Base.SKS_carbine_short) | Manual | - | -
+Smith&Wesson M629 (Base.SW629) | Manual | - | -
+Snub22LR (Base.Snub22LR) | Manual | - | -
 Springfield XD Pistol (Base.XD) | Manual | - | -
 Springfield1903 (Base.Springfield1903) | Manual | - | -
 SR1M Pistol (Base.SR1M) | Manual | - | -
-USP-45 (Base.Glock23) | Manual | - | -
+SW1905 38 (Base.SW1905) | Manual | - | -
+SW1917 45 (Base.SW1917) | Manual | - | -
+SW500 50Magnum (Base.SW500) | Manual | - | -
+SWM3 38 (Base.SWM3) | Manual | - | -
+SWM327 357 (Base.SWM327) | Manual | - | -
+SWM629_Deluxe 44 (Base.SWM629_Deluxe) | Manual | - | -
+Taurus606 357 (Base.Taurus606) | Manual | - | -
+Taurus_raging_bull 357 (Base.Taurus_raging_bull) | Manual | - | -
+Taurus_raging_bull460 50Magnum (Base.Taurus_raging_bull460) | Manual | - | -
+Taurus_RT85 38 (Base.Taurus_RT85) | Manual | - | -
 USP-45 (Base.USP45) | Manual | - | -
+USP-45 (Base.Glock23) | Manual | - | -
 VictorySW22 (Base.VictorySW22) | Manual | - | -
 VP70 Pistol (Base.VP70) | Manual | - | -
 VZ. 58 (Base.VZ58) | Manual | - | -
 Walther P99 (Base.P99) | Manual | - | -
 Walther_P38 (Base.Walther_P38) | Manual | - | -
+Webley_MK_snub 38 (Base.Webley_MK_snub) | Manual | - | -
+Webley_Revolver 38 (Base.Webley_Revolver) | Manual | - | -
 Wildey pistol calibre .44 (Base.Wildey) | Manual | - | -
 Grizzly50AE (Base.Grizzly50AE) | Verified default | - | -
 Samurai Albert Wesker (Base.Samurai_aw) | Verified default | - | -
-Anaconda 44 (Base.Anaconda) | Pending | - | -
-ColtNavy1851 38 (Base.ColtNavy1851) | Pending | - | -
 ColtNavyExorcist 9mm (Base.ColtNavyExorcist) | Pending | - | -
-ColtPeacemaker1873 45 (Base.ColtPeacemaker1873) | Pending | - | -
-MP_R8 357 (Base.MP_R8) | Pending | - | -
-Nagant_M1895 22LR (Base.Nagant_M1895) | Pending | - | -
-Python .357 (Base.Python357) | Pending | - | -
-Revolver (Base.Revolver) | Pending | - | -
-Revolver38 (Base.Revolver38) | Pending | - | -
-Revolver666 22LR (Base.Revolver666) | Pending | - | -
-Revolver_long (Base.Revolver_long) | Pending | - | -
-Revolver_short (Base.Revolver_short) | Pending | - | -
-Rhino20DS 357 (Base.Rhino20DS) | Pending | - | -
-Rhino60DS (Base.Rhino60DS) | Pending | - | -
-RSH12 308 (Base.RSH12) | Pending | - | -
-Ruger357 45 (Base.Ruger357) | Pending | - | -
-Schofield1875 44 (Base.Schofield1875) | Pending | - | -
-ScrapRevolver 9mm (Base.ScrapRevolver) | Pending | - | -
-Smith&Wesson M629 (Base.SW629) | Pending | - | -
-Snub22LR (Base.Snub22LR) | Pending | - | -
-SW1905 38 (Base.SW1905) | Pending | - | -
-SW1917 45 (Base.SW1917) | Pending | - | -
-SW500 50Magnum (Base.SW500) | Pending | - | -
-SWM3 38 (Base.SWM3) | Pending | - | -
-SWM327 357 (Base.SWM327) | Pending | - | -
-SWM629_Deluxe 44 (Base.SWM629_Deluxe) | Pending | - | -
-Taurus606 357 (Base.Taurus606) | Pending | - | -
-Taurus_raging_bull 357 (Base.Taurus_raging_bull) | Pending | - | -
-Taurus_raging_bull460 50Magnum (Base.Taurus_raging_bull460) | Pending | - | -
-Taurus_RT85 38 (Base.Taurus_RT85) | Pending | - | -
-Webley_MK_snub 38 (Base.Webley_MK_snub) | Pending | - | -
-Webley_Revolver 38 (Base.Webley_Revolver) | Pending | - | -
 
 [h1]Optics[/h1]
 Magnified Gael optics (2x-8x) use scope mode on supported rifles. 1x sights use reflex mode. Other weapon/optic combinations still need individual visual calibration.
