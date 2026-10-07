@@ -1,38 +1,151 @@
-# NOT READY Viewpoint Gael Compatibility Patch
+# Viewpoint Gael Compatibility
 
-A work-in-progress compatibility mod for Project Zomboid Build 42.21. It adds Viewpoint ADS profiles for 50 Gael Gun Store optics, improves eye relief on large scopes, provides a sight-line baseline for Gael's AK-74, and adds provisional ADS baselines for 22 pistols. Existing player calibrations can override these defaults.
-
-**NOT READY YET.** Work in progress. The first iron-sight baselines cover `Kimber1911`, `M9_Samurai`, `MP1911`, `OTS_33`, `P220`, `P220_Elite`, `P228`, `P99`, `PB6P9`, `Pistol`, `Pistol2`, `Pistol3`, `pistol_shotgun`, `Samurai_aw`, `Samurai_kendo`, `SR1M`, `USP45`, `VictorySW22`, `VP70`, `Walther_P38`, `Wildey`, and `XD`. These profiles are provisional and have not each been verified in game.
-
-**Maintenance:** One person maintains this project and updates it sporadically. Fixes, tested calibration data, and documentation improvements are welcome through [GitHub issues and pull requests](https://github.com/AlhuayOscar/Viewpoint-ADS-Gael-Gun-Store-Compatibility).
-
-## Requirements
-
-- Project Zomboid Build 42.21 or newer
-- Gael Gun Store B42 (`GaelGunStore_B42`)
-- Project Viewpoint ADS (`ProjectViewpointADS`)
-
-Enable the dependency mods before this compatibility mod. This package is client-side. It does not include either dependency.
+47 pistols manually verified (45 saved calibrations, 2 verified defaults). 32 revolvers pending.
 
 ## Installation
 
-Subscribe to all required Workshop items and enable the mod ID `PVADSGaelOptics`. For a manual install, copy `Contents/mods/PVADSGaelOptics` into `Zomboid/mods/` and restart the game. Disable older local copies of this compatibility mod and the separate `PVADSGaelPistolBaseline` test mod to avoid duplicate profile registration.
+For Project Zomboid Build 42.21, enable `Viewpoint`, `GaelGunStore_B42`, and `ProjectViewpointADS`, then enable this mod as `ViewpointGaelCompat`. The package is in `Contents/mods/ViewpointGaelCompat`. Restart the game after installing or updating it.
 
-## Status and limitations
+The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks the calibration status. The older English workbook remains in `docs` as a historical snapshot.
 
-This is a WIP. Many weapon and optic offsets are provisional and still need in-game calibration. The [weapon checklist](docs/GaelGunStore_B42_checklist_EN.xlsx) tracks manually completed entries separately from automated baselines. A yellow **Done/Automated** row means a default profile exists; it does not claim that the weapon has been individually verified in game. Gael Gun Store's own sight overlays should be disabled when using Viewpoint ADS to avoid overlapping views. Results can vary by weapon model, optic, animation, and Viewpoint ADS version.
+Manual = saved personal calibration; Verified default = checked in game without a personal offset; Profile = included calibration awaiting individual confirmation; Pending = not yet verified.
 
-Report a problem with the game build, versions of both required mods, weapon and optic item IDs, screenshots, and `Zomboid/console.txt` errors. Include an F9 Viewpoint calibration when possible.
+## Slider calibrator
 
-### M1 Garand + ACOG 4x32 trial
+Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile.
 
-With debug mode enabled, equip Gael's `Base.M1` and right-click in the inventory. Select **Debug: Mount ACOG 4x32 on M1 Garand**. The action mounts `Base.ACOGx4` for a scoped ADS trial. This combination uses Viewpoint's x8-style mildot reticle and lens size with 2×/4× zoom steps. It does not mount a scope on every M1 Garand automatically. For the clearest comparison, disable Gael Gun Store's separate scope overlay and enable Viewpoint ADS scope rendering. The 3D alignment still needs an in-game check.
+## Weapon status
 
-If the F9 calibrator reports `mode reflex` for `Base.ACOGx4`, check that `PVADSGaelOptics` is enabled for that specific save and restart the game. Viewpoint's built-in `Base.x8Scope` works without this patch; the ACOG needs this mod's profile to enter scope mode. Avoid enabling the separate local `PVADSGaelPistolBaseline` test mod alongside this package because its profiles are already included here.
+| Name | Iron Sights | Red Dot Sight | Other Optics |
+|---|---|---|---|
+| ACE21 (Base.ACE21) | Manual | - | - |
+| ACE23 (Base.ACE23) | Manual | - | - |
+| ACE52_CQB (Base.ACE52_CQB) | Manual | - | - |
+| ACE53 (Base.ACE53) | Manual | - | - |
+| AK47 (Base.AK47) | Manual | - | - |
+| AK74 (Base.AK74) | Manual | - | - |
+| AK_minidrako (Base.AK_minidrako) | Manual | - | - |
+| AKM (Base.AKM) | Manual | Manual | - |
+| AR-10 (Base.AR10) | Manual | - | - |
+| AssaultRifle (Base.AssaultRifle) | Manual | - | - |
+| AssaultRifle2 (Base.AssaultRifle2) | Manual | - | - |
+| AUG_A1 (Base.AUG_A1) | Manual | - | - |
+| Automag calibre .357 (Base.Automag357) | Manual | - | - |
+| Automag calibre .44 (Base.Automag44) | Manual | - | - |
+| Automag calibre .50AE (Base.Automag50AE) | Manual | - | - |
+| Beretta_PX4 (Base.Beretta_PX4) | Manual | - | - |
+| BrowningHP Pistol (Base.BrowningHP) | Manual | - | - |
+| Coonan-357 (Base.Coonan357) | Manual | - | - |
+| crafted Bow (Base.Bow_crafted) | Profile | - | - |
+| Crossbow (Base.Crossbow) | Profile | - | - |
+| CZ75 Pistol (Base.CZ75) | Manual | - | - |
+| Daniel Defense M16A2 (Base.M16A2) | Manual | - | - |
+| Deagle 357 Gold (Base.Deagle357_gold) | Manual | - | - |
+| Deagle Carabine 14 (Base.DeagleCar14) | Manual | - | - |
+| Deagle50AE (Base.Deagle50AE) | Manual | - | - |
+| DoubleBarrelShotgun (Base.DoubleBarrelShotgun) | Profile | - | - |
+| DoubleBarrelShotgunSawnoff (Base.DoubleBarrelShotgunSawnoff) | Profile | - | - |
+| Enfield1917 (Base.Enfield1917) | Manual | - | - |
+| FiveSeven Pistol (Base.FiveSeven) | Manual | - | - |
+| FN FAL (Base.FAL) | Manual | - | - |
+| FN502 22LR (Base.FN502_22LR) | Manual | - | - |
+| FNX-45 (Base.FNX45) | Manual | - | - |
+| G2 Pistol (Base.G2) | Manual | - | - |
+| G36 (Base.G36) | Manual | - | - |
+| Glock-17 (Base.G17) | Manual | - | - |
+| Glock-18 (Base.G18) | Manual | - | - |
+| Glock43 (Base.Glock43) | Manual | - | - |
+| Glock_tactical (Base.Glock_tactical) | Manual | - | - |
+| GSH-18 (Base.GSH18) | Manual | - | - |
+| HK-MK23 (Base.HKMK23) | Manual | - | - |
+| Hunting Bow (Base.Bow_hunting) | Profile | - | - |
+| Hunting Bow (Base.Bow_compbound) | Profile | - | - |
+| Hunting Crossbow (Base.Crossbow_hunting) | Profile | - | - |
+| Jericho-941 (Base.Jericho941) | Manual | - | - |
+| Kark98 (Base.Kark98) | Manual | - | - |
+| Kimber1911 (Base.Kimber1911) | Manual | - | - |
+| L85 (Base.L85) | Manual | - | - |
+| M1 Garand (Base.M1) | Manual | - | Manual |
+| M240B (Base.M240B) | Profile | - | - |
+| M249 (Base.M249) | Profile | - | - |
+| M4 Assault Rifle (Base.M4) | Manual | Manual | - |
+| M60E4 (Base.M60E4) | Profile | - | - |
+| M9 Samurai (Base.M9_Samurai) | Manual | - | - |
+| M9A3 Pistol (Base.M9A3) | Manual | - | - |
+| M9R Pistol (Base.M93R) | Manual | - | - |
+| MAC10 .45 (Base.MAC10) | Profile | - | - |
+| Mini_14 Assault Rifle (Base.Mini_14) | Manual | - | - |
+| MosinNagant1891 (Base.MosinNagant1891) | Manual | - | - |
+| MP1911 Marccenary (Base.MP1911) | Manual | - | - |
+| MP5 (Base.MP5) | Profile | - | - |
+| MP5K (Base.MP5K) | Profile | - | - |
+| OTS33 (Base.OTS_33) | Manual | - | - |
+| P220 (Base.P220) | Manual | - | - |
+| P220 Elite (Base.P220_Elite) | Manual | - | - |
+| P228 (Base.P228) | Manual | - | - |
+| PB6P9 (Base.PB6P9) | Manual | - | - |
+| Pistol (Base.Pistol) | Manual | - | - |
+| pistol shotgun (Base.pistol_shotgun) | Manual | - | - |
+| Pistol2 (Base.Pistol2) | Manual | - | - |
+| Pistol3 (Base.Pistol3) | Manual | - | - |
+| Remington870 (Base.Remington870) | Profile | - | - |
+| Remington870 Short (Base.Remington870_Short) | Profile | - | - |
+| RPG7 (Base.RPG7) | Profile | - | - |
+| Samurai kendo (Base.Samurai_kendo) | Manual | - | - |
+| Scar-H (Base.ScarH) | Manual | - | - |
+| ScarL (Base.ScarL) | Manual | - | - |
+| Shotgun (Base.Shotgun) | Profile | - | - |
+| SKS (Base.SKS) | Manual | - | - |
+| SKS Carbine (Base.SKS_carbine) | Manual | - | - |
+| SKS Carbine short (Base.SKS_carbine_short) | Manual | - | - |
+| Springfield XD Pistol (Base.XD) | Manual | - | - |
+| Springfield1903 (Base.Springfield1903) | Manual | - | - |
+| SR1M Pistol (Base.SR1M) | Manual | - | - |
+| USP-45 (Base.Glock23) | Manual | - | - |
+| USP-45 (Base.USP45) | Manual | - | - |
+| VictorySW22 (Base.VictorySW22) | Manual | - | - |
+| VP70 Pistol (Base.VP70) | Manual | - | - |
+| VZ. 58 (Base.VZ58) | Manual | - | - |
+| Walther P99 (Base.P99) | Manual | - | - |
+| Walther_P38 (Base.Walther_P38) | Manual | - | - |
+| Wildey pistol calibre .44 (Base.Wildey) | Manual | - | - |
+| Grizzly50AE (Base.Grizzly50AE) | Verified default | - | - |
+| Samurai Albert Wesker (Base.Samurai_aw) | Verified default | - | - |
+| Anaconda 44 (Base.Anaconda) | Pending | - | - |
+| ColtNavy1851 38 (Base.ColtNavy1851) | Pending | - | - |
+| ColtNavyExorcist 9mm (Base.ColtNavyExorcist) | Pending | - | - |
+| ColtPeacemaker1873 45 (Base.ColtPeacemaker1873) | Pending | - | - |
+| MP_R8 357 (Base.MP_R8) | Pending | - | - |
+| Nagant_M1895 22LR (Base.Nagant_M1895) | Pending | - | - |
+| Python .357 (Base.Python357) | Pending | - | - |
+| Revolver (Base.Revolver) | Pending | - | - |
+| Revolver38 (Base.Revolver38) | Pending | - | - |
+| Revolver666 22LR (Base.Revolver666) | Pending | - | - |
+| Revolver_long (Base.Revolver_long) | Pending | - | - |
+| Revolver_short (Base.Revolver_short) | Pending | - | - |
+| Rhino20DS 357 (Base.Rhino20DS) | Pending | - | - |
+| Rhino60DS (Base.Rhino60DS) | Pending | - | - |
+| RSH12 308 (Base.RSH12) | Pending | - | - |
+| Ruger357 45 (Base.Ruger357) | Pending | - | - |
+| Schofield1875 44 (Base.Schofield1875) | Pending | - | - |
+| ScrapRevolver 9mm (Base.ScrapRevolver) | Pending | - | - |
+| Smith&Wesson M629 (Base.SW629) | Pending | - | - |
+| Snub22LR (Base.Snub22LR) | Pending | - | - |
+| SW1905 38 (Base.SW1905) | Pending | - | - |
+| SW1917 45 (Base.SW1917) | Pending | - | - |
+| SW500 50Magnum (Base.SW500) | Pending | - | - |
+| SWM3 38 (Base.SWM3) | Pending | - | - |
+| SWM327 357 (Base.SWM327) | Pending | - | - |
+| SWM629_Deluxe 44 (Base.SWM629_Deluxe) | Pending | - | - |
+| Taurus606 357 (Base.Taurus606) | Pending | - | - |
+| Taurus_raging_bull 357 (Base.Taurus_raging_bull) | Pending | - | - |
+| Taurus_raging_bull460 50Magnum (Base.Taurus_raging_bull460) | Pending | - | - |
+| Taurus_RT85 38 (Base.Taurus_RT85) | Pending | - | - |
+| Webley_MK_snub 38 (Base.Webley_MK_snub) | Pending | - | - |
+| Webley_Revolver 38 (Base.Webley_Revolver) | Pending | - | - |
 
-## Workshop upload
+## Optics
 
-This repository contains the Workshop-ready `workshop.txt`, `preview.png`, and `Contents/mods/PVADSGaelOptics` layout. Copy `workshop.txt`, `preview.png`, and `Contents/` to one folder under `Zomboid/Workshop/`, open Project Zomboid's Workshop uploader, and create or update the item. Keep `id=` empty until Steam assigns an item ID. Steam publication has not been performed from this repository.
+Magnified Gael optics (2x-8x) use scope mode on supported rifles. 1x sights use reflex mode. Other weapon/optic combinations still need individual visual calibration.
 
-The cover image was supplied by the project owner. Project Zomboid, Project Viewpoint ADS, and Gael Gun Store belong to their respective owners. This compatibility project is independent and does not redistribute those mods.
-
+Requires Viewpoint, GaelGunStore_B42 and ProjectViewpointADS. Build 42.21. This package contains one mod: ViewpointGaelCompat.

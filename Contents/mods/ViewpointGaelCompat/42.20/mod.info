@@ -1,0 +1,13 @@
+name=Viewpoint Gael Aim + ADS
+id=ViewpointGaelCompat
+description=Client aim compatibility for Viewpoint and Gael Gun Store, plus Project Viewpoint ADS optic modes and Gael weapon calibrations.
+require=Viewpoint,GaelGunStore_B42,ProjectViewpointADS,\ZombieBuddy
+loadModAfter=Viewpoint;GaelGunStore_B42;ProjectViewpointADS;SophieRadArchery;SophieServerCompat
+author=ProjectZombie
+modversion=1.1.7
+versionMin=42.21
+poster=poster.png
+icon=icon.png
+ZBVersionMin=2.3.0
+javaJarFile=media/java/client/ViewpointGaelCompat.jar
+javaPkgName=viewpointgael

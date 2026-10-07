@@ -55,30 +55,42 @@ for _, row in ipairs(optics) do
         relief = longScopeRelief[name],
     })
 end
-PVADS.RegisterOpticProfile("Base.TritiumSights", { kind = "iron" })
+-- Gael's TritiumSights item points at the VenomRDS 3D mesh, so it is a dot.
+PVADS.RegisterOpticProfile("Base.TritiumSights", { kind = "reflex", mag = 1, reticle = "dot", zero = 50 })
 PVADS.RegisterWeaponProfile("Base.UMP45", { family = "smg" })
 PVADS.RegisterWeaponProfile("Base.UMP45_long", { family = "smg" })
 
--- M1 Garand + Gael ACOG 4x32 trial: use Viewpoint's scope renderer with a
--- x8-style mildot reticle and explicit medium/long zoom steps. This only applies
--- when Base.ACOGx4 is actually attached to Base.M1.
+-- M1 Garand + Gael ACOG 4x32: manually calibrated scope and PiP lens.
+-- These values mirror the user's saved Base.M1|Base.ACOGx4 profile, so the
+-- alignment also travels with this compatibility mod.
 PVADS.RegisterWeaponOpticOverride("Base.M1", "Base.ACOGx4", {
     mode = "scope", mag = 4, reticle = "mildot",
-    zoomLevels = { 2, 4 }, relief = 0.22, lensScale = 0.8,
+    zoomLevels = { 2, 4 }, lensScale = 0.8,
+    adjZ = -0.00720, adjY = 0.13650, fovMul = 0.50000,
+    relief = 0.23000, adjPitch = 0.20000, adjYaw = -0.07500,
+    opticHeight = 0.03000, pipDepth = 0.00000, pipZoom = 1.00000,
+    pipRetX = 0.00000, pipY = 0.00000, pipZ = -0.08200,
+})
+
+-- Preserve the separate M1 + x8 calibration too.
+PVADS.RegisterWeaponOpticOverride("Base.M1", "Base.x8Scope", {
+    mode = "scope", mag = 8, reticle = "mildot",
+    zoomLevels = { 2, 4, 8 }, lensScale = 0.8,
+    adjZ = -0.01840, adjY = 0.14350, fovMul = 0.50000,
+    pipY = 0.00000, pipZ = -0.07000,
 })
 
 -- ADS's generated Base.AK74 geometry belongs to its STALKER mesh, while
--- Gael's active Base.AK74 uses AR/AssaultRifles|AK74.  The wrong sight line
--- forces the hands into a distorted pose.  These points use Gael's muzzle,
--- Scope and handguard attachments as a conservative sight-line baseline.
+-- Gael's active Base.AK74 uses AR/AssaultRifles|AK74. Discard that geometry.
+-- Do not replace it with guessed rear/front points: doing so disables ADS's
+-- live iron-sight mesh measurement and broke the user's manual calibration.
 local generatedAK74 = PVADS.Generated and PVADS.Generated.weapons
     and PVADS.Generated.weapons["Base.AK74"]
 if generatedAK74 and generatedAK74.source == "STALKER" then
     PVADS.Generated.weapons["Base.AK74"] = nil
 end
 PVADS.RegisterWeaponProfile("Base.AK74", {
-    family = "assault", rear = { 0, 0.083, 0.052 },
-    front = { 0, 0.35, 0.052 }, weaponLength = 0.55,
+    family = "assault", weaponLength = 0.55,
 })
 
 -- Registering a model shape also lets PVADS's Java finder recognize Gael's
