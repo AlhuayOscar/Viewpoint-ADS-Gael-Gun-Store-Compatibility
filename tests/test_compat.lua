@@ -25,8 +25,9 @@ assert(acog.reticle == "chevron" and acog.opticId == "Base.ACOGx4")
 assert(acog.relief == 0.22)
 
 local garand = PVADS.ResolveProfile(gun("Scope", "ACOGx4", "M1"))
-assert(garand.mode == "scope" and garand.reticle == "chevron" and garand.mag == 4)
+assert(garand.mode == "scope" and garand.reticle == "mildot" and garand.mag == 4)
 assert(garand.zoomLevels[1] == 2 and garand.zoomLevels[2] == 4)
+assert(garand.lensScale == 0.8)
 
 local kobra = PVADS.ResolveProfile(gun("L_Scope", "EKP_kobra"))
 assert(kobra.mode == "reflex" and kobra.mag == 1 and kobra.opticId == "Base.EKP_kobra")

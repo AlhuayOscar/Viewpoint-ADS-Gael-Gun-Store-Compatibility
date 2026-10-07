@@ -60,11 +60,11 @@ PVADS.RegisterWeaponProfile("Base.UMP45", { family = "smg" })
 PVADS.RegisterWeaponProfile("Base.UMP45_long", { family = "smg" })
 
 -- M1 Garand + Gael ACOG 4x32 trial: use Viewpoint's scope renderer with a
--- chevron reticle and explicit medium/long zoom steps. This only applies
+-- x8-style mildot reticle and explicit medium/long zoom steps. This only applies
 -- when Base.ACOGx4 is actually attached to Base.M1.
 PVADS.RegisterWeaponOpticOverride("Base.M1", "Base.ACOGx4", {
-    mode = "scope", mag = 4, reticle = "chevron",
-    zoomLevels = { 2, 4 }, relief = 0.22,
+    mode = "scope", mag = 4, reticle = "mildot",
+    zoomLevels = { 2, 4 }, relief = 0.22, lensScale = 0.8,
 })
 
 -- ADS's generated Base.AK74 geometry belongs to its STALKER mesh, while
