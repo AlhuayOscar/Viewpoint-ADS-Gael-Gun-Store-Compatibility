@@ -28,6 +28,8 @@ Report a problem with the game build, versions of both required mods, weapon and
 
 With debug mode enabled, equip Gael's `Base.M1` and right-click in the inventory. Select **Debug: Mount ACOG 4x32 on M1 Garand**. The action mounts `Base.ACOGx4` for a scoped ADS trial. This combination uses Viewpoint's chevron reticle and 2×/4× zoom steps. It does not mount a scope on every M1 Garand automatically. For the clearest comparison, disable Gael Gun Store's separate scope overlay and enable Viewpoint ADS scope rendering. The 3D alignment still needs an in-game check.
 
+If the F9 calibrator reports `mode reflex` for `Base.ACOGx4`, check that `PVADSGaelOptics` is enabled for that specific save and restart the game. Viewpoint's built-in `Base.x8Scope` works without this patch; the ACOG needs this mod's profile to enter scope mode. Avoid enabling the separate local `PVADSGaelPistolBaseline` test mod alongside this package because its profiles are already included here.
+
 ## Workshop upload
 
 This repository contains the Workshop-ready `workshop.txt`, `preview.png`, and `Contents/mods/PVADSGaelOptics` layout. Copy `workshop.txt`, `preview.png`, and `Contents/` to one folder under `Zomboid/Workshop/`, open Project Zomboid's Workshop uploader, and create or update the item. Keep `id=` empty until Steam assigns an item ID. Steam publication has not been performed from this repository.
