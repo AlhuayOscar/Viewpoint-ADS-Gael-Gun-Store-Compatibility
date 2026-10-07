@@ -10,11 +10,11 @@ assert(init)
 init()
 assert(not shapes.ACOGx4 and shapes.EKP_kobra)
 
-local function gun(partType, partName)
+local function gun(partType, partName, weaponName)
     local part = { getFullType = function() return "Base." .. partName end,
         getPartType = function() return partType end }
     local parts = { size = function() return 1 end, get = function() return part end }
-    return { getFullType = function() return "Base.UMP45" end,
+    return { getFullType = function() return "Base." .. (weaponName or "UMP45") end,
         getDisplayName = function() return "UMP-45" end,
         getAllWeaponParts = function() return parts end }
 end
@@ -23,6 +23,10 @@ local acog = PVADS.ResolveProfile(gun("Scope", "ACOGx4"))
 assert(acog.family == "smg" and acog.mode == "scope" and acog.mag == 4)
 assert(acog.reticle == "chevron" and acog.opticId == "Base.ACOGx4")
 assert(acog.relief == 0.22)
+
+local garand = PVADS.ResolveProfile(gun("Scope", "ACOGx4", "M1"))
+assert(garand.mode == "scope" and garand.reticle == "chevron" and garand.mag == 4)
+assert(garand.zoomLevels[1] == 2 and garand.zoomLevels[2] == 4)
 
 local kobra = PVADS.ResolveProfile(gun("L_Scope", "EKP_kobra"))
 assert(kobra.mode == "reflex" and kobra.mag == 1 and kobra.opticId == "Base.EKP_kobra")

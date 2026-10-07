@@ -59,6 +59,14 @@ PVADS.RegisterOpticProfile("Base.TritiumSights", { kind = "iron" })
 PVADS.RegisterWeaponProfile("Base.UMP45", { family = "smg" })
 PVADS.RegisterWeaponProfile("Base.UMP45_long", { family = "smg" })
 
+-- M1 Garand + Gael ACOG 4x32 trial: use Viewpoint's scope renderer with a
+-- chevron reticle and explicit medium/long zoom steps. This only applies
+-- when Base.ACOGx4 is actually attached to Base.M1.
+PVADS.RegisterWeaponOpticOverride("Base.M1", "Base.ACOGx4", {
+    mode = "scope", mag = 4, reticle = "chevron",
+    zoomLevels = { 2, 4 }, relief = 0.22,
+})
+
 -- ADS's generated Base.AK74 geometry belongs to its STALKER mesh, while
 -- Gael's active Base.AK74 uses AR/AssaultRifles|AK74.  The wrong sight line
 -- forces the hands into a distorted pose.  These points use Gael's muzzle,

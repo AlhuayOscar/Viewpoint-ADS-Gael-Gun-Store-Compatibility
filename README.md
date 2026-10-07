@@ -24,6 +24,10 @@ This is a WIP. Many weapon and optic offsets are provisional and still need in-g
 
 Report a problem with the game build, versions of both required mods, weapon and optic item IDs, screenshots, and `Zomboid/console.txt` errors. Include an F9 Viewpoint calibration when possible.
 
+### M1 Garand + ACOG 4x32 trial
+
+With debug mode enabled, equip Gael's `Base.M1` and right-click in the inventory. Select **Debug: Mount ACOG 4x32 on M1 Garand**. The action mounts `Base.ACOGx4` for a scoped ADS trial. This combination uses Viewpoint's chevron reticle and 2×/4× zoom steps. It does not mount a scope on every M1 Garand automatically. For the clearest comparison, disable Gael Gun Store's separate scope overlay and enable Viewpoint ADS scope rendering. The 3D alignment still needs an in-game check.
+
 ## Workshop upload
 
 This repository contains the Workshop-ready `workshop.txt`, `preview.png`, and `Contents/mods/PVADSGaelOptics` layout. Copy `workshop.txt`, `preview.png`, and `Contents/` to one folder under `Zomboid/Workshop/`, open Project Zomboid's Workshop uploader, and create or update the item. Keep `id=` empty until Steam assigns an item ID. Steam publication has not been performed from this repository.
