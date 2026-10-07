@@ -1,0 +1,8 @@
+*.bak
+*.log
+*.tmp
+*.inspect.ndjson
+Thumbs.db
+.DS_Store
+/42/
+/common/

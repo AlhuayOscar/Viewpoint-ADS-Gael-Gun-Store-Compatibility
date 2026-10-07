@@ -1,0 +1,10 @@
+name=Viewpoint ADS + Gael Gun Store Compatibility
+id=PVADSGaelOptics
+description=Work-in-progress optic and pistol ADS profiles for Gael Gun Store. Sporadically maintained by one person; contributions welcome on GitHub.
+author=ZEnicko
+modversion=0.2.0
+versionMin=42.21
+require=\GaelGunStore_B42,\ProjectViewpointADS
+loadModAfter=GaelGunStore_B42;ProjectViewpointADS
+poster=poster.png
+icon=icon.png

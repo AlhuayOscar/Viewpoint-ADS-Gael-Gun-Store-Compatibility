@@ -1,0 +1,6 @@
+version=1
+id=
+title=Project Viewpoint ADS + Gael Gun Store Compatibility (B42)
+description=Work-in-progress compatibility profiles for Gael Gun Store optics and selected pistols in Project Viewpoint ADS. Requires GaelGunStore_B42 and ProjectViewpointADS. Maintained by one person with sporadic updates. Contributions and issue reports are welcome on GitHub: https://github.com/AlhuayOscar/Viewpoint-ADS-Gael-Gun-Store-Compatibility
+tags=Build 42;Weapons
+visibility=public
