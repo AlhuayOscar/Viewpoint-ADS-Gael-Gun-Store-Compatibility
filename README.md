@@ -1,6 +1,8 @@
-# Project Viewpoint ADS + Gael Gun Store Compatibility
+# NOT READY Viewpoint Gael Compatibility Patch
 
 A work-in-progress compatibility mod for Project Zomboid Build 42.21. It adds Viewpoint ADS profiles for 50 Gael Gun Store optics, improves eye relief on large scopes, provides a sight-line baseline for Gael's AK-74, and adds provisional ADS baselines for 22 pistols. Existing player calibrations can override these defaults.
+
+**NOT READY YET.** Work in progress. The first iron-sight baselines cover `Kimber1911`, `M9_Samurai`, `MP1911`, `OTS_33`, `P220`, `P220_Elite`, `P228`, `P99`, `PB6P9`, `Pistol`, `Pistol2`, `Pistol3`, `pistol_shotgun`, `Samurai_aw`, `Samurai_kendo`, `SR1M`, `USP45`, `VictorySW22`, `VP70`, `Walther_P38`, `Wildey`, and `XD`. These profiles are provisional and have not each been verified in game.
 
 **Maintenance:** One person maintains this project and updates it sporadically. Fixes, tested calibration data, and documentation improvements are welcome through [GitHub issues and pull requests](https://github.com/AlhuayOscar/Viewpoint-ADS-Gael-Gun-Store-Compatibility).
 

@@ -1,6 +1,6 @@
-name=Viewpoint ADS + Gael Gun Store Compatibility
+name=NOT READY Viewpoint Gael Compatibility Patch
 id=PVADSGaelOptics
-description=Work-in-progress optic and pistol ADS profiles for Gael Gun Store. Sporadically maintained by one person; contributions welcome on GitHub.
+description=NOT READY YET. Work in progress. First iron-sight baselines: Kimber1911, M9_Samurai, MP1911, OTS_33, P220, P220_Elite, P228, P99, PB6P9, Pistol, Pistol2, Pistol3, pistol_shotgun, Samurai_aw, Samurai_kendo, SR1M, USP45, VictorySW22, VP70, Walther_P38, Wildey, XD. Provisional profiles; more calibration needed.
 author=ZEnicko
 modversion=0.2.0
 versionMin=42.21
