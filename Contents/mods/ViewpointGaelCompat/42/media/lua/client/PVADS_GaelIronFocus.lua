@@ -48,6 +48,9 @@ local function updateNoReferenceSway(player)
     local profile = controller and controller.profile
     local aim = ViewpointGael and ViewpointGael.Aim
     if not (profile and aim and aim.setHoldSway) then
+        if swayApplied and aim and aim.setHoldSway and swayKey then
+            aim.setHoldSway(string.match(swayKey, "^[^|]+"), 0, 0)
+        end
         swayKey, swayApplied, swayAt = nil, false, nil
         swayYaw, swayPitch = 0, 0
         return
@@ -62,9 +65,8 @@ local function updateNoReferenceSway(player)
         and profile.ironSource == "family default"
         and NO_REFERENCE_IRONS[profile.weaponId]
     if not eligible then
-        if swayApplied and controller.sig == swayKey then
-            aim.setHoldSway(profile.weaponId,
-                tonumber(profile.adjYaw) or 0, tonumber(profile.adjPitch) or 0)
+        if swayApplied and swayKey then
+            aim.setHoldSway(string.match(swayKey, "^[^|]+"), 0, 0)
         end
         swayKey, swayApplied, swayAt = nil, false, nil
         swayYaw, swayPitch = 0, 0
@@ -89,9 +91,7 @@ local function updateNoReferenceSway(player)
     if swayPitch == targetPitch then
         targetPitch, speedPitch = randomTarget(swayPitch, SWAY_LIMIT), randomSpeed()
     end
-    swayApplied = aim.setHoldSway(profile.weaponId,
-        (tonumber(profile.adjYaw) or 0) + swayYaw,
-        (tonumber(profile.adjPitch) or 0) + swayPitch) == true
+    swayApplied = aim.setHoldSway(profile.weaponId, swayYaw, swayPitch) == true
 end
 
 local function updateIronFocus(player)
