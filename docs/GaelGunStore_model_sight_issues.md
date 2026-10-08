@@ -55,5 +55,7 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 49 | PKM | `Base.PKM` (#290) | Mira frontal | Revisar la geometría o ubicación de la mira frontal. | [ ] Pendiente |
 | 50 | RPK-16 | `Base.RPK16` (#296) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
 | 51 | RMB-93 | `Base.RMB93` (#307) | Modelo visual | Error visual. | [ ] Pendiente |
+| 52 | QBS09 | `Base.QBS09` (#329) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
+| 53 | Saiga-12 | `Base.Saiga12` (#340) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
 
 Para cada caso: confirmar el defecto con el arma sin óptica, inspeccionar el modelo y sus puntos de mira, corregir el recurso 3D o sus anexos si corresponde y volver a comprobar ADS. Mantener las calibraciones manuales existentes hasta verificar la corrección visual en juego.
