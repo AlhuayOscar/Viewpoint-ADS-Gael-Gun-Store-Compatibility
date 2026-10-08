@@ -3,5 +3,7 @@
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: agacharse cambia el FOV de las miras de hierro",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "Al apuntar agachado con miras de hierro, reduce solo el FOV. No cambia las miras acopladas ni las calibraciones guardadas.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Multiplicador de FOV para miras de hierro agachado",
-    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplica el FOV ADS calibrado del arma. Un valor menor acerca más la imagen; 1.00 desactiva el acercamiento adicional. Predeterminado: 0.70."
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplica el FOV ADS calibrado del arma. Un valor menor acerca más la imagen; 1.00 desactiva el acercamiento adicional. Predeterminado: 0.70.",
+    "Sandbox_ViewpointGaelCompat_WheelIronFocus": "Experimental: FOV ADS fijo -0,3 (rueda del mouse)",
+    "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "Con miras de hierro en ADS, rueda arriba acerca al restar 0,30 del FOV ADS calibrado; rueda abajo vuelve al FOV normal. La rueda tiene prioridad sobre el foco al agacharse hasta que termine el ADS. Los scopes conservan su zoom."
 }

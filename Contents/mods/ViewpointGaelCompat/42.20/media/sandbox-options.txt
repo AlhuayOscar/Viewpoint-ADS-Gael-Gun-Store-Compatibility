@@ -17,3 +17,11 @@ option ViewpointGaelCompat.CrouchIronFocusMultiplier
     page = ViewpointGaelCompat,
     translation = ViewpointGaelCompat_CrouchIronFocusMultiplier,
 }
+
+option ViewpointGaelCompat.WheelIronFocus
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_WheelIronFocus,
+}

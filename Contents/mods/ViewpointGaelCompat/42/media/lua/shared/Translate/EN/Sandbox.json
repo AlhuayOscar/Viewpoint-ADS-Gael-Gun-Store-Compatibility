@@ -3,5 +3,7 @@
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: Crouch enables Iron Sights FOV Change",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "While crouched and aiming through iron sights, narrow only the view FOV. Attached optics and saved weapon calibrations are unaffected.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Crouched iron sight FOV multiplier",
-    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplies the weapon's calibrated ADS FOV. Lower values zoom further; 1.00 disables the extra zoom. Default: 0.70."
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplies the weapon's calibrated ADS FOV. Lower values zoom further; 1.00 disables the extra zoom. Default: 0.70.",
+    "Sandbox_ViewpointGaelCompat_WheelIronFocus": "Experimental: Fixed -0.3 ADS FOV (mouse wheel)",
+    "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated FOV multiplier; wheel down restores normal ADS FOV. Wheel control takes priority over crouch focus until ADS ends. Scopes keep their own wheel zoom."
 }
