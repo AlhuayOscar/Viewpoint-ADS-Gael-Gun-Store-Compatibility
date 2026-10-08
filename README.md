@@ -20,6 +20,10 @@ The additional sandbox option **Experimental: Fixed -0.3 ADS FOV (mouse wheel)**
 
 The sandbox option **Experimental: increase all firearm ranges by 50%** extends the effective `MaxRange` of aimed firearms without rewriting each weapon or Gael's dynamic ammo stats. It is off by default. **Nerf long distances?** depends on that option and is on by default: character hits beyond the weapon's original range deal 30% less damage. Both options are experimental and require an in-game check. The damage reduction currently applies to character hits, not vehicles. True Ballistics may still impose its separate projectile-distance cap, and multiplayer needs matching server support before using this option.
 
+## Experimental hold sway for unsupported irons
+
+Enabled by default for `Base.GOL` without an attached optic. While ADS is held, its live iron-sight yaw and pitch drift at 0.025 degrees per second, reflecting at +/-0.7 degrees yaw and +/-0.4 degrees pitch relative to the saved manual alignment. The temporary offsets reset when ADS ends and pause while the calibrator is open. Saved profiles, scoped profiles, and the camera direction stay intact. The eligible weapon list is deliberately limited to the GOL until other sightless models are checked in game. This is a visual uncertainty effect: ADS realigns the sight ray, so it does not add projectile spread on its own.
+
 ## Slider calibrator
 
 Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.

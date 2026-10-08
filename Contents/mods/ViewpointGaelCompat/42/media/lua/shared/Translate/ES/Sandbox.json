@@ -9,5 +9,7 @@
     "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: aumentar todos los alcances un 50 %",
     "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Aumenta un 50 % el MaxRange efectivo de todas las armas de fuego apuntadas. Desactivado por defecto para pruebas. Conserva los valores de munición dinámica de Gael. Requiere reiniciar el juego.",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances": "¿Reducir daño a larga distancia?",
-    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Solo funciona si está activado el aumento experimental de alcance. Los impactos más allá del alcance original de cada arma causan un 30 % menos de daño a personajes. Activado por defecto."
+    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Solo funciona si está activado el aumento experimental de alcance. Los impactos más allá del alcance original de cada arma causan un 30 % menos de daño a personajes. Activado por defecto.",
+    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway": "Experimental: desvío al sostener miras sin referencia",
+    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "Para la GOL Sniper Magnum sin óptica acoplada, mueve lentamente la alineación de la mira de hierro en ADS. Yaw se limita a +/-0,7 grados y pitch a +/-0,4 grados, a 0,025 grados por segundo. La cámara y la calibración guardada no cambian. Activado por defecto."
 }

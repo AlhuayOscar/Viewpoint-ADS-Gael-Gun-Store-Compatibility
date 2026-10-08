@@ -41,3 +41,11 @@ option ViewpointGaelCompat.NerfLongDistances
     page = ViewpointGaelCompat,
     translation = ViewpointGaelCompat_NerfLongDistances,
 }
+
+option ViewpointGaelCompat.NoReferenceHoldSway
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_NoReferenceHoldSway,
+}
