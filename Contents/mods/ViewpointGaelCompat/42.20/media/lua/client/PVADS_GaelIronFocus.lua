@@ -6,14 +6,16 @@ local lastProfile = nil
 local lastFov = nil
 local wheelFocused = nil
 local NO_REFERENCE_IRONS = { ["Base.GOL"] = true }
-local SWAY_DEGREES_PER_SECOND = 0.1 -- 0.025 degrees every 0.25 s, applied smoothly per frame.
-local SWAY_YAW_LIMIT = 0.7
-local SWAY_PITCH_LIMIT = 0.4
+local SWAY_LIMIT = 0.5
+local SWAY_SPEED_INTERVAL = 0.25
+local SWAY_STEP_MIN = 0.05
+local SWAY_STEP_MAX = 0.20
 local swayKey = nil
 local swayApplied = false
 local swayAt = nil
 local swayYaw, swayPitch = 0, 0
 local targetYaw, targetPitch = 0, 0
+local speedYaw, speedPitch = 0, 0
 
 local function settings()
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
@@ -25,11 +27,14 @@ end
 
 local function randomTarget(current, limit)
     for _ = 1, 8 do
-        local side = ZombRand(2) == 0 and -1 or 1
-        local target = side * limit * (0.55 + ZombRand(451) / 1000)
+        local target = limit * (ZombRand(1001) / 500 - 1)
         if math.abs(target - current) >= limit * 0.35 then return target end
     end
-    return (current >= 0 and -1 or 1) * limit * (0.55 + ZombRand(451) / 1000)
+    return current >= 0 and -limit or limit
+end
+
+local function randomSpeed()
+    return (SWAY_STEP_MIN + (SWAY_STEP_MAX - SWAY_STEP_MIN) * ZombRand(1001) / 1000) / SWAY_SPEED_INTERVAL
 end
 
 local function approach(value, target, step)
@@ -70,16 +75,20 @@ local function updateNoReferenceSway(player)
     if controller.sig ~= swayKey then
         swayKey, swayAt = controller.sig, now
         swayYaw, swayPitch = 0, 0
-        targetYaw = randomTarget(0, SWAY_YAW_LIMIT)
-        targetPitch = randomTarget(0, SWAY_PITCH_LIMIT)
+        targetYaw = randomTarget(0, SWAY_LIMIT)
+        targetPitch = randomTarget(0, SWAY_LIMIT)
+        speedYaw, speedPitch = randomSpeed(), randomSpeed()
     end
     local dt = math.max(0, math.min(0.25, (now - swayAt) / 1000))
     swayAt = now
-    local step = SWAY_DEGREES_PER_SECOND * dt
-    swayYaw = approach(swayYaw, targetYaw, step)
-    swayPitch = approach(swayPitch, targetPitch, step)
-    if swayYaw == targetYaw then targetYaw = randomTarget(swayYaw, SWAY_YAW_LIMIT) end
-    if swayPitch == targetPitch then targetPitch = randomTarget(swayPitch, SWAY_PITCH_LIMIT) end
+    swayYaw = approach(swayYaw, targetYaw, speedYaw * dt)
+    swayPitch = approach(swayPitch, targetPitch, speedPitch * dt)
+    if swayYaw == targetYaw then
+        targetYaw, speedYaw = randomTarget(swayYaw, SWAY_LIMIT), randomSpeed()
+    end
+    if swayPitch == targetPitch then
+        targetPitch, speedPitch = randomTarget(swayPitch, SWAY_LIMIT), randomSpeed()
+    end
     swayApplied = aim.setHoldSway(profile.weaponId,
         (tonumber(profile.adjYaw) or 0) + swayYaw,
         (tonumber(profile.adjPitch) or 0) + swayPitch) == true

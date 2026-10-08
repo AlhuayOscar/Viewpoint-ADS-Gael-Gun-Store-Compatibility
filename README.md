@@ -22,7 +22,7 @@ The sandbox option **Experimental: increase all firearm ranges by 50%** extends 
 
 ## Experimental hold sway for unsupported irons
 
-Enabled by default for `Base.GOL` without an attached optic. While ADS is held, its live iron-sight yaw and pitch move smoothly by 0.025 degrees every 0.25 seconds (0.1 degrees per second) toward independently chosen random positions within +/-0.7 degrees yaw and +/-0.4 degrees pitch relative to the saved manual alignment. Brief aim-animation interruptions do not reset the movement. The temporary offsets reset when ADS ends and pause while the calibrator is open. Saved profiles, scoped profiles, and the camera direction stay intact. The eligible weapon list is deliberately limited to the GOL until other sightless models are checked in game. This is a visual uncertainty effect: ADS realigns the sight ray, so it does not add projectile spread on its own.
+Enabled by default for `Base.GOL` without an attached optic. While ADS is held, its live iron-sight yaw and pitch move smoothly toward independently chosen random positions within +/-0.5 degrees of the saved manual alignment. Each movement uses a random speed equivalent to 0.05-0.2 degrees every 0.25 seconds (0.2-0.8 degrees per second); the movement is interpolated each frame rather than jumping by that amount. Brief aim-animation interruptions do not reset it. The temporary offsets reset when ADS ends and pause while the calibrator is open. Saved profiles, scoped profiles, and the camera direction stay intact. The eligible weapon list is deliberately limited to the GOL until other sightless models are checked in game. This is a visual uncertainty effect: ADS realigns the sight ray, so it does not add projectile spread on its own.
 
 ## Slider calibrator
 
