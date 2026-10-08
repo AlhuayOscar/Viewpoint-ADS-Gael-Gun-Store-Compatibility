@@ -6,7 +6,7 @@ local lastProfile = nil
 local lastFov = nil
 local wheelFocused = nil
 local NO_REFERENCE_IRONS = { ["Base.GOL"] = true }
-local SWAY_DEGREES_PER_SECOND = 0.0425
+local SWAY_DEGREES_PER_SECOND = 0.1 -- 0.025 degrees every 0.25 s, applied smoothly per frame.
 local SWAY_YAW_LIMIT = 0.7
 local SWAY_PITCH_LIMIT = 0.4
 local swayProfile = nil

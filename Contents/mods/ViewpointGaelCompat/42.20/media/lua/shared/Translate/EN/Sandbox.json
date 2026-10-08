@@ -11,5 +11,5 @@
     "Sandbox_ViewpointGaelCompat_NerfLongDistances": "Nerf long distances?",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Only works when the experimental range increase is enabled. Hits beyond each weapon's original range deal 30% less damage to characters. Enabled by default.",
     "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway": "Experimental: unsupported iron sight hold sway",
-    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "For the GOL Sniper Magnum without an attached optic, slowly shifts the weapon's iron-sight alignment while ADS is active. Yaw stays within +/-0.7 degrees, pitch within +/-0.4 degrees, moving at 0.0425 degrees per second. Camera and saved calibration stay intact. Enabled by default."
+    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "For the GOL Sniper Magnum without an attached optic, smoothly shifts the weapon's iron-sight alignment while ADS is active. Yaw stays within +/-0.7 degrees and pitch within +/-0.4 degrees, moving 0.025 degrees every 0.25 seconds. Camera and saved calibration stay intact. Enabled by default."
 }
