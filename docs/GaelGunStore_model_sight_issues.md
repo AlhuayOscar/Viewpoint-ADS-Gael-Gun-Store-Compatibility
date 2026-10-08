@@ -30,5 +30,18 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 24 | AEK | `Base.AEK` (#130) | Modelo y mira frontal | Error visual y de la mira frontal. | [ ] Pendiente |
 | 25 | AK-101 | `Base.AK101` (#131) | Modelo y miras de hierro | Error visual y de las miras. | [ ] Pendiente |
 | 26 | AK-12 | `Base.AK12` (#133) | Modelo visual; miras por confirmar | Error visual. Revisar también si las miras están afectadas. | [ ] Pendiente |
+| 27 | AK-74 | `Base.AK74` (#137) | Modelo visual | Error visual. | [ ] Pendiente |
+| 28 | Beretta ARX160 | `Base.AR160` (#147) | Modelo visual | Error visual. | [ ] Pendiente |
+| 29 | CZ 805 BREN | `Base.CZ805` (#152) | Modelo visual | Error visual. | [ ] Pendiente |
+| 30 | FN-2000 | `Base.FN2000` (#157) | Modelo visual | Error visual. | [ ] Pendiente |
+| 31 | Groza | `Base.Groza` (#160) | Modelo visual | Error visual. | [ ] Pendiente |
+| 32 | HK416 | `Base.HK416` (#161) | Modelo visual | Error visual. | [ ] Pendiente |
+| 33 | AAC Honey Badger | `Base.HoneyBadger` (#162) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
+| 34 | IMBEL IA2 | `Base.IA2` (#163) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
+| 35 | K2 | `Base.K2` (#164) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
+| 36 | R5 | `Base.R5` (#172) | Modelo visual | Error visual. | [ ] Pendiente |
+| 37 | VSK | `Base.VSK` (#181) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
+| 38 | VZ. 58 | `Base.VZ58` (#184) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
+| 39 | G27 (HK417) | `Base.G27` (#195) | Modelo visual | Error visual. | [ ] Pendiente |
 
 Para cada caso: confirmar el defecto con el arma sin óptica, inspeccionar el modelo y sus puntos de mira, corregir el recurso 3D o sus anexos si corresponde y volver a comprobar ADS. Mantener las calibraciones manuales existentes hasta verificar la corrección visual en juego.
