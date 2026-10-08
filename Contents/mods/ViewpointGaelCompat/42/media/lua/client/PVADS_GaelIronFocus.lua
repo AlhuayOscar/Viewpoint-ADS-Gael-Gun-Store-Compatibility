@@ -9,11 +9,11 @@ local NO_REFERENCE_IRONS = { ["Base.GOL"] = true }
 local SWAY_DEGREES_PER_SECOND = 0.1 -- 0.025 degrees every 0.25 s, applied smoothly per frame.
 local SWAY_YAW_LIMIT = 0.7
 local SWAY_PITCH_LIMIT = 0.4
-local swayProfile = nil
+local swayKey = nil
 local swayApplied = false
 local swayAt = nil
 local swayYaw, swayPitch = 0, 0
-local yawDirection, pitchDirection = 1, -1
+local targetYaw, targetPitch = 0, 0
 
 local function settings()
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
@@ -23,14 +23,18 @@ local function settings()
     return enabled, wheelEnabled, math.max(0.30, math.min(1.00, multiplier))
 end
 
-local function advance(value, direction, limit, step)
-    value = value + direction * step
-    if value > limit then
-        value, direction = limit - (value - limit), -1
-    elseif value < -limit then
-        value, direction = -limit + (-limit - value), 1
+local function randomTarget(current, limit)
+    for _ = 1, 8 do
+        local side = ZombRand(2) == 0 and -1 or 1
+        local target = side * limit * (0.55 + ZombRand(451) / 1000)
+        if math.abs(target - current) >= limit * 0.35 then return target end
     end
-    return value, direction
+    return (current >= 0 and -1 or 1) * limit * (0.55 + ZombRand(451) / 1000)
+end
+
+local function approach(value, target, step)
+    if math.abs(target - value) <= step then return target end
+    return value + (target > value and step or -step)
 end
 
 local function updateNoReferenceSway(player)
@@ -38,38 +42,44 @@ local function updateNoReferenceSway(player)
     local controller = PVADS and PVADS.Controller
     local profile = controller and controller.profile
     local aim = ViewpointGael and ViewpointGael.Aim
-    if not (profile and aim and aim.setHoldSway) then return end
+    if not (profile and aim and aim.setHoldSway) then
+        swayKey, swayApplied, swayAt = nil, false, nil
+        swayYaw, swayPitch = 0, 0
+        return
+    end
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
     local calibrator = PVADS.Calibrator
     local calibrating = calibrator and calibrator.window and calibrator.window:isVisible()
     local eligible = (not vars or vars.NoReferenceHoldSway ~= false)
         and not calibrating
-        and controller.ready and controller.lastWant and player:isAiming()
+        and controller.ready and controller.lastWant
         and profile.mode == "iron" and not profile.opticId and not profile.noIrons
         and profile.ironSource == "family default"
         and NO_REFERENCE_IRONS[profile.weaponId]
     if not eligible then
-        if swayApplied and profile == swayProfile then
+        if swayApplied and controller.sig == swayKey then
             aim.setHoldSway(profile.weaponId,
                 tonumber(profile.adjYaw) or 0, tonumber(profile.adjPitch) or 0)
         end
-        swayProfile, swayApplied, swayAt = nil, false, nil
+        swayKey, swayApplied, swayAt = nil, false, nil
         swayYaw, swayPitch = 0, 0
         return
     end
 
     local now = getTimestampMs()
-    if profile ~= swayProfile then
-        swayProfile, swayAt = profile, now
+    if controller.sig ~= swayKey then
+        swayKey, swayAt = controller.sig, now
         swayYaw, swayPitch = 0, 0
-        yawDirection = ZombRand(2) == 0 and -1 or 1
-        pitchDirection = ZombRand(2) == 0 and -1 or 1
+        targetYaw = randomTarget(0, SWAY_YAW_LIMIT)
+        targetPitch = randomTarget(0, SWAY_PITCH_LIMIT)
     end
     local dt = math.max(0, math.min(0.25, (now - swayAt) / 1000))
     swayAt = now
     local step = SWAY_DEGREES_PER_SECOND * dt
-    swayYaw, yawDirection = advance(swayYaw, yawDirection, SWAY_YAW_LIMIT, step)
-    swayPitch, pitchDirection = advance(swayPitch, pitchDirection, SWAY_PITCH_LIMIT, step)
+    swayYaw = approach(swayYaw, targetYaw, step)
+    swayPitch = approach(swayPitch, targetPitch, step)
+    if swayYaw == targetYaw then targetYaw = randomTarget(swayYaw, SWAY_YAW_LIMIT) end
+    if swayPitch == targetPitch then targetPitch = randomTarget(swayPitch, SWAY_PITCH_LIMIT) end
     swayApplied = aim.setHoldSway(profile.weaponId,
         (tonumber(profile.adjYaw) or 0) + swayYaw,
         (tonumber(profile.adjPitch) or 0) + swayPitch) == true
