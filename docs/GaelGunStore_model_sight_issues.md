@@ -22,5 +22,13 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 16 | AEK919 | `Base.AEK919` (#80) | Modelo visual | Al apuntar, sobresale un polígono como una punta en el lado izquierdo. | [ ] Pendiente |
 | 17 | PP93 | `Base.PP93` (#90) | Modelo visual | Error visual. | [ ] Pendiente |
 | 18 | Veresk | `Base.Veresk` (#94) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
+| 19 | AR6951 | `Base.AR6951` (#98) | Modelo visual | Error visual. | [ ] Pendiente |
+| 20 | K7 | `Base.K7` (#102) | Modelo visual | Error visual. | [ ] Pendiente |
+| 21 | Lanchester MK1 | `Base.LanchesterMK1` (#105) | Geometría del modelo | Del lado derecho sobresale un polígono fuera de lugar. | [ ] Pendiente |
+| 22 | MX4 | `Base.MX4` (#114) | Modelo visual | Error visual. | [ ] Pendiente |
+| 23 | Silenced Sten | `Base.Silenced_Sten` (#118) | Mira frontal | La mira frontal central queda muy baja; necesita más altura. | [ ] Pendiente |
+| 24 | AEK | `Base.AEK` (#130) | Modelo y mira frontal | Error visual y de la mira frontal. | [ ] Pendiente |
+| 25 | AK-101 | `Base.AK101` (#131) | Modelo y miras de hierro | Error visual y de las miras. | [ ] Pendiente |
+| 26 | AK-12 | `Base.AK12` (#133) | Modelo visual; miras por confirmar | Error visual. Revisar también si las miras están afectadas. | [ ] Pendiente |
 
 Para cada caso: confirmar el defecto con el arma sin óptica, inspeccionar el modelo y sus puntos de mira, corregir el recurso 3D o sus anexos si corresponde y volver a comprobar ADS. Mantener las calibraciones manuales existentes hasta verificar la corrección visual en juego.
