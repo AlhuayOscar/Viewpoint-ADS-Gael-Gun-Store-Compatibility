@@ -5,5 +5,9 @@
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Crouched iron sight FOV multiplier",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplies the weapon's calibrated ADS FOV. Lower values zoom further; 1.00 disables the extra zoom. Default: 0.70.",
     "Sandbox_ViewpointGaelCompat_WheelIronFocus": "Experimental: Fixed -0.3 ADS FOV (mouse wheel)",
-    "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated FOV multiplier; wheel down restores normal ADS FOV. Wheel control takes priority over crouch focus until ADS ends. Scopes keep their own wheel zoom."
+    "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated FOV multiplier; wheel down restores normal ADS FOV. Wheel control takes priority over crouch focus until ADS ends. Scopes keep their own wheel zoom.",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: increase all firearm ranges by 50%",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Extends the effective MaxRange of all aimed firearms by 50%. Disabled by default for testing. Gael's dynamic ammo values remain intact. Requires a game restart.",
+    "Sandbox_ViewpointGaelCompat_NerfLongDistances": "Nerf long distances?",
+    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Only works when the experimental range increase is enabled. Hits beyond each weapon's original range deal 30% less damage to characters. Enabled by default."
 }

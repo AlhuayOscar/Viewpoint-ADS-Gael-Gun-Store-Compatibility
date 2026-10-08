@@ -25,3 +25,19 @@ option ViewpointGaelCompat.WheelIronFocus
     page = ViewpointGaelCompat,
     translation = ViewpointGaelCompat_WheelIronFocus,
 }
+
+option ViewpointGaelCompat.ExperimentalExtendedRange
+{
+    type = boolean,
+    default = false,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_ExperimentalExtendedRange,
+}
+
+option ViewpointGaelCompat.NerfLongDistances
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_NerfLongDistances,
+}

@@ -16,6 +16,10 @@ The sandbox option is enabled by default. While crouched, ADS with an unmounted 
 
 The additional sandbox option **Experimental: Fixed -0.3 ADS FOV (mouse wheel)** is also enabled by default. With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated `fovMul` (minimum 0.30); wheel down restores normal ADS FOV. The wheel choice overrides crouch focus until ADS ends. Scopes retain their existing wheel zoom.
 
+## Experimental firearm range
+
+The sandbox option **Experimental: increase all firearm ranges by 50%** extends the effective `MaxRange` of aimed firearms without rewriting each weapon or Gael's dynamic ammo stats. It is off by default. **Nerf long distances?** depends on that option and is on by default: character hits beyond the weapon's original range deal 30% less damage. Both options are experimental and require an in-game check. The damage reduction currently applies to character hits, not vehicles. True Ballistics may still impose its separate projectile-distance cap, and multiplayer needs matching server support before using this option.
+
 ## Slider calibrator
 
 Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.

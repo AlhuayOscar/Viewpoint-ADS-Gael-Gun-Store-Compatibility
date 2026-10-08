@@ -6,3 +6,4 @@ Thumbs.db
 .DS_Store
 /42/
 /common/
+.build/
