@@ -29,7 +29,7 @@ option ViewpointGaelCompat.WheelIronFocus
 option ViewpointGaelCompat.ExperimentalExtendedRange
 {
     type = boolean,
-    default = false,
+    default = true,
     page = ViewpointGaelCompat,
     translation = ViewpointGaelCompat_ExperimentalExtendedRange,
 }

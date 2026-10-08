@@ -19,10 +19,10 @@ public final class RangeBalance {
         try {
             SandboxOptions options = SandboxOptions.instance;
             if (options == null) return;
-            extendedRange = enabled(options, "ExperimentalExtendedRange", false);
+            extendedRange = enabled(options, "ExperimentalExtendedRange", true);
             nerfLongDistances = enabled(options, "NerfLongDistances", true);
         } catch (RuntimeException ignored) {
-            // Before the sandbox loads, keep the experimental change off.
+            // Before the sandbox loads, keep the last known values.
         }
     }
 

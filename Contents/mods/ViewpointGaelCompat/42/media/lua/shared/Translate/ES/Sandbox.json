@@ -7,7 +7,7 @@
     "Sandbox_ViewpointGaelCompat_WheelIronFocus": "Experimental: FOV ADS fijo -0,3 (rueda del mouse)",
     "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "Con miras de hierro en ADS, rueda arriba acerca al restar 0,30 del FOV ADS calibrado; rueda abajo vuelve al FOV normal. La rueda tiene prioridad sobre el foco al agacharse hasta que termine el ADS. Los scopes conservan su zoom.",
     "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: aumentar todos los alcances un 50 %",
-    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Aumenta un 50 % el MaxRange efectivo de todas las armas de fuego apuntadas. Desactivado por defecto para pruebas. Conserva los valores de munición dinámica de Gael. Requiere reiniciar el juego.",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Aumenta un 50 % el MaxRange efectivo de todas las armas de fuego apuntadas. Activado por defecto durante las pruebas. Conserva los valores de munición dinámica de Gael. Requiere reiniciar el juego.",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances": "¿Reducir daño a larga distancia?",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Solo funciona si está activado el aumento experimental de alcance. Los impactos más allá del alcance original de cada arma causan un 30 % menos de daño a personajes. Activado por defecto.",
     "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway": "Experimental: desvío al sostener miras sin referencia",
