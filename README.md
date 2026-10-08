@@ -26,7 +26,7 @@ When the local player tries to fire an aimed firearm that is jammed, a short voi
 
 ## Recoil without a stock
 
-Gael's dynamic recoil is 50% stronger when a shoulder firearm that supports a removable `Stock` fires without one attached. This includes the M4, AK47 and Mini Draco. Pistols, revolvers, one-handed SMGs, intentionally stockless weapons, launchers, and shortened shotguns are excluded. The modifier is applied only while Gael prepares the shot, then immediately restored; attaching a stock removes the penalty for the next shot. This needs an in-game firing check.
+Gael's dynamic recoil is 90% stronger when a shoulder firearm that supports a removable `Stock` fires without one attached. This includes the M4, AK47 and Mini Draco. Pistols, revolvers, one-handed SMGs, intentionally stockless weapons, launchers, and shortened shotguns are excluded. The modifier is applied only while Gael prepares the shot, then immediately restored; attaching a stock removes the penalty for the next shot. This needs an in-game firing check.
 
 ## Experimental hold sway for unsupported irons
 
