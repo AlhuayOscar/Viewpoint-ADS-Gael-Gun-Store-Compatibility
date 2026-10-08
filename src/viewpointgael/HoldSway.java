@@ -7,7 +7,7 @@ import zombie.inventory.InventoryItem;
 
 /** Small procedural rotation of the held gun and arms after ADS has solved its calibrated pose. */
 public final class HoldSway {
-    private static final float LIMIT = 2f;
+    private static final float LIMIT = 25f;
     private static final long MAX_AGE_NS = 500_000_000L;
     private static volatile State state;
     private static boolean reported;

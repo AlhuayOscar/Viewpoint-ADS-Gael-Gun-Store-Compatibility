@@ -6,10 +6,10 @@ local lastProfile = nil
 local lastFov = nil
 local wheelFocused = nil
 local NO_REFERENCE_IRONS = { ["Base.GOL"] = true }
-local SWAY_LIMIT = 2.0 -- Temporary diagnostic amplitude for visible post-alignment motion.
+local SWAY_LIMIT = 25.0 -- Temporary diagnostic amplitude for visible post-alignment motion.
 local SWAY_SPEED_INTERVAL = 0.25
-local SWAY_STEP_MIN = 0.05
-local SWAY_STEP_MAX = 0.20
+local SWAY_STEP_MIN = 0.5
+local SWAY_STEP_MAX = 2.0
 local swayKey = nil
 local swayApplied = false
 local swayAt = nil
@@ -29,7 +29,7 @@ end
 local function randomTarget(current, limit)
     for _ = 1, 8 do
         local side = ZombRand(2) == 0 and -1 or 1
-        local target = side * limit * (0.5 + ZombRand(501) / 1000)
+        local target = side * limit * (0.6 + ZombRand(401) / 1000)
         if math.abs(target - current) >= limit * 0.5 then return target end
     end
     return current >= 0 and -limit or limit

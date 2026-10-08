@@ -11,5 +11,5 @@
     "Sandbox_ViewpointGaelCompat_NerfLongDistances": "¿Reducir daño a larga distancia?",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Solo funciona si está activado el aumento experimental de alcance. Los impactos más allá del alcance original de cada arma causan un 30 por ciento menos de daño a personajes. Activado por defecto.",
     "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway": "Experimental: desvío al sostener miras sin referencia",
-    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "Para la GOL Sniper Magnum sin óptica acoplada, anima el arma y los brazos después de la alineación ADS. Rango temporal de prueba: destinos aleatorios de yaw y pitch entre 1 y 2 grados a cada lado; avanzan 0,05-0,2 grados cada 0,25 segundos. La cámara y la calibración guardada no cambian. Activado por defecto."
+    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "Para la GOL Sniper Magnum sin óptica acoplada, anima el arma y los brazos después de la alineación ADS. Rango temporal de prueba: destinos aleatorios de yaw y pitch entre 15 y 25 grados a cada lado; avanzan 0,5-2,0 grados cada 0,25 segundos. La cámara y la calibración guardada no cambian. Activado por defecto."
 }
