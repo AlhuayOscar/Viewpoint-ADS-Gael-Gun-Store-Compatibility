@@ -10,6 +10,10 @@ For Project Zomboid Build 42.21, enable `Viewpoint`, `GaelGunStore_B42`, and `Pr
 
 The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks calibration status.
 
+## Experimental: Crouch enables Iron Sights FOV Change
+
+While crouched, ADS with an unmounted iron sight narrows the view to 70% of that weapon's calibrated ADS FOV. Standing restores its calibrated FOV. Weapon alignment and saved profiles are unchanged; attached reflex sights and scopes keep their normal behavior. This is a local test feature and needs an in-game visual check.
+
 ## Slider calibrator
 
 Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.
