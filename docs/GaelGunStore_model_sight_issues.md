@@ -43,5 +43,14 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 37 | VSK | `Base.VSK` (#181) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
 | 38 | VZ. 58 | `Base.VZ58` (#184) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
 | 39 | G27 (HK417) | `Base.G27` (#195) | Modelo visual | Error visual. | [ ] Pendiente |
+| 40 | G3A3 | `Base.G3A3` (#196) | Modelo visual | Error visual. | [ ] Pendiente |
+| 41 | Mauser Selbstlader M1916 | `Base.MauserSelbstladerM1916` (#208) | Modelo visual | Error visual. | [ ] Pendiente |
+| 42 | Mosin-Nagant | `Base.Mosin` (#252) | Modelo visual | Error visual. | [ ] Pendiente |
+| 43 | S&W Model 1854 | `Base.SWM1854` (#257) | Modelo visual | Error visual. | [ ] Pendiente |
+| 44 | S&W Model 1894 | `Base.SWM1894` (#258) | Mira frontal | Revisar la geometría o ubicación de la mira frontal. | [ ] Pendiente |
+| 45 | Hunting Rifle | `Base.HuntingRifle` (#266) | Mira frontal | Revisar la geometría o ubicación de la mira frontal. | [ ] Pendiente |
+| 46 | AWS | `Base.AWS` (#275) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
+| 47 | CETME | `Base.CETME` (#276) | Modelo y miras de hierro | Revisión visual completa del modelo y de las miras. | [ ] Pendiente |
+| 48 | Negev | `Base.Negev` (#289) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
 
 Para cada caso: confirmar el defecto con el arma sin óptica, inspeccionar el modelo y sus puntos de mira, corregir el recurso 3D o sus anexos si corresponde y volver a comprobar ADS. Mantener las calibraciones manuales existentes hasta verificar la corrección visual en juego.
