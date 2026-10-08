@@ -22,7 +22,7 @@ The sandbox option **Experimental: increase all firearm ranges by 50%** extends 
 
 ## Jam complaint
 
-When the local player tries to fire an aimed firearm that is jammed, a short voice grunt plays using the game's male or female `PainFromRunIntoWall` event at 30% volume. It triggers on a new attack press or when a gun jams while the trigger is held, with a 1.2-second cooldown. It does not alter the jam, damage, ammunition, or firing logic. The sound needs an in-game audio check.
+When the local player tries to fire an aimed firearm that is jammed, a short voice grunt plays using the game's male or female `PainFromRunIntoWall` event at 30% volume. It triggers on a new attack press or when a gun jams while the trigger is held, with a 1.2-second cooldown. Some random variants of this game event are much longer; the voice fades after 0.45 seconds and stops by 0.75 seconds. It does not alter the jam, damage, ammunition, or firing logic. The shortened sound needs an in-game audio check.
 
 ## Experimental hold sway for unsupported irons
 
