@@ -63,9 +63,9 @@ if type(originalPrepareShot) == "function" then
         end
 
         -- Gael uses 1 + (weaponRecoil + partsRecoil) / 100. Adjust the weapon
-        -- term so the complete recoil multiplier, including parts, grows 30%.
+        -- term so the complete recoil multiplier, including parts, grows 50%.
         data.RealRecoil = math.max(-75, math.min(150,
-            30 + 1.30 * weaponRecoil + 0.30 * partsRecoil))
+            50 + 1.50 * weaponRecoil + 0.50 * partsRecoil))
         local ok, result = pcall(originalPrepareShot, playerObj, weapon)
         data.RealRecoil = previous
         if not ok then error(result) end
