@@ -1,12 +1,11 @@
--- Experimental: crouching narrows the ADS view for unmounted iron sights.
--- Only fovMul changes; the calibrated sight position and saved profile stay intact.
+-- Experimental iron focus and GOL sway; dynamic values never enter the saved profile.
 local MIN_FOV_MULTIPLIER = 0.30 -- PVADS Java clamps fovMul to this value.
 
 local lastProfile = nil
 local lastFov = nil
 local wheelFocused = nil
 local NO_REFERENCE_IRONS = { ["Base.GOL"] = true }
-local SWAY_LIMIT = 25.0 -- Temporary diagnostic amplitude for visible post-alignment motion.
+local SWAY_LIMIT = 25.0 -- Temporary diagnostic amplitude for live PVADS profile motion.
 local SWAY_SPEED_INTERVAL = 0.25
 local SWAY_STEP_MIN = 0.5
 local SWAY_STEP_MAX = 2.0
@@ -16,7 +15,9 @@ local swayAt = nil
 local swayYaw, swayPitch = 0, 0
 local targetYaw, targetPitch = 0, 0
 local speedYaw, speedPitch = 0, 0
-local swayRequestedLogged = false
+local swayReachedLogged = false
+local lastSwayPushAt = nil
+local SWAY_PUSH_INTERVAL_MS = 50
 
 local function settings()
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
@@ -44,38 +45,21 @@ local function approach(value, target, step)
     return value + (target > value and step or -step)
 end
 
-local function updateNoReferenceSway(player)
-    if player ~= getSpecificPlayer(0) then return end
-    local controller = PVADS and PVADS.Controller
-    local profile = controller and controller.profile
-    local aim = ViewpointGael and ViewpointGael.Aim
-    if not (profile and aim and aim.setHoldSway) then
-        if swayApplied and aim and aim.setHoldSway and swayKey then
-            print("[ViewpointGael] hold sway reset: ADS profile unavailable")
-            aim.setHoldSway(string.match(swayKey, "^[^|]+"), 0, 0)
-        end
-        swayKey, swayApplied, swayAt = nil, false, nil
-        swayYaw, swayPitch = 0, 0
-        return
-    end
+local function updateNoReferenceSway(controller, profile, iron)
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
     local calibrator = PVADS.Calibrator
     local calibrating = calibrator and calibrator.window and calibrator.window:isVisible()
     local eligible = (not vars or vars.NoReferenceHoldSway ~= false)
         and not calibrating
         and controller.ready and controller.lastWant
-        and profile.mode == "iron" and not profile.opticId and not profile.noIrons
-        and profile.ironSource == "family default"
+        and iron
         and NO_REFERENCE_IRONS[profile.weaponId]
     if not eligible then
-        if swayApplied and swayKey then
-            print("[ViewpointGael] hold sway reset: want=" .. tostring(controller.lastWant)
-                .. " calibrating=" .. tostring(calibrating) .. " iron=" .. tostring(profile.mode == "iron"))
-            aim.setHoldSway(string.match(swayKey, "^[^|]+"), 0, 0)
-        end
+        if swayApplied then print("[ViewpointGael] Lua ADS sway stopped; restoring base profile") end
         swayKey, swayApplied, swayAt = nil, false, nil
         swayYaw, swayPitch = 0, 0
-        return
+        swayReachedLogged = false
+        return false, nil
     end
 
     local now = getTimestampMs()
@@ -85,6 +69,9 @@ local function updateNoReferenceSway(player)
         targetYaw = randomTarget(0, SWAY_LIMIT)
         targetPitch = randomTarget(0, SWAY_LIMIT)
         speedYaw, speedPitch = randomSpeed(), randomSpeed()
+        swayReachedLogged = false
+        print("[ViewpointGael] Lua ADS sway active for " .. profile.weaponId
+            .. "; iron source=" .. tostring(profile.ironSource))
     end
     local dt = math.max(0, math.min(0.25, (now - swayAt) / 1000))
     swayAt = now
@@ -96,11 +83,12 @@ local function updateNoReferenceSway(player)
     if swayPitch == targetPitch then
         targetPitch, speedPitch = randomTarget(swayPitch, SWAY_LIMIT), randomSpeed()
     end
-    swayApplied = aim.setHoldSway(profile.weaponId, swayYaw, swayPitch) == true
-    if swayApplied and not swayRequestedLogged and (math.abs(swayYaw) > 0.05 or math.abs(swayPitch) > 0.05) then
-        swayRequestedLogged = true
-        print("[ViewpointGael] requesting post-alignment hold sway for " .. profile.weaponId)
+    swayApplied = true
+    if not swayReachedLogged and (math.abs(swayYaw) >= 15 or math.abs(swayPitch) >= 15) then
+        swayReachedLogged = true
+        print("[ViewpointGael] Lua ADS sway reached 15 degrees for " .. profile.weaponId)
     end
+    return true, now
 end
 
 local function updateIronFocus(player)
@@ -109,6 +97,8 @@ local function updateIronFocus(player)
     local profile = controller and controller.profile
     if not controller or not controller.ready or not profile or not PVADS_setProfile then
         lastProfile, lastFov, wheelFocused = nil, nil, nil
+        swayKey, swayApplied, swayAt, lastSwayPushAt = nil, false, nil, nil
+        swayYaw, swayPitch = 0, 0
         return
     end
 
@@ -124,17 +114,27 @@ local function updateIronFocus(player)
             focusFov = math.max(MIN_FOV_MULTIPLIER, baseFov * multiplier)
         end
     end
-    if profile == lastProfile and focusFov == lastFov then return end
+    local swayActive, now = updateNoReferenceSway(controller, profile, iron)
+    if profile == lastProfile and focusFov == lastFov then
+        if not swayActive and not lastSwayPushAt then return end
+        if swayActive and lastSwayPushAt and now - lastSwayPushAt < SWAY_PUSH_INTERVAL_MS then return end
+    end
+    local hadDynamicProfile = lastFov ~= nil or lastSwayPushAt ~= nil
     lastProfile, lastFov = profile, focusFov
 
-    if focusFov then
+    if focusFov or swayActive then
         local view = {}
         for key, value in pairs(profile) do view[key] = value end
-        view.fovMul = focusFov
+        if focusFov then view.fovMul = focusFov end
+        if swayActive then
+            view.adjYaw = (tonumber(profile.adjYaw) or 0) + swayYaw
+            view.adjPitch = (tonumber(profile.adjPitch) or 0) + swayPitch
+        end
         PVADS_setProfile(view)
-    elseif iron then
+    elseif hadDynamicProfile then
         PVADS_setProfile(profile)
     end
+    lastSwayPushAt = swayActive and now or nil
 end
 
 local function onWheel(wheel)
@@ -153,5 +153,4 @@ local function onWheel(wheel)
 end
 
 Events.OnPlayerUpdate.Add(updateIronFocus)
-Events.OnPlayerUpdate.Add(updateNoReferenceSway)
 Events.OnMouseWheel.Add(onWheel)
