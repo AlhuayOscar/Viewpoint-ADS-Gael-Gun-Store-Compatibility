@@ -1,0 +1,7 @@
+{
+    "Sandbox_ViewpointGaelCompat": "Compatibilidad Viewpoint Gael",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: agacharse cambia el FOV de las miras de hierro",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "Al apuntar agachado con miras de hierro, reduce solo el FOV. No cambia las miras acopladas ni las calibraciones guardadas.",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Multiplicador de FOV para miras de hierro agachado",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplica el FOV ADS calibrado del arma. Un valor menor acerca más la imagen; 1.00 desactiva el acercamiento adicional. Predeterminado: 0.70."
+}

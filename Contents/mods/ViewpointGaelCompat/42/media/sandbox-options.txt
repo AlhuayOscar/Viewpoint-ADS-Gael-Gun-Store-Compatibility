@@ -1,0 +1,19 @@
+VERSION = 1,
+
+option ViewpointGaelCompat.CrouchIronFocus
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_CrouchIronFocus,
+}
+
+option ViewpointGaelCompat.CrouchIronFocusMultiplier
+{
+    type = double,
+    min = 0.30,
+    max = 1.00,
+    default = 0.70,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_CrouchIronFocusMultiplier,
+}

@@ -1,0 +1,7 @@
+{
+    "Sandbox_ViewpointGaelCompat": "Viewpoint Gael Compatibility",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: Crouch enables Iron Sights FOV Change",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "While crouched and aiming through iron sights, narrow only the view FOV. Attached optics and saved weapon calibrations are unaffected.",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Crouched iron sight FOV multiplier",
+    "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplies the weapon's calibrated ADS FOV. Lower values zoom further; 1.00 disables the extra zoom. Default: 0.70."
+}

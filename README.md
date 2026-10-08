@@ -12,7 +12,7 @@ The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks cali
 
 ## Experimental: Crouch enables Iron Sights FOV Change
 
-While crouched, ADS with an unmounted iron sight narrows the view to 70% of that weapon's calibrated ADS FOV. Standing restores its calibrated FOV. Weapon alignment and saved profiles are unchanged; attached reflex sights and scopes keep their normal behavior. This is a local test feature and needs an in-game visual check.
+The sandbox option is enabled by default. While crouched, ADS with an unmounted iron sight narrows the view to 70% of that weapon's calibrated ADS FOV. The sandbox multiplier can be adjusted from 0.30 to 1.00 for testing. Standing restores its calibrated FOV. Weapon alignment and saved profiles are unchanged; attached reflex sights and scopes keep their normal behavior. This is a local test feature and needs an in-game visual check.
 
 ## Slider calibrator
 
