@@ -6,10 +6,10 @@
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplica el FOV ADS calibrado del arma. Un valor menor acerca más la imagen; 1.00 desactiva el acercamiento adicional. Predeterminado: 0.70.",
     "Sandbox_ViewpointGaelCompat_WheelIronFocus": "Experimental: FOV ADS fijo -0,3 (rueda del mouse)",
     "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "Con miras de hierro en ADS, rueda arriba acerca al restar 0,30 del FOV ADS calibrado; rueda abajo vuelve al FOV normal. La rueda tiene prioridad sobre el foco al agacharse hasta que termine el ADS. Los scopes conservan su zoom.",
-    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: aumentar todos los alcances un 50 %",
-    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Aumenta un 50 % el MaxRange efectivo de todas las armas de fuego apuntadas. Activado por defecto durante las pruebas. Conserva los valores de munición dinámica de Gael. Requiere reiniciar el juego.",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: aumentar todos los alcances un 50 por ciento",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Aumenta un 50 por ciento el MaxRange efectivo de todas las armas de fuego apuntadas. Activado por defecto durante las pruebas. Conserva los valores de munición dinámica de Gael. Requiere reiniciar el juego.",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances": "¿Reducir daño a larga distancia?",
-    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Solo funciona si está activado el aumento experimental de alcance. Los impactos más allá del alcance original de cada arma causan un 30 % menos de daño a personajes. Activado por defecto.",
+    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Solo funciona si está activado el aumento experimental de alcance. Los impactos más allá del alcance original de cada arma causan un 30 por ciento menos de daño a personajes. Activado por defecto.",
     "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway": "Experimental: desvío al sostener miras sin referencia",
-    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "Para la GOL Sniper Magnum sin óptica acoplada, anima el arma y los brazos después de la alineación ADS. Yaw y pitch aleatorios quedan dentro de +/-0,5 grados y avanzan 0,05-0,2 grados cada 0,25 segundos. La cámara y la calibración guardada no cambian. Activado por defecto."
+    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "Para la GOL Sniper Magnum sin óptica acoplada, anima el arma y los brazos después de la alineación ADS. Rango temporal de prueba: destinos aleatorios de yaw y pitch entre 1 y 2 grados a cada lado; avanzan 0,05-0,2 grados cada 0,25 segundos. La cámara y la calibración guardada no cambian. Activado por defecto."
 }

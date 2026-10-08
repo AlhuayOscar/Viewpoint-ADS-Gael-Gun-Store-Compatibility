@@ -6,7 +6,7 @@ local lastProfile = nil
 local lastFov = nil
 local wheelFocused = nil
 local NO_REFERENCE_IRONS = { ["Base.GOL"] = true }
-local SWAY_LIMIT = 0.5
+local SWAY_LIMIT = 2.0 -- Temporary diagnostic amplitude for visible post-alignment motion.
 local SWAY_SPEED_INTERVAL = 0.25
 local SWAY_STEP_MIN = 0.05
 local SWAY_STEP_MAX = 0.20
@@ -16,6 +16,7 @@ local swayAt = nil
 local swayYaw, swayPitch = 0, 0
 local targetYaw, targetPitch = 0, 0
 local speedYaw, speedPitch = 0, 0
+local swayRequestedLogged = false
 
 local function settings()
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
@@ -27,8 +28,9 @@ end
 
 local function randomTarget(current, limit)
     for _ = 1, 8 do
-        local target = limit * (ZombRand(1001) / 500 - 1)
-        if math.abs(target - current) >= limit * 0.35 then return target end
+        local side = ZombRand(2) == 0 and -1 or 1
+        local target = side * limit * (0.5 + ZombRand(501) / 1000)
+        if math.abs(target - current) >= limit * 0.5 then return target end
     end
     return current >= 0 and -limit or limit
 end
@@ -49,6 +51,7 @@ local function updateNoReferenceSway(player)
     local aim = ViewpointGael and ViewpointGael.Aim
     if not (profile and aim and aim.setHoldSway) then
         if swayApplied and aim and aim.setHoldSway and swayKey then
+            print("[ViewpointGael] hold sway reset: ADS profile unavailable")
             aim.setHoldSway(string.match(swayKey, "^[^|]+"), 0, 0)
         end
         swayKey, swayApplied, swayAt = nil, false, nil
@@ -66,6 +69,8 @@ local function updateNoReferenceSway(player)
         and NO_REFERENCE_IRONS[profile.weaponId]
     if not eligible then
         if swayApplied and swayKey then
+            print("[ViewpointGael] hold sway reset: want=" .. tostring(controller.lastWant)
+                .. " calibrating=" .. tostring(calibrating) .. " iron=" .. tostring(profile.mode == "iron"))
             aim.setHoldSway(string.match(swayKey, "^[^|]+"), 0, 0)
         end
         swayKey, swayApplied, swayAt = nil, false, nil
@@ -92,6 +97,10 @@ local function updateNoReferenceSway(player)
         targetPitch, speedPitch = randomTarget(swayPitch, SWAY_LIMIT), randomSpeed()
     end
     swayApplied = aim.setHoldSway(profile.weaponId, swayYaw, swayPitch) == true
+    if swayApplied and not swayRequestedLogged and (math.abs(swayYaw) > 0.05 or math.abs(swayPitch) > 0.05) then
+        swayRequestedLogged = true
+        print("[ViewpointGael] requesting post-alignment hold sway for " .. profile.weaponId)
+    end
 end
 
 local function updateIronFocus(player)

@@ -6,10 +6,10 @@
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier_tooltip": "Multiplies the weapon's calibrated ADS FOV. Lower values zoom further; 1.00 disables the extra zoom. Default: 0.70.",
     "Sandbox_ViewpointGaelCompat_WheelIronFocus": "Experimental: Fixed -0.3 ADS FOV (mouse wheel)",
     "Sandbox_ViewpointGaelCompat_WheelIronFocus_tooltip": "With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated FOV multiplier; wheel down restores normal ADS FOV. Wheel control takes priority over crouch focus until ADS ends. Scopes keep their own wheel zoom.",
-    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: increase all firearm ranges by 50%",
-    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Extends the effective MaxRange of all aimed firearms by 50%. Enabled by default during testing. Gael's dynamic ammo values remain intact. Requires a game restart.",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange": "Experimental: increase all firearm ranges by 50 percent",
+    "Sandbox_ViewpointGaelCompat_ExperimentalExtendedRange_tooltip": "Extends the effective MaxRange of all aimed firearms by 50 percent. Enabled by default during testing. Gael's dynamic ammo values remain intact. Requires a game restart.",
     "Sandbox_ViewpointGaelCompat_NerfLongDistances": "Nerf long distances?",
-    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Only works when the experimental range increase is enabled. Hits beyond each weapon's original range deal 30% less damage to characters. Enabled by default.",
+    "Sandbox_ViewpointGaelCompat_NerfLongDistances_tooltip": "Only works when the experimental range increase is enabled. Hits beyond each weapon's original range deal 30 percent less damage to characters. Enabled by default.",
     "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway": "Experimental: unsupported iron sight hold sway",
-    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "For the GOL Sniper Magnum without an attached optic, animates the gun and arms after ADS aligns them. Random yaw and pitch stay within +/-0.5 degrees, moving at 0.05-0.2 degrees per 0.25 seconds. Camera and saved calibration stay intact. Enabled by default."
+    "Sandbox_ViewpointGaelCompat_NoReferenceHoldSway_tooltip": "For the GOL Sniper Magnum without an attached optic, animates the gun and arms after ADS aligns them. Temporary test range: random yaw and pitch targets from 1 to 2 degrees on either side, moving at 0.05-0.2 degrees per 0.25 seconds. Camera and saved calibration stay intact. Enabled by default."
 }
