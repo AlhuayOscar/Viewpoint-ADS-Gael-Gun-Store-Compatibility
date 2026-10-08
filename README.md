@@ -24,6 +24,10 @@ The sandbox option **Experimental: increase all firearm ranges by 50%** extends 
 
 When the local player tries to fire an aimed firearm that is jammed, a short voice grunt plays using the game's male or female `PainFromRunIntoWall` event at 30% volume. It triggers on a new attack press or when a gun jams while the trigger is held, with a 1.2-second cooldown. Some random variants of this game event are much longer; the voice fades after 0.45 seconds and stops by 0.75 seconds. It does not alter the jam, damage, ammunition, or firing logic. The shortened sound needs an in-game audio check.
 
+## Recoil without a stock
+
+Gael's dynamic recoil is 30% stronger when a shoulder firearm that supports a removable `Stock` fires without one attached. This includes the M4, AK47 and Mini Draco. Pistols, revolvers, one-handed SMGs, intentionally stockless weapons, launchers, and shortened shotguns are excluded. The modifier is applied only while Gael prepares the shot, then immediately restored; attaching a stock removes the penalty for the next shot. This needs an in-game firing check.
+
 ## Experimental hold sway for unsupported irons
 
 Enabled by default for `Base.GOL` without an attached optic. While ADS is held, Lua animates a temporary copy of the PVADS profile by changing its calibrated yaw and pitch offsets through `PVADS_setProfile` every 50 ms. This uses the same alignment path as the in-game calibrator and does not require the separate hold-sway Java patch to run. For this visibility test, yaw and pitch move toward independent random targets 15-25 degrees to either side of the saved manual alignment (maximum +/-25 degrees). Each movement uses a random speed equivalent to 0.5-2.0 degrees every 0.25 seconds (2-8 degrees per second). The temporary offsets stop when ADS ends and pause while the calibrator is open. Saved profiles and scoped profiles stay intact. The eligible weapon list is limited to the GOL until checked in game. PVADS' published sight ray should follow the moving alignment; the camera direction stays unchanged. The console logs when Lua sway starts, reaches 15 degrees, and stops, to help verify the active path.
