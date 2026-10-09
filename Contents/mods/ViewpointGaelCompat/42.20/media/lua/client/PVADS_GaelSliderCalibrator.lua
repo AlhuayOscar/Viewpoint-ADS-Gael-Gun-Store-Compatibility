@@ -27,8 +27,10 @@ local WEAPONS = PVADS_GaelWeaponCatalog or {}
 local RETICLES = {
     {"Auto (optic default)", "auto"}, {"None", "none"},
     {"Dot", "dot"}, {"Holo circle", "holo"},
-    {"OKP-7 chevron", "okp7"}, {"OKP-7 rings", "okp7_rings"},
-    {"Kobra chevron + dot", "kobra_combo"}, {"Kobra open cross", "kobra_open"},
+    {"OKP-7 arrow + bars", "okp7"}, {"OKP-7 ring + dot", "okp7_ring"},
+    {"OKP-7 double rings", "okp7_rings"},
+    {"Kobra T (solid)", "kobra_open"}, {"Kobra T (LED dots)", "kobra_dotted"},
+    {"Kobra dot + chevron", "kobra_combo"}, {"Kobra chevron", "kobra_chevron"},
     {"Chevron", "chevron"}, {"Cross + dot", "crossdot"},
     {"Duplex", "duplex"}, {"Mil-dot", "mildot"},
     {"Post", "post"}, {"Eastern / PSO", "eastern"},
@@ -335,7 +337,7 @@ function PVADSGaelSliderWindow:render()
     self:drawText("Weapon", 8, self.weaponY, 1, 1, 1, 1, UIFont.Small)
     self:drawText("Hold Ctrl to aim; V toggles ADS. Selecting a weapon enables Hold ADS.", 8, self.weaponY + 22, 0.7, 0.85, 1, 1, UIFont.Small)
     self:drawText("Retícula", 8, self.choiceY, 1, 1, 1, 1, UIFont.Small)
-    self:drawText("Modo", 320, self.choiceY, 1, 1, 1, 1, UIFont.Small)
+    self:drawText("Modo ADS", 306, self.choiceY, 1, 1, 1, 1, UIFont.Small)
     local profile = PVADS.Controller.profile
     if profile then
         self:drawText("Actual: " .. tostring(profile.reticle) .. " / " .. tostring(profile.mode),

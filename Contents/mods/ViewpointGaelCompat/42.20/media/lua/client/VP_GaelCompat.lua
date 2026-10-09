@@ -19,12 +19,12 @@ local optics = {
     {"x2Scope", 2, "crossdot"}, {"x4Scope", 4, "duplex"},
     {"x8Scope", 8, "mildot"},
     {"1P78", 2.8, "eastern"}, {"1PN93_4", 4, "eastern"},
-    {"EKP_kobra_2x", 2, "kobra_combo"}, {"POSP", 4, "eastern"},
+    {"EKP_kobra_2x", 2, "kobra_open"}, {"POSP", 4, "eastern"},
     {"POSP4x24", 4, "eastern"}, {"Zeiss4x25", 4, "duplex"},
     {"Comp_M4", 1, "dot"}, {"Coyote", 1, "dot"},
     {"CP1", 1, "dot"}, {"CrimsonRedDot", 1, "dot"},
     {"Deltapoint", 1, "dot"}, {"Eotech", 1, "holo"},
-    {"Eotech_XPS3", 1, "holo"}, {"Kobra", 1, "kobra_combo"},
+    {"Eotech_XPS3", 1, "holo"}, {"Kobra", 1, "kobra_open"},
     {"MicroT1", 1, "dot"}, {"MiniRedDot", 1, "dot"},
     {"OKP7", 1, "okp7"}, {"PKA", 1, "dot"},
     {"RDS", 1, "dot"}, {"RedDot", 1, "dot"},
@@ -32,7 +32,7 @@ local optics = {
     {"SigSauerRomeo3", 1, "dot"}, {"SLDG", 1, "dot"},
     {"TruBrite", 1, "dot"}, {"VenomRDS", 1, "dot"},
     {"VortexRedDot", 1, "dot"}, {"ZaMiniRDS", 1, "dot"},
-    {"EKP_kobra", 1, "kobra_combo"},
+    {"EKP_kobra", 1, "kobra_open"},
 }
 
 -- Eye distance is measured from the rear eyepiece in weapon model units.

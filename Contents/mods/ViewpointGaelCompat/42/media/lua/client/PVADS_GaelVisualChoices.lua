@@ -9,7 +9,9 @@ if not PVADS.gaelVisualChoicesInstalled then
     local modes = { iron = true, reflex = true, scope = true }
     local reticles = {
         none = true, dot = true, holo = true, okp7 = true,
-        okp7_rings = true, kobra_combo = true, kobra_open = true,
+        okp7_ring = true, okp7_rings = true,
+        kobra_combo = true, kobra_open = true,
+        kobra_dotted = true, kobra_chevron = true,
         chevron = true, crossdot = true,
         duplex = true, mildot = true, post = true, eastern = true,
     }
