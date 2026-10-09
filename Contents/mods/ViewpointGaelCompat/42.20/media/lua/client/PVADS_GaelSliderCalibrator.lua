@@ -84,7 +84,7 @@ end
 local function markerScale()
     local settings = PVADS.User and PVADS.User[PVADS.GaelGlobalKey]
     local value = settings and tonumber(settings.markerScale) or 1
-    return math.max(0, math.min(3, value))
+    return math.max(0, math.min(10, value))
 end
 
 local function shotProjectionVersion(aim)
@@ -216,7 +216,7 @@ function PVADSGaelSliderWindow:addMarkerScaleControl()
         self, PVADSGaelSliderWindow.onMarkerScale)
     slider:initialise(); slider:instantiate()
     slider:setDoButtons(false)
-    slider:setValues(0, 3, 0.05, 0.05, true)
+    slider:setValues(0, 10, 0.05, 0.05, true)
     slider:setCurrentValue(markerScale(), true)
     self:addChild(slider)
     self.markerScaleSlider = slider
@@ -225,8 +225,10 @@ function PVADSGaelSliderWindow:addMarkerScaleControl()
 end
 
 function PVADSGaelSliderWindow:onMarkerScale(value)
-    value = math.floor(math.max(0, math.min(3, tonumber(value) or 1)) * 20 + 0.5) / 20
+    value = math.floor(math.max(0, math.min(10, tonumber(value) or 1)) * 20 + 0.5) / 20
     local key = PVADS.GaelGlobalKey
+    if not key then return end
+    PVADS.User = PVADS.User or {}
     PVADS.User[key] = PVADS.User[key] or {}
     PVADS.User[key].markerScale = value
     self.markerDirty = true
@@ -668,17 +670,13 @@ local function install()
                         and angleX > -9000 and angleY > -9000 then
                         pushMarkerScale()
                         local scale = markerScale()
-                        -- Version 1 reflected the muzzle a second time and
-                        -- left the marker on the front post. Lua reload can
-                        -- correct its HUD preview until version 2 is loaded.
-                        if projectionVersion < 2 then
-                            local dx, dy = angleX - cx, angleY - cy
-                            angleX, angleY = cx - dx * scale, cy - dy * scale
-                        end
-                        local dotX, dotY = angleX, angleY
                         if not startX or not startY or startX < -9000 or startY < -9000 then
                             startX, startY = cx, cy
                         end
+                        local dx = angleX - startX
+                        local dy = angleY - startY
+                        local dotX = startX + dx * scale
+                        local dotY = startY + dy * scale
                         if startX ~= dotX or startY ~= dotY then
                             self:drawLine2(startX, startY, dotX, dotY, 0.72, 1, 0.18, 0.85)
                         end
