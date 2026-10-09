@@ -1,0 +1,91 @@
+VERSION = 1,
+
+option ViewpointGaelCompat.CrouchIronFocus
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_CrouchIronFocus,
+}
+
+option ViewpointGaelCompat.CrouchIronFocusMultiplier
+{
+    type = double,
+    min = 0.30,
+    max = 1.00,
+    default = 0.70,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_CrouchIronFocusMultiplier,
+}
+
+option ViewpointGaelCompat.WheelIronFocus
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_WheelIronFocus,
+}
+
+option ViewpointGaelCompat.FocusSearchBlur
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_FocusSearchBlur,
+}
+
+option ViewpointGaelCompat.ExperimentalExtendedRange
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_ExperimentalExtendedRange,
+}
+
+option ViewpointGaelCompat.NerfLongDistances
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_NerfLongDistances,
+}
+
+option ViewpointGaelCompat.NoReferenceHoldSway
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_NoReferenceHoldSway,
+}
+
+option ViewpointGaelCompat.SightMotion
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_SightMotion,
+}
+
+option ViewpointGaelCompat.ShotPitchRecoil
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_ShotPitchRecoil,
+}
+
+option ViewpointGaelCompat.ShotRecoilAffectsAim
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_ShotRecoilAffectsAim,
+}
+
+option ViewpointGaelCompat.BoltPitchMotion
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_BoltPitchMotion,
+}

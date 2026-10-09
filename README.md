@@ -10,9 +10,35 @@ For Project Zomboid Build 42.21, enable `Viewpoint`, `GaelGunStore_B42`, and `Pr
 
 The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks calibration status.
 
+## Experimental: Crouch enables Iron Sights FOV Change
+
+The sandbox option is enabled by default. While crouched, ADS with an unmounted iron sight narrows the view to 70% of that weapon's calibrated ADS FOV. The sandbox multiplier can be adjusted from 0.30 to 1.00 for testing. Standing restores its calibrated FOV. Weapon alignment and saved profiles are unchanged; attached reflex sights and scopes keep their normal behavior. This is a local test feature and needs an in-game visual check.
+
+The additional sandbox option **Experimental: Fixed -0.3 ADS FOV (mouse wheel)** is also enabled by default. With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated `fovMul` (minimum 0.30); wheel down restores normal ADS FOV. The wheel choice overrides crouch focus until ADS ends. Scopes retain their existing wheel zoom.
+
+## Experimental firearm range
+
+The sandbox option **Experimental: increase all firearm ranges by 50%** extends the effective `MaxRange` of aimed firearms without rewriting each weapon or Gael's dynamic ammo stats. It is on by default during testing. **Nerf long distances?** depends on that option and is also on by default: character hits beyond the weapon's original range deal 30% less damage. Both options are experimental and require an in-game check. The damage reduction currently applies to character hits, not vehicles. True Ballistics may still impose its separate projectile-distance cap, and multiplayer needs matching server support before using this option.
+
+## Jam complaint
+
+When the local player tries to fire an aimed firearm that is jammed, a short voice grunt plays using the game's male or female `PainFromRunIntoWall` event at 30% volume. It triggers on a new attack press or when a gun jams while the trigger is held, with a 1.2-second cooldown. Some random variants of this game event are much longer; the voice fades after 0.45 seconds and stops by 0.75 seconds. It does not alter the jam, damage, ammunition, or firing logic. The shortened sound needs an in-game audio check.
+
+## Recoil without a stock
+
+Gael's dynamic recoil is 90% stronger when a shoulder firearm that supports a removable `Stock` fires without one attached. This includes the M4, AK47 and Mini Draco. Pistols, revolvers, one-handed SMGs, intentionally stockless weapons, launchers, and shortened shotguns are excluded. The modifier is applied only while Gael prepares the shot, then immediately restored; attaching a stock removes the penalty for the next shot. This needs an in-game firing check.
+
+## Experimental hold sway for unsupported irons
+
+Enabled by default for `Base.GOL` without an attached optic. While ADS is held, Lua animates a temporary copy of the PVADS profile by changing its calibrated yaw and pitch offsets through `PVADS_setProfile` every 50 ms. This uses the same alignment path as the in-game calibrator and does not require the separate hold-sway Java patch to run. For this visibility test, yaw and pitch move toward independent random targets 15-25 degrees to either side of the saved manual alignment (maximum +/-25 degrees). Each movement uses a random speed equivalent to 0.5-2.0 degrees every 0.25 seconds (2-8 degrees per second). The temporary offsets stop when ADS ends and pause while the calibrator is open. Saved profiles and scoped profiles stay intact. The eligible weapon list is limited to the GOL until checked in game. PVADS' published sight ray should follow the moving alignment; the camera direction stays unchanged. The console logs when Lua sway starts, reaches 15 degrees, and stops, to help verify the active path.
+
 ## Slider calibrator
 
 Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.
+
+The companion panel also has **Retícula** and **Modo ADS** selectors for the equipped weapon and optic. Auto keeps the optic's default; a selection changes the live ADS profile and Save writes it alongside the numeric calibration in `PVADS_UserProfiles.txt`. Copy includes the visual choices in a ready-to-paste override. OKP-7 offers the supplied arrow-and-bars mark plus ring-and-dot and double-ring marks. Kobra offers a solid or LED-dotted T, dot plus chevron, chevron alone, and the shared dot. Modo ADS selects Viewpoint's rendering mode (iron/reflex/scope), separately from the reticle pattern. The assets are drawn for this mod, not copied optic textures; check their appearance in-game.
+
+`Base.ZaMiniRDS` and `Base.MiniRedDot` default to Viewpoint's 1x clear-lens PiP mode. Their sight models remain around the lens, while the centre shows the unobstructed world and dot without scope magnification. The usual numeric calibration for each weapon carrying either optic is retained.
 
 ## Weapon status
 

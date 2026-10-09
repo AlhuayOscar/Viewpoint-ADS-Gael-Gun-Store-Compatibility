@@ -1,169 +1,20 @@
-[h1]Weapon status[/h1]
-47 pistols manually verified (45 saved calibrations, 2 verified defaults). 32 of 32 revolvers and 15 of 16 one-handed SMGs have saved manual profiles.
-Manual = saved personal calibration; Verified default = checked in game without a personal offset; Profile = included calibration awaiting individual confirmation; Pending = no saved calibration.
-Name | Iron Sights | Red Dot Sight | Other Optics
-AA-12 (Base.AA12) | Manual | - | -
-ACE21 (Base.ACE21) | Manual | - | -
-ACE23 (Base.ACE23) | Manual | - | -
-ACE52_CQB (Base.ACE52_CQB) | Manual | - | -
-ACE53 (Base.ACE53) | Manual | - | -
-AEK919 9mm (Base.AEK919) | Manual | - | -
-AK47 (Base.AK47) | Manual | - | -
-AK74 (Base.AK74) | Manual | - | -
-AK_minidrako (Base.AK_minidrako) | Manual | - | -
-AKM (Base.AKM) | Manual | Manual | -
-Anaconda 44 (Base.Anaconda) | Manual | - | -
-AR-10 (Base.AR10) | Manual | - | -
-Armsel Striker Shotgun (Base.Striker) | Manual | - | -
-AssaultRifle (Base.AssaultRifle) | Manual | - | -
-AssaultRifle2 (Base.AssaultRifle2) | Manual | - | -
-AUG_A1 (Base.AUG_A1) | Manual | - | -
-Automag calibre .357 (Base.Automag357) | Manual | - | -
-Automag calibre .44 (Base.Automag44) | Manual | - | -
-Automag calibre .50AE (Base.Automag50AE) | Manual | - | -
-BAR M1918A (Base.BAR) | Manual | - | -
-Benelli M3 (Base.BenelliM3) | Manual | - | -
-Benelli M4 Super 90 (Base.BenelliM4) | Manual | - | -
-Beretta_PX4 (Base.Beretta_PX4) | Manual | - | -
-BrowningHP Pistol (Base.BrowningHP) | Manual | - | -
-CBJ 9mm (Base.CBJ) | Manual | - | -
-ColtNavy1851 38 (Base.ColtNavy1851) | Manual | - | -
-ColtNavyExorcist 9mm (Base.ColtNavyExorcist) | Manual | - | -
-ColtPeacemaker1873 45 (Base.ColtPeacemaker1873) | Manual | - | -
-Coonan-357 (Base.Coonan357) | Manual | - | -
-crafted Bow (Base.Bow_crafted) | Manual | - | -
-Crossbow (Base.Crossbow) | Manual | - | -
-CZ75 Pistol (Base.CZ75) | Manual | - | -
-Daniel Defense M16A2 (Base.M16A2) | Manual | - | -
-Deagle 357 Gold (Base.Deagle357_gold) | Manual | - | -
-Deagle Carabine 14 (Base.DeagleCar14) | Manual | - | -
-Deagle50AE (Base.Deagle50AE) | Manual | - | -
-DoubleBarrelShotgun (Base.DoubleBarrelShotgun) | Manual | - | -
-DoubleBarrelShotgunSawnoff (Base.DoubleBarrelShotgunSawnoff) | Manual | - | -
-Enfield1917 (Base.Enfield1917) | Manual | - | -
-FAMAS (Base.FAMAS) | Manual | - | -
-FiveSeven Pistol (Base.FiveSeven) | Manual | - | -
-FN FAL (Base.FAL) | Manual | - | -
-FN502 22LR (Base.FN502_22LR) | Manual | - | -
-FNX-45 (Base.FNX45) | Manual | - | -
-G2 Pistol (Base.G2) | Manual | - | -
-G36 (Base.G36) | Manual | - | -
-Glock-17 (Base.G17) | Manual | - | -
-Glock-18 (Base.G18) | Manual | - | -
-Glock43 (Base.Glock43) | Manual | - | -
-Glock_tactical (Base.Glock_tactical) | Manual | - | -
-GSH-18 (Base.GSH18) | Manual | - | -
-HK-MK23 (Base.HKMK23) | Manual | - | -
-Hunting Bow (Base.Bow_hunting) | Manual | - | -
-Hunting Bow (Base.Bow_compbound) | Manual | - | -
-Hunting Crossbow (Base.Crossbow_hunting) | Manual | - | -
-IMI Galil (Base.Galil) | Manual | - | -
-Jericho-941 (Base.Jericho941) | Manual | - | -
-Kark98 (Base.Kark98) | Manual | - | -
-Kimber1911 (Base.Kimber1911) | Manual | - | -
-L85 (Base.L85) | Manual | - | -
-M1 Garand (Base.M1) | Manual | - | Manual
-M1A1 Carbine (Base.M1A1) | Manual | - | -
-M24 (Base.M24) | Manual | - | -
-M240B (Base.M240B) | Manual | - | -
-M249 (Base.M249) | Manual | - | -
-M4 Assault Rifle (Base.M4) | Manual | Manual | -
-M60E4 (Base.M60E4) | Manual | - | -
-M9 Samurai (Base.M9_Samurai) | Manual | - | -
-M9A3 Pistol (Base.M9A3) | Manual | - | -
-M9R Pistol (Base.M93R) | Manual | - | -
-MAC10 .45 (Base.MAC10) | Manual | - | -
-Micro_UZI 22LR (Base.Micro_UZI) | Manual | - | -
-Mini_14 Assault Rifle (Base.Mini_14) | Manual | - | -
-MK18 Assault Rifle (Base.MK18) | Manual | - | -
-Mosin-Nagant (Base.Mosin) | Manual | - | -
-MosinNagant1891 (Base.MosinNagant1891) | Manual | - | -
-MP1911 Marccenary (Base.MP1911) | Manual | - | -
-MP40 9mm (Base.MP40) | Manual | - | -
-MP5 (Base.MP5) | Manual | - | -
-MP5K (Base.MP5K) | Manual | - | -
-MP5SD 9mm (Base.MP5SD) | Manual | - | -
-MP7 9mm (Base.MP7) | Manual | - | -
-MP9 45 (Base.MP9) | Manual | - | -
-MP_R8 357 (Base.MP_R8) | Manual | - | -
-MSST 45 (Base.MSST) | Manual | - | -
-Nagant_M1895 22LR (Base.Nagant_M1895) | Manual | - | -
-OTS33 (Base.OTS_33) | Manual | - | -
-P220 (Base.P220) | Manual | - | -
-P220 Elite (Base.P220_Elite) | Manual | - | -
-P228 (Base.P228) | Manual | - | -
-P90 9mm (Base.P90) | Manual | - | -
-PB6P9 (Base.PB6P9) | Manual | - | -
-Pistol (Base.Pistol) | Manual | - | -
-pistol shotgun (Base.pistol_shotgun) | Manual | - | -
-Pistol2 (Base.Pistol2) | Manual | - | -
-Pistol3 (Base.Pistol3) | Manual | - | -
-PP2000 9mm (Base.PP2000) | Manual | - | -
-PP93 9mm (Base.PP93) | Manual | - | -
-PPSH41 9mm (Base.PPSH41) | Manual | - | -
-Python .357 (Base.Python357) | Manual | - | -
-Remington870 (Base.Remington870) | Manual | - | -
-Remington870 Short (Base.Remington870_Short) | Manual | - | -
-Revolver (Base.Revolver) | Manual | - | -
-Revolver38 (Base.Revolver38) | Manual | - | -
-Revolver666 22LR (Base.Revolver666) | Manual | - | -
-Revolver_long (Base.Revolver_long) | Manual | - | -
-Revolver_short (Base.Revolver_short) | Manual | - | -
-Rhino20DS 357 (Base.Rhino20DS) | Manual | - | -
-Rhino60DS (Base.Rhino60DS) | Manual | - | -
-RPG7 (Base.RPG7) | Manual | - | -
-RPK (Base.RPK) | Manual | - | -
-RPK12 (Base.RPK12) | Manual | - | -
-RPK16 (Base.RPK16) | Manual | - | -
-RSH12 308 (Base.RSH12) | Manual | - | -
-Ruger357 45 (Base.Ruger357) | Manual | - | -
-S&W M&P 12 (Base.SWMP_12) | Manual | - | -
-Samurai kendo (Base.Samurai_kendo) | Manual | - | -
-Scar-H (Base.ScarH) | Manual | - | -
-ScarL (Base.ScarL) | Manual | - | -
-Schofield1875 44 (Base.Schofield1875) | Manual | - | -
-ScrapRevolver 9mm (Base.ScrapRevolver) | Manual | - | -
-Shotgun (Base.Shotgun) | Manual | - | -
-SIG-553 Assault Rifle (Base.SIG_553) | Manual | - | -
-SKS (Base.SKS) | Manual | - | -
-SKS Carbine (Base.SKS_carbine) | Manual | - | -
-SKS Carbine short (Base.SKS_carbine_short) | Manual | - | -
-Smith&Wesson M629 (Base.SW629) | Manual | - | -
-Snub22LR (Base.Snub22LR) | Manual | - | -
-Springfield XD Pistol (Base.XD) | Manual | - | -
-Springfield1903 (Base.Springfield1903) | Manual | - | -
-SR1M Pistol (Base.SR1M) | Manual | - | -
-SW1905 38 (Base.SW1905) | Manual | - | -
-SW1917 45 (Base.SW1917) | Manual | - | -
-SW500 50Magnum (Base.SW500) | Manual | - | -
-SWM3 38 (Base.SWM3) | Manual | - | -
-SWM327 357 (Base.SWM327) | Manual | - | -
-SWM629_Deluxe 44 (Base.SWM629_Deluxe) | Manual | - | -
-Taurus606 357 (Base.Taurus606) | Manual | - | -
-Taurus_raging_bull 357 (Base.Taurus_raging_bull) | Manual | - | -
-Taurus_raging_bull460 50Magnum (Base.Taurus_raging_bull460) | Manual | - | -
-Taurus_RT85 38 (Base.Taurus_RT85) | Manual | - | -
-TEC9 9mm (Base.TEC9) | Manual | - | -
-Thompson 45 (Base.Thompson) | Manual | - | -
-TMP 9mm (Base.TMP) | Manual | - | -
-USP-45 (Base.Glock23) | Manual | - | -
-USP-45 (Base.USP45) | Manual | - | -
-UZI 9mm (Base.UZI) | Manual | - | -
-Veresk 9mm (Base.Veresk) | Manual | - | -
-VictorySW22 (Base.VictorySW22) | Manual | - | -
-VP70 Pistol (Base.VP70) | Manual | - | -
-VZ. 58 (Base.VZ58) | Manual | - | -
-VZ61 22LR (Base.VZ61) | Manual | - | -
-Walther P99 (Base.P99) | Manual | - | -
-Walther_P38 (Base.Walther_P38) | Manual | - | -
-Webley_MK_snub 38 (Base.Webley_MK_snub) | Manual | - | -
-Webley_Revolver 38 (Base.Webley_Revolver) | Manual | - | -
-Wildey pistol calibre .44 (Base.Wildey) | Manual | - | -
-Grizzly50AE (Base.Grizzly50AE) | Verified default | - | -
-Samurai Albert Wesker (Base.Samurai_aw) | Verified default | - | -
-P99_Kilin 9mm (Base.P99_Kilin) | Pending | - | -
+[h1]Viewpoint Gael Compatibility[/h1]
+First-person ADS compatibility for GaelGunStore_B42 with Viewpoint and Project Viewpoint ADS. The patch aligns Gael firearms and supported optics, and includes an in-game slider calibrator with weapon search, live adjustments, Save/Copy/Reset controls, and an "Añadir Retícula" selector for base sights, reflex reticles, or 2x/4x/8x scope mode. Choices are saved per weapon and optic.
 
-[h1]Optics[/h1]
-Magnified Gael optics (2x-8x) use scope mode on supported rifles. 1x sights use reflex mode. Other weapon/optic combinations still need individual visual calibration.
+[b]Calibration status:[/b] 157 weapons have manually saved iron-sight profiles. Two more were verified in game using their default alignment. Selected optics also have manual profiles. Other weapon and optic combinations may still need visual calibration.
 
-Requires Viewpoint, GaelGunStore_B42 and ProjectViewpointADS. Build 42.21. This package contains one mod: ViewpointGaelCompat.
+[h1]Experimental options — enabled by default for testing[/h1]
+[list]
+[*] Iron-sight focus: crouching narrows the calibrated FOV. The mouse wheel or your Project Viewpoint ADS zoom keys add focus with a smooth 0.4-second zoom. An optional sandbox setting adds the vanilla search-mode blur around the view only during manual focus. If zoom is attempted before breath is ready, a brief red X and "Espera..." appear beside the sight instead of the bar. A translucent bar appears only during manual focus. On activation it moves smoothly from yellow toward green when breath is plentiful, then through orange to translucent red as breath runs out; it shows breath capacity: 5 seconds plus 1 second per Fitness level, reduced by Endurance exertion. While stationary, focus reduces temporary sight movement by 70%. Firing or running out of breath ends focus. Sprinting drains 1 second of breath per real second; normal running drains 0.5 seconds. Breath recharges after a 0.4-second cooldown at 0.25 seconds of breath per real second, increased by 10% per Fitness level; at least 25% capacity must recover before focus can be used again.
+[*] Extended firearm range: effective range increases by 50%. Hits on characters beyond the original range deal 30% less damage.
+[*] Dynamic aiming: ADS sway responds to weapon weight and length, Strength, and Endurance exertion. Each shot recenters the sway; the character realigns smoothly after a random 3–5 seconds. Exertion also moves the sight on X/Y/Z and can briefly lower the arms. Walking adds smooth Y movement and progressive Roll.
+[*] Arm muscle fatigue: mild arm stiffness adds 150% to sway and shot recoil; moderate or greater stiffness adds 300%. It also introduces small irregular aim corrections. This uses arm muscle stiffness separately from the Endurance moodle.
+[*] Shot recoil: the patch and Project Viewpoint ADS recoil amplitudes are reduced by 60% for Gael firearms. Any attached grip adds another 40% recoil reduction to both effects (24% of the original recoil remains); handguards do not count, and multiple grips do not stack. Pitch and Yaw move independently, each with a 50/50 chance of either direction. Weapon weight, pistol ammunition, and exertion affect the angles. Shots 1–3 of a continuous sequence use 50% recoil, shots 4–5 use 75%, and later shots use full recoil. Only in Auto mode, from shot 21 onward both axes gain 3 degrees, keep their direction, and receive a new random Pitch/Yaw impulse around that held position on every further shot. Each bullet advances part of a 4–5-shot path toward a random different corner, avoiding the previous corner; the movement is smoothed between shots. Releasing the trigger after 26 or more Auto shots makes the sight trace a brief irregular circular motion while the held recoil returns to center over 0.4 seconds before Fitness bonuses. A pause longer than one second, changing weapons, or changing fire mode resets the sequence. In Auto mode, Strength further reduces each shot from 1/8 at level 0 to 1/28.8 at level 10. From shot 6, Fitness levels 5–10 speed up the return to center by 10% per level above 4; from shot 26, the total bonus is 15% per level above 4, including the release regrip. Fitness levels 0–4 give no recovery bonus. Ordinary recoil settles over a random 0.3–0.5 seconds, or 0.4–0.7 seconds for heavier weapons; after shot 20 in Auto mode it holds briefly and settles over 1.15 seconds, shortening to 1.00 second from shot 27 onward.
+[*] Cycling a firearm bolt or slide moves sight Pitch smoothly up or down during the rack action.
+[/list]
+These options can be changed in Sandbox Settings. Dynamic aiming does not overwrite saved weapon calibrations.
+
+[h1]Optics and requirements[/h1]
+Supported Gael 1x sights use reflex mode; magnified 2x–8x optics use scope mode on supported rifles.
+
+Requires Viewpoint, GaelGunStore_B42, and ProjectViewpointADS. For Project Zomboid Build 42.21. This Workshop package contains one mod: ViewpointGaelCompat. Restart the game after installing or updating.

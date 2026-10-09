@@ -19,20 +19,20 @@ local optics = {
     {"x2Scope", 2, "crossdot"}, {"x4Scope", 4, "duplex"},
     {"x8Scope", 8, "mildot"},
     {"1P78", 2.8, "eastern"}, {"1PN93_4", 4, "eastern"},
-    {"EKP_kobra_2x", 2, "dot"}, {"POSP", 4, "eastern"},
+    {"EKP_kobra_2x", 2, "kobra_open"}, {"POSP", 4, "eastern"},
     {"POSP4x24", 4, "eastern"}, {"Zeiss4x25", 4, "duplex"},
     {"Comp_M4", 1, "dot"}, {"Coyote", 1, "dot"},
     {"CP1", 1, "dot"}, {"CrimsonRedDot", 1, "dot"},
     {"Deltapoint", 1, "dot"}, {"Eotech", 1, "holo"},
-    {"Eotech_XPS3", 1, "holo"}, {"Kobra", 1, "eastern"},
+    {"Eotech_XPS3", 1, "holo"}, {"Kobra", 1, "kobra_open"},
     {"MicroT1", 1, "dot"}, {"MiniRedDot", 1, "dot"},
-    {"OKP7", 1, "eastern"}, {"PKA", 1, "dot"},
+    {"OKP7", 1, "okp7"}, {"PKA", 1, "dot"},
     {"RDS", 1, "dot"}, {"RedDot", 1, "dot"},
     {"Romeo3", 1, "dot"}, {"RX01", 1, "dot"},
     {"SigSauerRomeo3", 1, "dot"}, {"SLDG", 1, "dot"},
     {"TruBrite", 1, "dot"}, {"VenomRDS", 1, "dot"},
     {"VortexRedDot", 1, "dot"}, {"ZaMiniRDS", 1, "dot"},
-    {"EKP_kobra", 1, "eastern"},
+    {"EKP_kobra", 1, "kobra_open"},
 }
 
 -- Eye distance is measured from the rear eyepiece in weapon model units.
@@ -55,6 +55,20 @@ for _, row in ipairs(optics) do
         relief = longScopeRelief[name],
     })
 end
+-- These two mini red-dot meshes have an opaque-looking centre when the dot is
+-- only overlaid on top. PVADS's 1x scope mode cuts the sight model out of the
+-- PiP lens without magnifying the scene. Preserve the normal reflex eye relief
+-- so existing weapon+optic alignments remain valid.
+local clearMiniDots = { ["Base.ZaMiniRDS"] = true, ["Base.MiniRedDot"] = true }
+for opticId in pairs(clearMiniDots) do
+    PVADS.RegisterOpticProfile(opticId, {
+        kind = "scope", mag = 1, reticle = "dot", zero = 50,
+        relief = 0.17, fovMul = 1.0,
+    })
+end
+PVADS.RegisterADSAdapter("GaelMiniDotClearLens", function(_, profile)
+    if clearMiniDots[profile.opticId] then profile.pipDepth = 0.04 end
+end)
 -- Gael's TritiumSights item points at the VenomRDS 3D mesh, so it is a dot.
 PVADS.RegisterOpticProfile("Base.TritiumSights", { kind = "reflex", mag = 1, reticle = "dot", zero = 50 })
 PVADS.RegisterWeaponProfile("Base.UMP45", { family = "smg" })
