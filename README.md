@@ -38,6 +38,8 @@ Open the ADS calibrator with its normal key. A companion panel appears on the ri
 
 The companion panel also has **Retícula** and **Modo ADS** selectors for the equipped weapon and optic. Auto keeps the optic's default; a selection changes the live ADS profile and Save writes it alongside the numeric calibration in `PVADS_UserProfiles.txt`. Copy includes the visual choices in a ready-to-paste override. OKP-7 offers the supplied arrow-and-bars mark plus ring-and-dot and double-ring marks. Kobra offers a solid or LED-dotted T, dot plus chevron, chevron alone, and the shared dot. Modo ADS selects Viewpoint's rendering mode (iron/reflex/scope), separately from the reticle pattern. The assets are drawn for this mod, not copied optic textures; check their appearance in-game.
 
+`Base.ZaMiniRDS` defaults to Viewpoint's 1x clear-lens PiP mode. Its sight model remains around the lens, while the centre shows the unobstructed world and dot without scope magnification. The usual numeric calibration for each weapon carrying this optic is retained.
+
 ## Weapon status
 
 | Name | Iron Sights | Red Dot Sight | Other Optics |

@@ -55,6 +55,17 @@ for _, row in ipairs(optics) do
         relief = longScopeRelief[name],
     })
 end
+-- The ZaMiniRDS mesh has an opaque-looking centre when its dot is drawn as a
+-- simple reflex overlay. PVADS's 1x scope mode uses the clear PiP lens pass:
+-- it cuts the sight model out of the window without magnifying the scene.
+-- Keep the reflex eye distance so existing weapon+optic alignments still fit.
+PVADS.RegisterOpticProfile("Base.ZaMiniRDS", {
+    kind = "scope", mag = 1, reticle = "dot", zero = 50,
+    relief = 0.17, fovMul = 1.0,
+})
+PVADS.RegisterADSAdapter("GaelZaMiniRDSClearLens", function(_, profile)
+    if profile.opticId == "Base.ZaMiniRDS" then profile.pipDepth = 0.04 end
+end)
 -- Gael's TritiumSights item points at the VenomRDS 3D mesh, so it is a dot.
 PVADS.RegisterOpticProfile("Base.TritiumSights", { kind = "reflex", mag = 1, reticle = "dot", zero = 50 })
 PVADS.RegisterWeaponProfile("Base.UMP45", { family = "smg" })
