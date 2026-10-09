@@ -6,6 +6,7 @@ require "ISUI/ISInventoryPaneContextMenu"
 require "RadioCom/ISUIRadio/ISSliderPanel"
 require "PVADS/PVADS_Calibrator"
 require "PVADS_GaelWeaponCatalog"
+require "PVADS_GaelVisualChoices"
 
 -- Companion to the stock calibrator. Both windows write to the same user profile.
 local Cal = PVADS.Calibrator
@@ -23,6 +24,19 @@ local FIELDS = {
 }
 local RANGES = { 1, 5, 20 }
 local WEAPONS = PVADS_GaelWeaponCatalog or {}
+local RETICLES = {
+    {"Auto (optic default)", "auto"}, {"None", "none"},
+    {"Dot", "dot"}, {"Holo circle", "holo"},
+    {"OKP-7 chevron", "okp7"}, {"OKP-7 rings", "okp7_rings"},
+    {"Kobra chevron + dot", "kobra_combo"}, {"Kobra open cross", "kobra_open"},
+    {"Chevron", "chevron"}, {"Cross + dot", "crossdot"},
+    {"Duplex", "duplex"}, {"Mil-dot", "mildot"},
+    {"Post", "post"}, {"Eastern / PSO", "eastern"},
+}
+local MODES = {
+    {"Auto (optic default)", "auto"}, {"Iron", "iron"},
+    {"Reflex", "reflex"}, {"Scope / PiP", "scope"},
+}
 
 local function findOwned(container, itemId)
     if not container then return nil end
@@ -94,6 +108,21 @@ function PVADSGaelSliderWindow:createChildren()
     local next = ISButton:new(566, y, 30, bh, ">", self, PVADSGaelSliderWindow.onNextWeapon)
     next:initialise(); self:addChild(next)
     self.weaponY = y + 3
+    y = y + bh + 23
+    self.choiceY = y + 3
+    self.reticleCombo = ISComboBox:new(75, y, 220, bh, self, PVADSGaelSliderWindow.onReticleChosen)
+    self.reticleCombo:initialise(); self.reticleCombo:instantiate()
+    for _, option in ipairs(RETICLES) do
+        self.reticleCombo:addOptionWithData(option[1], option[2])
+    end
+    self:addChild(self.reticleCombo)
+    self.modeCombo = ISComboBox:new(375, y, 220, bh, self, PVADSGaelSliderWindow.onModeChosen)
+    self.modeCombo:initialise(); self.modeCombo:instantiate()
+    for _, option in ipairs(MODES) do
+        self.modeCombo:addOptionWithData(option[1], option[2])
+    end
+    self:addChild(self.modeCombo)
+    self.choiceInfoY = y + bh + 4
     y = y + bh + 23
     for i, field in ipairs(FIELDS) do
         if i == 12 then y = y + 16; self.pipY = y - 13 end
@@ -178,6 +207,39 @@ end
 function PVADSGaelSliderWindow:onPrevWeapon() self:stepWeapon(-1) end
 function PVADSGaelSliderWindow:onNextWeapon() self:stepWeapon(1) end
 
+function PVADSGaelSliderWindow:syncChoices()
+    local key = selected()
+    local profile = key and PVADS.User[key]
+    self.updatingChoices = true
+    self.reticleCombo:setSelectedData(profile and profile.reticle or "auto")
+    self.modeCombo:setSelectedData(profile and profile.mode or "auto")
+    self.updatingChoices = false
+end
+
+function PVADSGaelSliderWindow:applyChoice(field, choice)
+    if self.updatingChoices then return end
+    local key = selected()
+    if not key then return end
+    local allowed = field == "mode" and PVADS.GaelVisualModes or PVADS.GaelVisualReticles
+    if choice ~= "auto" and not allowed[choice] then return end
+    PVADS.User[key] = PVADS.User[key] or {}
+    if choice == "auto" then
+        PVADS.User[key][field] = nil
+    else
+        PVADS.User[key][field] = choice
+    end
+    PVADS.Controller.refresh(true)
+    self.message = field .. " = " .. (choice == "auto" and "optic default" or choice)
+end
+
+function PVADSGaelSliderWindow:onReticleChosen()
+    self:applyChoice("reticle", self.reticleCombo:getSelectedData())
+end
+
+function PVADSGaelSliderWindow:onModeChosen()
+    self:applyChoice("mode", self.modeCombo:getSelectedData())
+end
+
 function PVADSGaelSliderWindow:onSlide(amount, slider)
     local row = self.rows[slider.pvRow]
     if not row then return end
@@ -224,6 +286,7 @@ function PVADSGaelSliderWindow:onReset()
     PVADS.User[key] = nil
     PVADS.Controller.refresh(true)
     self:onCenter()
+    self:syncChoices()
     self.message = "Reset " .. key
 end
 
@@ -260,11 +323,24 @@ function PVADSGaelSliderWindow:render()
     if key ~= self.lastKey then
         self.lastKey = key
         self:onCenter()
+        self:syncChoices()
         local itemId = key and string.match(key, "^[^|]+")
         if itemId then self.weaponCombo:setSelectedData(itemId) end
     end
+    local choices = key and PVADS.User[key]
+    if self.reticleCombo:getSelectedData() ~= (choices and choices.reticle or "auto")
+        or self.modeCombo:getSelectedData() ~= (choices and choices.mode or "auto") then
+        self:syncChoices()
+    end
     self:drawText("Weapon", 8, self.weaponY, 1, 1, 1, 1, UIFont.Small)
     self:drawText("Hold Ctrl to aim; V toggles ADS. Selecting a weapon enables Hold ADS.", 8, self.weaponY + 22, 0.7, 0.85, 1, 1, UIFont.Small)
+    self:drawText("Retícula", 8, self.choiceY, 1, 1, 1, 1, UIFont.Small)
+    self:drawText("Modo", 320, self.choiceY, 1, 1, 1, 1, UIFont.Small)
+    local profile = PVADS.Controller.profile
+    if profile then
+        self:drawText("Actual: " .. tostring(profile.reticle) .. " / " .. tostring(profile.mode),
+            8, self.choiceInfoY, 0.65, 0.85, 1, 1, UIFont.Small)
+    end
     if self.pipY then self:drawText("Picture-in-picture (scopes / red dots)", 8, self.pipY, 0.55, 0.85, 1, 1, UIFont.Small) end
     for _, row in ipairs(self.rows) do
         self:drawText(row.field[2], 8, row.y + 3, 1, 1, 1, 1, UIFont.Small)

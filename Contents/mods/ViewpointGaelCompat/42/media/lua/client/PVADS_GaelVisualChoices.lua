@@ -1,0 +1,88 @@
+-- String-valued visual choices for the Gael calibrator. PVADS 1.6's stock
+-- profile file only reads/writes numbers; keep both kinds in the same file.
+require "PVADS/PVADS_Calibrator"
+
+if not PVADS.gaelVisualChoicesInstalled then
+    PVADS.gaelVisualChoicesInstalled = true
+
+    local FILE = "PVADS_UserProfiles.txt"
+    local modes = { iron = true, reflex = true, scope = true }
+    local reticles = {
+        none = true, dot = true, holo = true, okp7 = true,
+        okp7_rings = true, kobra_combo = true, kobra_open = true,
+        chevron = true, crossdot = true,
+        duplex = true, mildot = true, post = true, eastern = true,
+    }
+    PVADS.GaelVisualModes = modes
+    PVADS.GaelVisualReticles = reticles
+
+    function PVADS.loadUserProfiles()
+        PVADS.User = {}
+        local reader = getFileReader(FILE, false)
+        if not reader then return end
+        while true do
+            local line = reader:readLine()
+            if not line then break end
+            local key, fields = string.match(line, "^([^=]+)=>(.*)$")
+            if key then
+                local profile = {}
+                for name, value in string.gmatch(fields, "([%w_]+)=([^;]+)") do
+                    local number = tonumber(value)
+                    if number then
+                        profile[name] = number
+                    elseif name == "mode" and modes[value] then
+                        profile.mode = value
+                    elseif name == "reticle" and reticles[value] then
+                        profile.reticle = value
+                    end
+                end
+                PVADS.User[key] = profile
+            end
+        end
+        reader:close()
+    end
+
+    function PVADS.saveUserProfiles()
+        local writer = getFileWriter(FILE, true, false)
+        if not writer then return false end
+        writer:write("# Project Viewpoint ADS - personal calibration. Format: weapon|optic=>key=value;...\r\n")
+        for key, profile in pairs(PVADS.User) do
+            local fields = {}
+            for name, value in pairs(profile) do
+                if type(value) == "number" then
+                    fields[#fields + 1] = name .. "=" .. string.format("%.5f", value)
+                elseif name == "mode" and modes[value] then
+                    fields[#fields + 1] = "mode=" .. value
+                elseif name == "reticle" and reticles[value] then
+                    fields[#fields + 1] = "reticle=" .. value
+                end
+            end
+            table.sort(fields)
+            writer:write(key .. "=>" .. table.concat(fields, ";") .. ";\r\n")
+        end
+        writer:close()
+        return true
+    end
+
+    function PVADS.Calibrator.snippet()
+        local playerObj = getSpecificPlayer(0)
+        local weapon = PVADS.Controller.weapon(playerObj)
+        if not weapon then return "-- no firearm equipped" end
+        local key = PVADS.userKey(weapon)
+        local profile = PVADS.User[key] or {}
+        local fields = {}
+        for name, value in pairs(profile) do
+            if type(value) == "number" then
+                fields[#fields + 1] = name .. " = " .. string.format("%.4f", value)
+            elseif name == "mode" and modes[value] then
+                fields[#fields + 1] = "mode = " .. string.format("%q", value)
+            elseif name == "reticle" and reticles[value] then
+                fields[#fields + 1] = "reticle = " .. string.format("%q", value)
+            end
+        end
+        table.sort(fields)
+        local weaponId, opticId = string.match(key, "^([^|]*)|(.*)$")
+        return string.format('PVADS.RegisterWeaponOpticOverride("%s", "%s", { %s })',
+            weaponId, opticId or "", table.concat(fields, ", "))
+    end
+end

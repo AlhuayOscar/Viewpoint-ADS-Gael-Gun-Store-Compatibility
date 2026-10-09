@@ -36,6 +36,8 @@ Enabled by default for `Base.GOL` without an attached optic. While ADS is held, 
 
 Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.
 
+The companion panel also has **Retícula** and **Modo** selectors for the equipped weapon and optic. Auto keeps the optic's default; a selection changes the live ADS profile and Save writes it alongside the numeric calibration in `PVADS_UserProfiles.txt`. Copy includes the visual choices in a ready-to-paste override. OKP-7 has a simple chevron-and-bars mark and a concentric-rings variant; Kobra has combined and open-cross marks in addition to the existing dot and chevron choices. These are drawn for the mod rather than copied optic textures, and their appearance needs an in-game check.
+
 ## Weapon status
 
 | Name | Iron Sights | Red Dot Sight | Other Optics |
