@@ -1,17 +1,21 @@
 package viewpointgael;
 
 import me.zed_0xff.zombie_buddy.Exposer;
+import pvads.GaelBarrelRay;
+import pvads.GaelDynamicProfile;
+import pvads.GaelRecoilAim;
+import pvads.GaelSightProjection;
+import pvads.GaelWeaponMotion;
+import pvads.GaelImpactMarker;
+import pvads.GaelNativeShot;
 import viewpoint.core.View;
 import viewpoint.input.FreeCam;
 import viewpoint.input.Look;
 import viewpoint.render.MousePick;
+import zombie.characters.IsoGameCharacter;
+import zombie.characters.IsoPlayer;
 
-/**
- * Read-only probe. Lua uses it to tell a captured Viewpoint view from the isometric camera.
- * The aim point is the same screen-center depth hit CrosshairAim uses, in tile coordinates.
- * aimZ is a floor coordinate; Gael archery multiplies it by 2.44949 to get its height unit.
- */
-@Exposer.LuaClass(name = "ViewpointGael.Aim")
+@Exposer.LuaClass(name="ViewpointGael.Aim")
 public final class AimProbe {
     public static volatile boolean suppressPose;
 
@@ -19,22 +23,81 @@ public final class AimProbe {
         return View.enabled && Look.captured && !FreeCam.active;
     }
 
-    public static void setSuppressPose(boolean suppress) {
-        suppressPose = suppress;
+    public static void setSuppressPose(boolean bl) {
+        suppressPose = bl;
     }
 
+    public static boolean setHoldSway(String string, double d, double d2) {
+        return HoldSway.set(string, d, d2);
+    }
+
+    public static boolean setWeaponMotion(String weapon, double yaw, double pitch, double roll) {
+        return HoldSway.set(weapon,yaw,pitch,roll);
+    }
+
+    public static boolean setDynamicProfile(String string, double d, double d2, double d3, double d4, double d5, double d6, double d7) {
+        return GaelDynamicProfile.set(string, d, d2, d3, d4, d5, d6, d7);
+    }
+
+    public static void setRecoilAim(String string, double d, double d2, boolean bl) {
+        GaelRecoilAim.set(string, d, d2, bl);
+    }
+
+    public static double recoilScreenX(int n) {
+        return GaelRecoilAim.screenOffset((IsoGameCharacter)IsoPlayer.players[0], false, n);
+    }
+
+    public static double recoilScreenY(int n) {
+        return GaelRecoilAim.screenOffset((IsoGameCharacter)IsoPlayer.players[0], true, n);
+    }
+
+    public static double sightMarkerX() {
+        GaelSightProjection.Point point = GaelSightProjection.current();
+        return point == null ? Double.NaN : point.x();
+    }
+
+    public static double sightMarkerY() {
+        GaelSightProjection.Point point = GaelSightProjection.current();
+        return point == null ? Double.NaN : point.y();
+    }
+
+    public static int shotMirrorVersion() {
+        // Version 11 adds per-weapon model-space shot-origin calibration.
+        return 11;
+    }
+
+    public static boolean weaponMotionReady() { return GaelWeaponMotion.ready(); }
+
+    public static void setShotSeparationScale(double d) {
+        GaelBarrelRay.setSeparationScale(d);
+    }
+
+    public static boolean setShotOrigin(String weapon, double x, double y, double z) {
+        return GaelNativeShot.setShotOrigin(weapon, x, y, z);
+    }
+
+    public static double sightTargetDistance() {
+        GaelSightProjection.Line line = GaelSightProjection.currentLine();
+        return line == null ? Double.NaN : line.distance();
+    }
+
+    public static boolean impactVisible() { return GaelImpactMarker.visible(); }
+    public static double impactScreenX() { return GaelImpactMarker.screenX(); }
+    public static double impactScreenY() { return GaelImpactMarker.screenY(); }
+    public static String impactLabel() { return GaelImpactMarker.label(); }
+
     public static Double aimX() {
-        MousePick.Hit hit = fresh();
+        MousePick.Hit hit = AimProbe.fresh();
         return hit == null ? null : Double.valueOf(hit.x());
     }
 
     public static Double aimY() {
-        MousePick.Hit hit = fresh();
+        MousePick.Hit hit = AimProbe.fresh();
         return hit == null ? null : Double.valueOf(hit.y());
     }
 
     public static Double aimZ() {
-        MousePick.Hit hit = fresh();
+        MousePick.Hit hit = AimProbe.fresh();
         return hit == null ? null : Double.valueOf(hit.z());
     }
 

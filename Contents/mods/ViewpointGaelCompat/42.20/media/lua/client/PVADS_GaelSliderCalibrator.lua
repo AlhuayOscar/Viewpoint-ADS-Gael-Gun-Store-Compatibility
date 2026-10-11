@@ -10,12 +10,15 @@ require "PVADS_GaelWeaponCatalog"
 require "PVADS_GaelVisualChoices"
 
 -- Companion to the stock calibrator. Both windows write to the same user profile.
+-- Shot origin X/Y/Z are model-local offsets from the muzzle (X lateral, Y along the barrel, Z up).
 PVADS.GaelRealTimeDot = true
 local Cal = PVADS.Calibrator
 local FIELDS = {
     {"adjX", "Sight X", 0.0002}, {"adjY", "Sight Y", 0.0005},
     {"adjZ", "Sight Z", 0.0002}, {"adjPitch", "Pitch", 0.025},
     {"adjYaw", "Yaw", 0.025}, {"adjRoll", "Roll", 0.1},
+    {"shotX", "Shot origin X (local)", 0.0002}, {"shotY", "Shot origin Y (forward)", 0.0005},
+    {"shotZ", "Shot origin Z (up)", 0.0002},
     {"relief", "Relief", 0.001}, {"fovMul", "ADS FOV", 0.005},
     {"opticHeight", "Optic height", 0.0002}, {"lensScale", "Lens size", 0.01, 1},
     {"adsTime", "ADS time", 0.005},
@@ -84,7 +87,7 @@ end
 local function markerScale()
     local settings = PVADS.User and PVADS.User[PVADS.GaelGlobalKey]
     local value = settings and tonumber(settings.markerScale) or 1
-    return math.max(0, math.min(3, value))
+    return math.max(0, math.min(10, value))
 end
 
 local function shotProjectionVersion(aim)
@@ -109,7 +112,7 @@ PVADSGaelSliderWindow = ISCollapsableWindow:derive("PVADSGaelSliderWindow")
 
 function PVADSGaelSliderWindow:new(x, y)
     local o = ISCollapsableWindow.new(self, x, y, 610, 690)
-    o.title = "Project Viewpoint - slider calibrator"
+    o.title = "Working | Project Viewpoint - slider calibrator"
     o.resizable = false
     o.rangeLevel = 1
     o.editGlobal = false
@@ -169,7 +172,7 @@ function PVADSGaelSliderWindow:createChildren()
     self.choiceInfoY = y + bh + 4
     y = y + bh + 23
     for i, field in ipairs(FIELDS) do
-        if i == 12 then y = y + 16; self.pipY = y - 13 end
+        if i == 15 then y = y + 16; self.pipY = y - 13 end
         local entry = ISTextEntryBox:new(string.format("%.5f", current(field, self.editGlobal)), 117, y, 83, bh)
         entry.font = UIFont.Small
         entry:initialise(); entry:instantiate()
@@ -216,7 +219,7 @@ function PVADSGaelSliderWindow:addMarkerScaleControl()
         self, PVADSGaelSliderWindow.onMarkerScale)
     slider:initialise(); slider:instantiate()
     slider:setDoButtons(false)
-    slider:setValues(0, 3, 0.05, 0.05, true)
+    slider:setValues(0, 10, 0.05, 0.05, true)
     slider:setCurrentValue(markerScale(), true)
     self:addChild(slider)
     self.markerScaleSlider = slider
@@ -225,8 +228,10 @@ function PVADSGaelSliderWindow:addMarkerScaleControl()
 end
 
 function PVADSGaelSliderWindow:onMarkerScale(value)
-    value = math.floor(math.max(0, math.min(3, tonumber(value) or 1)) * 20 + 0.5) / 20
+    value = math.floor(math.max(0, math.min(10, tonumber(value) or 1)) * 20 + 0.5) / 20
     local key = PVADS.GaelGlobalKey
+    if not key then return end
+    PVADS.User = PVADS.User or {}
     PVADS.User[key] = PVADS.User[key] or {}
     PVADS.User[key].markerScale = value
     self.markerDirty = true
@@ -510,6 +515,15 @@ function PVADSGaelSliderWindow:close()
 end
 
 function PVADSGaelSliderWindow:render()
+    local root = rawget(_G, "ViewpointGael")
+    local aim = root and root.Aim
+    local version = shotProjectionVersion(aim)
+    local status = ""
+    if version >= 8 and aim.weaponMotionReady then
+        local ok, ready = pcall(aim.weaponMotionReady)
+        status = ok and ready and " | Axis OK" or " | Axis unavailable"
+    end
+    self.title = "Working v" .. tostring(version) .. " | Recoil 70/30" .. status .. " | Project Viewpoint - slider calibrator"
     ISCollapsableWindow.render(self)
     if self.isCollapsed then return end
     local key = selected()
@@ -642,14 +656,15 @@ local function install()
                 self:drawRect(cx - 8, cy, 17, 1, 0.9, 0, 1, 1)
                 self:drawRect(cx, cy - 8, 1, 17, 0.9, 0, 1, 1)
 
-                -- The line begins at PVADS' visible sight window. Its end
-                -- shows the barrel's angular miss accumulated over range.
+                -- The endpoint is the mirrored shot ray, already scaled in
+                -- Java. Never multiply or reflect it again in this HUD.
                 if PVADS_getState then
                     PVADS_getState(sightState)
                     local angleX = tonumber(sightState.dotX)
                     local angleY = tonumber(sightState.dotY)
-                    local startX = tonumber(sightState.winX)
-                    local startY = tonumber(sightState.winY)
+                    -- The diagnostic line starts at screen center, never at
+                    -- the moving front sight / weapon's projected position.
+                    local startX, startY = cx, cy
                     local root = rawget(_G, "ViewpointGael")
                     local aim = root and root.Aim
                     local projectionVersion = shotProjectionVersion(aim)
@@ -663,6 +678,10 @@ local function install()
                             and math.abs(projectedX) < 100000 and math.abs(projectedY) < 100000 then
                             angleX, angleY = projectedX, projectedY
                         end
+                    end
+                    if projectionVersion >= 8 then
+                        local ok, ready = pcall(aim.weaponMotionReady)
+                        if not ok or not ready then angleX, angleY = nil, nil end
                     end
                     if sightState.visible and angleX and angleY
                         and angleX > -9000 and angleY > -9000 then

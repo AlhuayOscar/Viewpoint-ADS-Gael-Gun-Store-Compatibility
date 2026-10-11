@@ -1,0 +1,102 @@
+package pvads;
+
+import java.lang.reflect.Field;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Quaternionf;
+import zombie.characters.IsoPlayer;
+import zombie.core.Core;
+import zombie.scripting.objects.ModelAttachment;
+
+/** Samples the physical sight/barrel axis after the actual rendered transforms. */
+public final class GaelWeaponMotion {
+    private static volatile Sample sample;
+    private static boolean failed;
+    private static boolean announced;
+    private static final ThreadLocal<Scratch> scratch = ThreadLocal.withInitial(Scratch::new);
+
+    private static final class Fields {
+        static final Field W = field(ADS.class, "W");
+        static final Field M = field(ADS.class, "M");
+        static final Field direction = field(ADS.class, "dw");
+        static final Field drawnPose = field(ADS.class, "WP");
+        static final Field presence = field(Presence.class, "shotFix");
+        private static Field field(Class<?> type, String name) {
+            try {
+                Field value = type.getDeclaredField(name);
+                value.setAccessible(true);
+                return value;
+            } catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
+        }
+    }
+
+    public static void capture(IsoPlayer player, float facing) {
+        if (failed || player == null || player != IsoPlayer.players[0] || !ADS.P.valid
+                || ADS.P.weaponId == null || !VP.firstPerson() || VP.freeCam()) return;
+        try {
+            Scratch state = scratch.get();
+            GaelNativeShot.publishWeaponPose((Matrix4f) Fields.drawnPose.get(null), ADS.P.weaponId, facing);
+            physicalDirection((Vector3f) Fields.direction.get(null), ADS.P.adjYaw,
+                    ADS.P.adjPitch, ADS.P.adjRoll, (Matrix4f) Fields.W.get(null),
+                    (Matrix4f) Fields.M.get(null), state.direction, state.calibration);
+            if (Fields.presence.getBoolean(null)) {
+                Presence.fullCorrection().transformDirection(state.direction).normalize();
+            }
+            ADS.cmsDirToRender(state.direction, facing, state.render);
+            Core core = Core.getInstance();
+            GaelSightProjection.Point point = GaelSightProjection.project(0,0,0,
+                    state.render.x, state.render.y, state.render.z, VP.yaw(), VP.pitch(),
+                    ADS.fovOutRad, core.getScreenWidth(), core.getScreenHeight(), 60);
+            if (point == null) { sample = null; return; }
+            sample = new Sample(point, ADS.P.weaponId, System.nanoTime());
+            if (!announced) {
+                announced = true;
+                System.out.println("[ViewpointGael] Physical weapon axis sampled after ADS alignment/recoil/presence (v8)");
+            }
+        } catch (Throwable error) {
+            failed = true;
+            sample = null;
+            System.err.println("[ViewpointGael] Physical weapon axis unavailable: " + error);
+        }
+    }
+
+    static GaelSightProjection.Point current() {
+        Sample value = sample;
+        if (value == null || System.nanoTime() - value.at > 500_000_000L
+                || !value.weapon.equals(ADS.P.weaponId)) return null;
+        return value.point;
+    }
+
+    public static boolean ready() { return current() != null; }
+
+    public static boolean gripPivot(IsoPlayer player, Matrix4f pose, Vector3f result) {
+        if (player == null || player.primaryHandModel == null) return false;
+        var model = player.primaryHandModel;
+        if (model.attachmentNameSelf == null) return false;
+        ModelAttachment grip = model.getAttachmentById(model.attachmentNameSelf);
+        if (grip == null) return false;
+        try {
+            ((Matrix4f)Fields.W.get(null)).transformPosition(grip.getOffset(), result);
+            pose.transformPosition(result);
+            return Float.isFinite(result.x) && Float.isFinite(result.y) && Float.isFinite(result.z);
+        } catch (ReflectiveOperationException error) { return false; }
+    }
+
+    static void physicalDirection(Vector3f calibrated, float yaw, float pitch, float roll,
+                                  Matrix4f weapon, Matrix4f pose, Vector3f result, Quaternionf correction) {
+        // ADS rotates its reference axis to calibrate the sights before solving
+        // the weapon pose. Undo that reference adjustment, not the rendered pose.
+        correction.identity().rotateZ((float)Math.toRadians(yaw))
+                .rotateX((float)Math.toRadians(pitch)).rotateY((float)Math.toRadians(roll)).invert();
+        correction.transform(result.set(calibrated));
+        weapon.transformDirection(result);
+        pose.transformDirection(result).normalize();
+    }
+
+    private record Sample(GaelSightProjection.Point point, String weapon, long at) {}
+    private static final class Scratch {
+        final Vector3f direction = new Vector3f(), render = new Vector3f();
+        final Quaternionf calibration = new Quaternionf();
+    }
+    private GaelWeaponMotion() {}
+}

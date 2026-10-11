@@ -1,6 +1,8 @@
 [h1]Viewpoint Gael Compatibility[/h1]
 First-person ADS compatibility for GaelGunStore_B42 with Viewpoint and Project Viewpoint ADS. The patch aligns Gael firearms and supported optics, and includes an in-game slider calibrator with weapon search, live adjustments, Save/Copy/Reset controls, and an "Añadir Retícula" selector for base sights, reflex reticles, or 2x/4x/8x scope mode. Choices are saved per weapon and optic.
 
+With optional Viewpoint True Ballistics, a green marker follows the last shot to its terminal position and labels the collision (zombie/person, vehicle, wall, tree, furniture, floor, or range limit). The purple point remains an aim-direction preview.
+
 [b]Calibration status:[/b] 157 weapons have manually saved iron-sight profiles. Two more were verified in game using their default alignment. Selected optics also have manual profiles. Other weapon and optic combinations may still need visual calibration.
 
 [h1]Experimental options — enabled by default for testing[/h1]

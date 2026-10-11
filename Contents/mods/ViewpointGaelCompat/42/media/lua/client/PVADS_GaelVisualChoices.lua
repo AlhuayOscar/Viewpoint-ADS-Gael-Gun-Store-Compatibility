@@ -23,6 +23,7 @@ if not PVADS.gaelVisualChoicesInstalled then
     local globalKey = "__GaelGlobalOffsets__|"
     local globalFields = {
         adjX = true, adjY = true, adjZ = true,
+        shotX = true, shotY = true, shotZ = true,
         adjPitch = true, adjYaw = true, adjRoll = true,
         relief = true, fovMul = true, opticHeight = true,
         lensScale = true, adsTime = true,

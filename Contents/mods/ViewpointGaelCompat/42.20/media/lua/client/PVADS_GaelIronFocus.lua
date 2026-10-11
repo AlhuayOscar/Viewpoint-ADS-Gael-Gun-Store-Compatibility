@@ -2,6 +2,7 @@
 require "PVADS_GaelSwayCatalog"
 require "PVADS_GaelGrip"
 require "PVADS_GaelAlignment"
+require "PVADS_GaelRecoilBalance"
 require "TimedActions/ISTimedActionQueue"
 require "ISUI/ISUIElement"
 require "Foraging/ISSearchManager"
@@ -70,9 +71,11 @@ local WALK_ROLL_STEP = 0.01
 local WALK_ROLL_STEP_SECONDS = 1 / 120
 local HEAVY_RECOIL_WEIGHT = 2.2 -- Heaviest pistol in the Gael weight catalog.
 local HEAVY_RECOIL_BONUS = 5.0
-local SHOT_RECOIL_SCALE = 0.40
-local AUTO_RECOIL_MIN_DIVISOR = 8
-local AUTO_RECOIL_MAX_DIVISOR = 24
+local SHOT_RECOIL_SCALE = 1.60
+-- Automatic fire already uses shot scale, strength, burst stage and grip.
+-- Avoid reducing its barrel rotation to nearly imperceptible hundredths of a degree.
+local AUTO_RECOIL_MIN_DIVISOR = 2
+local AUTO_RECOIL_MAX_DIVISOR = 6
 local STRENGTH_RECOIL_EFFECT = 1.30
 local BURST_RESET_MS = 1000
 local LONG_BURST_RECOIL_SHOTS = 20
@@ -217,15 +220,16 @@ local ARM_PARTS = {
 local function armMuscleFatigue(player)
     local damage = player and player:getBodyDamage()
     if not damage then return 0 end
-    local stiffness = 0
+    local stiffness, pain = 0, 0
     for _, partType in ipairs(ARM_PARTS) do
         local part = damage:getBodyPart(partType)
-        if part then stiffness = math.max(stiffness, tonumber(part:getStiffness()) or 0) end
+        if part then
+            stiffness = math.max(stiffness, tonumber(part:getStiffness()) or 0)
+            pain = math.max(pain, tonumber(part:getPain()) or 0)
+        end
     end
     -- The health panel shows muscle stiffness from 5 and marks 20+ as more than minor.
-    if stiffness >= 20 then return 3 end
-    if stiffness >= 5 then return 1.5 end
-    return 0
+    return PVADS_GaelRecoilBalance.armPenalty(stiffness, pain)
 end
 
 local function fitnessLevel(player)
@@ -700,17 +704,25 @@ local function updateBoltPitch(player, controller, profile, now)
 end
 
 local lastMotionWeaponId
+local function renderedShotRayActive()
+    local root = rawget(_G, "ViewpointGael")
+    local version = root and root.Aim and root.Aim.shotMirrorVersion
+    if not version then return false end
+    local ok, value = pcall(version)
+    return ok and tonumber(value) and tonumber(value) >= 4
+end
+
 local function publishRecoilAim(profile, view, dynamicActive)
     local root = rawget(_G, "ViewpointGael")
     local publish = root and root.Aim and root.Aim.setRecoilAim
-    local moveSight = root and root.Aim and root.Aim.setHoldSway
+    local moveSight = root and root.Aim and (root.Aim.setWeaponMotion or root.Aim.setHoldSway)
 
     if not profile or not view or not dynamicActive or isCalibratingBlocked() then
         PVADS.GaelDeltaYaw, PVADS.GaelDeltaPitch, PVADS.GaelDeltaRoll = 0, 0, 0
         PVADS.GaelDeltaX, PVADS.GaelDeltaY, PVADS.GaelDeltaZ = 0, 0, 0
         if publish then pcall(publish, profile and profile.weaponId or "", 0, 0, false) end
         if moveSight and (profile or lastMotionWeaponId) then
-            pcall(moveSight, (profile and profile.weaponId) or lastMotionWeaponId, 0, 0)
+            pcall(moveSight, (profile and profile.weaponId) or lastMotionWeaponId, 0, 0, 0)
         end
         lastMotionWeaponId = nil
         return
@@ -722,7 +734,7 @@ local function publishRecoilAim(profile, view, dynamicActive)
         PVADS.GaelDeltaYaw, PVADS.GaelDeltaPitch, PVADS.GaelDeltaRoll = 0, 0, 0
         PVADS.GaelDeltaX, PVADS.GaelDeltaY, PVADS.GaelDeltaZ = 0, 0, 0
         if publish then pcall(publish, profile.weaponId or "", 0, 0, false) end
-        if moveSight then pcall(moveSight, profile.weaponId or "", 0, 0) end
+        if moveSight then pcall(moveSight, profile.weaponId or "", 0, 0, 0) end
         lastMotionWeaponId = nil
         return
     end
@@ -763,7 +775,9 @@ local function publishRecoilAim(profile, view, dynamicActive)
     -- The angular alignment is yaw/pitch only. Position and roll still animate
     -- the weapon, but must not be converted into extra degrees of aim error.
     local totalYaw, totalPitch = dYaw, dPitch
-    totalYaw, totalPitch = PVADS_GaelAlignment.response(totalYaw, totalPitch)
+    totalYaw, totalPitch = PVADS_GaelRecoilBalance.angular(
+        totalYaw, totalPitch, recoilYaw + releaseRegripYaw,
+        -recoilPitch + releaseRegripPitch)
 
     PVADS.GaelDynamicScreenX = totalYaw * pxPerDeg
     PVADS.GaelDynamicScreenY = totalPitch * pxPerDeg
@@ -771,12 +785,18 @@ local function publishRecoilAim(profile, view, dynamicActive)
     if publish then
         -- The shot leaves opposite the visible barrel deviation. The HUD
         -- marker reads the same shot ray, so it must use this sign as well.
-        pcall(publish, profile.weaponId or "", -totalYaw, -totalPitch, true)
+        if renderedShotRayActive() then
+            -- The native shot already reads the mirrored rendered ray. Applying
+            -- another character aim offset feeds back into the weapon model.
+            pcall(publish, profile.weaponId or "", 0, 0, false)
+        else
+            pcall(publish, profile.weaponId or "", -totalYaw, -totalPitch, true)
+        end
     end
     -- Apply the same angular deviation after PVADS aligns the gun. Its sight
     -- projection and the sight ray used by True Ballistics then move together.
     if moveSight then
-        pcall(moveSight, profile.weaponId or "", totalYaw, totalPitch)
+        pcall(moveSight, profile.weaponId or "", totalYaw, totalPitch, dRoll)
     end
     lastMotionWeaponId = profile.weaponId
 end
@@ -809,6 +829,21 @@ local function resetIronFocusState(player, now)
 end
 
 local function pushDynamicProfile(view, profile)
+    if renderedShotRayActive() then
+        -- Keep the saved alignment stable. Dynamic yaw/pitch belongs solely to
+        -- HoldSway after alignment, instead of rotating its reference as well.
+        local aligned = {}
+        for key, value in pairs(view) do aligned[key] = value end
+        aligned.adjYaw, aligned.adjPitch = profile.adjYaw, profile.adjPitch
+        aligned.adjRoll = profile.adjRoll
+        -- Posture translation is accessory; angular motion is applied at the grip.
+        for _, axis in ipairs({"adjX", "adjY", "adjZ"}) do
+            local base = tonumber(profile[axis]) or 0
+            aligned[axis] = base + ((tonumber(view[axis]) or base) - base)
+                * PVADS_GaelRecoilBalance.offsetWeight
+        end
+        view = aligned
+    end
     local root = rawget(_G, "ViewpointGael")
     local apply = root and root.Aim and root.Aim.setDynamicProfile
     if apply then
@@ -824,9 +859,19 @@ end
 
 local function updateIronFocus(player)
     if player ~= getSpecificPlayer(0) then return end
+    PVADS_GaelRecoilBalance.install()
     local focusNow = getTimestampMs()
     local controller = PVADS and PVADS.Controller
     local profile = controller and controller.profile
+    local root = rawget(_G, "ViewpointGael")
+    local setShotOrigin = root and root.Aim and root.Aim.setShotOrigin
+    if profile and setShotOrigin then
+        pcall(setShotOrigin, profile.weaponId or "",
+            tonumber(profile.shotX) or 0, tonumber(profile.shotY) or 0,
+            tonumber(profile.shotZ) or 0)
+    elseif setShotOrigin then
+        pcall(setShotOrigin, "", 0, 0, 0)
+    end
     if not controller or not controller.ready or not profile or not PVADS_setProfile then
         resetIronFocusState(player, focusNow)
         return
@@ -896,6 +941,14 @@ local function updateIronFocus(player)
                     + (swayPitch + armJitterPitch) * focusScale
             end
             if not vars or vars.SightMotion ~= false then
+                -- Walking must disturb the barrel too, rather than just moving
+                -- the player's arms while keeping the sights aligned.
+                local walkingFactor = PVADS_GaelRecoilBalance.movementFactor(
+                    enduranceLevel(player), armMuscleFatigue(player))
+                view.adjYaw = (tonumber(view.adjYaw) or tonumber(profile.adjYaw) or 0)
+                    + walkRoll / 3 * 1.8 * focusScale * walkingFactor
+                view.adjPitch = (tonumber(view.adjPitch) or tonumber(profile.adjPitch) or 0)
+                    + walkY / 0.04 * 2.2 * focusScale * walkingFactor
                 view.adjX = (tonumber(profile.adjX) or 0) + sightOffsetX * focusScale
                 view.adjY = (tonumber(profile.adjY) or 0) + (sightOffsetY + walkY) * focusScale
                 view.adjZ = (tonumber(profile.adjZ) or 0)
@@ -1015,8 +1068,8 @@ local function onWeaponFired(player, weapon)
                 end
             end
             releaseRegripAt, releaseRegripYaw, releaseRegripPitch = nil, 0, 0
-            local burstScale = burstShotCount <= 3 and 0.50
-                or (burstShotCount <= 5 and 0.75 or 1.00)
+            local burstScale = burstShotCount <= 3 and 0.85
+                or (burstShotCount <= 5 and 0.95 or 1.00)
             local longBurstBonus = automatic and burstShotCount > LONG_BURST_RECOIL_SHOTS
                 and LONG_BURST_RECOIL_BONUS or 0
             recoilLongBurst = longBurstBonus > 0
@@ -1024,17 +1077,17 @@ local function onWeaponFired(player, weapon)
             recoilStartPitch = recoilPitch
             recoilStartYaw = recoilYaw
             local exertion = enduranceLevel(player)
-            local minPitch, maxPitch = 5.0, 12.0
+            local minPitch, maxPitch = 2.0, 5.0
             if exertion == 1 then
-                minPitch, maxPitch = 6.0, 14.0
+                minPitch, maxPitch = 2.0, 7.0
             elseif exertion == 2 then
-                minPitch, maxPitch = 8.0, 16.0
+                minPitch, maxPitch = 4.0, 8.0
             elseif exertion >= 3 then
-                minPitch, maxPitch = 10.0, 20.0
+                minPitch, maxPitch = 3.0, 10.0
             end
             local weaponWeight = tonumber(weapon:getWeight()) or 0
             recoilDurationMs = weaponWeight > HEAVY_RECOIL_WEIGHT
-                and (750 + ZombRand(401)) or (650 + ZombRand(301))
+                and (480 + ZombRand(251)) or (400 + ZombRand(201))
             recoilRiseMs, recoilHoldMs = RECOIL_RISE_MS, RECOIL_HOLD_MS
             if longBurstBonus > 0 then
                 recoilRiseMs = LONG_BURST_RISE_MS
@@ -1063,7 +1116,14 @@ local function onWeaponFired(player, weapon)
             local direction = ZombRand(5) == 0 and -1 or 1
             local amount = (minPitch + ZombRand(steps + 1) / 10) * recoilScale
                 + longBurstBonus
-            local minYaw, maxYaw = 4.0, 10.0
+            local minYaw, maxYaw = 1.0, 4.0
+            if exertion == 1 then
+                minYaw, maxYaw = 1.0, 6.0
+            elseif exertion == 2 then
+                minYaw, maxYaw = 3.0, 7.0
+            elseif exertion >= 3 then
+                minYaw, maxYaw = 2.0, 9.0
+            end
             local yawSteps = math.floor((maxYaw - minYaw) * 10)
             local yawDirection = ZombRand(2) == 0 and -1 or 1
             local yawAmount = (minYaw + ZombRand(yawSteps + 1) / 10) * recoilScale
@@ -1077,6 +1137,13 @@ local function onWeaponFired(player, weapon)
                 longBurstYawDirection = longBurstYawDirection
                     or (recoilYaw ~= 0 and (recoilYaw > 0 and 1 or -1) or yawDirection)
                 if not longBurstLegShots then
+                    -- Enter the existing corner/regrip curve from the angular
+                    -- error already built up, rather than dropping it at shot 21.
+                    local angularScale = SHOT_RECOIL_SCALE * PVADS_GaelGrip.recoilMultiplier(weapon)
+                    longBurstPitchAnchor = PVADS_GaelRecoilBalance.longBurstAnchor(
+                        amount, recoilPeakPitch, angularScale)
+                    longBurstYawAnchor = PVADS_GaelRecoilBalance.longBurstAnchor(
+                        yawAmount, recoilPeakYaw, angularScale)
                     longBurstPitchFrom, longBurstYawFrom =
                         longBurstPitchDirection, longBurstYawDirection
                     longBurstPitchDirection, longBurstYawDirection = nextLongBurstCorner(
@@ -1104,10 +1171,17 @@ local function onWeaponFired(player, weapon)
             local gripScale = PVADS_GaelGrip.recoilMultiplier(weapon)
             local pitchTarget = amount * SHOT_RECOIL_SCALE * gripScale
             local yawTarget = yawAmount * SHOT_RECOIL_SCALE * gripScale
-            recoilPeakPitch = direction * (longBurstBonus > 0 and pitchTarget
+            local nextPitch = direction * (longBurstBonus > 0 and pitchTarget
                 or math.max(pitchTarget, direction * recoilPitch))
-            recoilPeakYaw = yawDirection * (longBurstBonus > 0 and yawTarget
+            local nextYaw = yawDirection * (longBurstBonus > 0 and yawTarget
                 or math.max(yawTarget, yawDirection * recoilYaw))
+            if automatic and burstShotCount > 5 and not recoilLongBurst then
+                nextPitch, nextYaw = direction * pitchTarget, yawDirection * yawTarget
+            end
+            recoilPeakPitch = PVADS_GaelRecoilBalance.burstPeak(nextPitch,
+                recoilPeakPitch, burstShotCount, automatic, recoilLongBurst, 12)
+            recoilPeakYaw = PVADS_GaelRecoilBalance.burstPeak(nextYaw,
+                recoilPeakYaw, burstShotCount, automatic, recoilLongBurst, 8)
         end
     end
 end

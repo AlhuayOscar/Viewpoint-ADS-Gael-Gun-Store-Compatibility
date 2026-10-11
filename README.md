@@ -6,6 +6,90 @@ Manual = saved personal calibration; Verified default = checked in game without 
 
 ## Installation
 
+The native Build 42 ballistics path now shares the purple calibrator marker's
+`pvads.Sight.ray` direction, after Project Viewpoint ADS corrects its visual
+weapon presence transform. True Ballistics already reads that same ray through
+its ADS bridge, so the patch does not rotate its projectiles again or replace
+its zeroing, spread, gravity, collision, or damage calculations. The muzzle
+position still comes from the held model and Project Viewpoint's presence
+correction; the Gael calibrator can add model-local X/Y/Z offsets after the
+lean correction. This change
+requires a full game restart and an in-game impact check with the enabled mods;
+the purple marker is a direction preview, not a guaranteed final impact.
+
+When Viewpoint True Ballistics is installed, a separate green marker records the
+terminal point of the latest local shot. It follows confirmed zombie/person,
+vehicle, world-surface, barrel-block and maximum-range/lifetime endpoints; a
+penetrating pellet is recorded only when it finally stops. The marker stays at
+the actual world position as the camera moves and shows the collision type and
+coordinates. This requires True Ballistics because vanilla Build 42 does not
+report a simulated projectile endpoint or general wall collision to this patch.
+
+Shot mirror version 11 retains the v8 physical sight/barrel axis through ADS's
+weapon and final pose matrices, undoing the sight-reference calibration first.
+It includes the visual presence correction. The adjusted ADS reference axis can
+point in a different direction from the actual weapon; it is not used as the
+barrel measurement. The added yaw/pitch motion rotates around the model's grip
+attachment, with a weapon-local rear fallback when no grip is available.
+Right/up angular deviation produces left/down shot separation about the fixed
+screen center. The endpoint is `screenCenter - scale * angularGain *
+(renderedAngularPoint - screenCenter)` on both axes. The purple line starts at that same screen center;
+the weapon's moving projected sight position (`ovWin`) is not an input.
+The purple-marker slider ranges from x0 to x10. An additional smooth angular gain
+is 1x up to 1 degree, 1.5x at 5.5 degrees, and 2x at 10 degrees or more. Combined
+yaw/pitch deviation is recovered using ADS FOV, so this response does not depend
+on resolution or zoom. This is a tunable game response, not a measured ballistic
+calibration. Both factors apply once to the shared shot ray; x0 uses the screen
+center. Dynamic yaw/pitch uses the post-alignment
+motion path only, retaining each weapon's saved calibration. The extra character
+aim offset is disabled because the native shot already uses the shared ray.
+Ordinary recoil ranges and recovery times are restored to the documented values
+(2–5 degrees base pitch before reductions; 0.3–0.5 seconds for light weapons).
+The calibrator title shows `Working v11` only when the loaded Java bridge reports
+version 11, plus `Axis OK` or `Axis unavailable`. A Lua reload alone cannot make an
+old jar look current. Missing/stale physical samples hide the point and leave the
+native shot unchanged, rather than displaying the wrong reference-axis fallback.
+
+Gael recoil presentation uses 70% rotational barrel kick and 30% positional
+push, each relative to its own baseline (degrees and metres are not summed).
+The custom yaw/pitch shot and release/regrip curves bypass fine hold attenuation
+and use the 70% weight directly. ADS `gunKick` uses 70% and `gunBack` uses 30%.
+The 1–3 / 4–5 / later shot stages and the 26-shot regrip policy remain intact.
+Balanced profiles are temporary copies, so saved calibrations are not changed
+and repeated profile updates cannot multiply the weights again.
+
+Version 9 routes dynamic roll through the grip rotation alongside yaw/pitch,
+leaving all three saved angular calibration values stable. Walking adds up to
+0.8 degrees of yaw/pitch from its existing motion cycle. Dynamic posture offsets
+use 30% of their prior amplitude (the 2–4 cm walking offset becomes 0.6–1.2 cm).
+The automatic-fire strength divisor is 2–6 instead of 8–24, making custom
+automatic angular recoil four times the v8 amplitude while preserving the
+existing shot scale, grip, 70% angular weight and burst thresholds. Single-shot
+pistol amplitudes are unchanged. These are tuning choices pending gameplay
+validation, not physical measurements. Pure roll tilts the weapon without
+changing the barrel axis; it must not invent a yaw/pitch shot deviation.
+
+Version 10 preserves the first five shot impulses, then accumulates angular
+error during rapid automatic fire (80% of each new custom angular impulse,
+bounded at 12 degrees pitch / 8 degrees yaw before the 70% weight). The existing
+long-burst corner path starts from that accumulated error at shot 21; the
+26-shot release/regrip behaviour remains. Local arm pain now contributes to the
+same fatigue factor as stiffness. Walking's angular cycle grows with exertion
+and arm fatigue, up to 3.5 times its healthy amplitude. The purple ray formula,
+its screen-center origin and calibration multiplier are unchanged: larger
+physical yaw/pitch drives more reflected separation through that shared ray.
+
+The Java sources are included in `src/`, and the compiled runtime classes are
+shipped in both versioned compatibility jars. To rebuild on another PC, run
+`build-native-shot.ps1` with explicit local paths for `-CompilerJar` (Eclipse
+ECJ 3.44 or newer), `-GameRoot`, `-AdsJar`, and `-ViewpointJar`; the script
+checks each dependency before compiling. It compiles against that PC's game
+and mod APIs, runs the included Java verification programs, and preserves all
+other classes in the existing compatibility jar. Use `-StageOnly` to compile
+and verify a separate jar while the game is open. Installation refuses to
+update a loaded jar until Project Zomboid is closed. The packaged mod runs from
+the jars; the `.java` sources are for review and reproducible rebuilding.
+
 For Project Zomboid Build 42.21, enable `Viewpoint`, `GaelGunStore_B42`, and `ProjectViewpointADS`, then enable this mod as `ViewpointGaelCompat`. The package is in `Contents/mods/ViewpointGaelCompat`. Restart the game after installing or updating it.
 
 The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks calibration status.
@@ -34,7 +118,7 @@ Enabled by default for `Base.GOL` without an attached optic. While ADS is held, 
 
 ## Slider calibrator
 
-Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the same 19 values. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.
+Open the ADS calibrator with its normal key. A companion panel appears on the right with sliders for the sight, recoil, optics and shot-origin calibration values. The three Shot origin controls move the projectile's starting point in the weapon model's local X/Y/Z axes, relative to the normal muzzle point; Y follows the barrel and Z points up. Drag for live adjustment, type exact values, switch range x1/x5/x20, and use Save to write the personal profile. The centered weapon selector has searchable names and IDs plus left/right arrows. Selecting an ADS firearm reuses or grants it, equips it through the normal inventory action, and prepares Hold ADS. Hold Ctrl to aim; V remains the normal ADS toggle.
 
 The companion panel also has **Retícula** and **Modo ADS** selectors for the equipped weapon and optic. Auto keeps the optic's default; a selection changes the live ADS profile and Save writes it alongside the numeric calibration in `PVADS_UserProfiles.txt`. Copy includes the visual choices in a ready-to-paste override. OKP-7 offers the supplied arrow-and-bars mark plus ring-and-dot and double-ring marks. Kobra offers a solid or LED-dotted T, dot plus chevron, chevron alone, and the shared dot. Modo ADS selects Viewpoint's rendering mode (iron/reflex/scope), separately from the reticle pattern. The assets are drawn for this mod, not copied optic textures; check their appearance in-game.
 
