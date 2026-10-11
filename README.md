@@ -90,6 +90,11 @@ and verify a separate jar while the game is open. Installation refuses to
 update a loaded jar until Project Zomboid is closed. The packaged mod runs from
 the jars; the `.java` sources are for review and reproducible rebuilding.
 
+The Java bridge also supports the October 10 Project Viewpoint API change that
+moved third-person state from `viewpoint.input.ThirdPerson.active` to
+`viewpoint.core.View.thirdPerson`. It restores the ADS bridge after this mod's
+jar is added to the shared classpath and mirrors the renamed camera state.
+
 For Project Zomboid Build 42.21, enable `Viewpoint`, `GaelGunStore_B42`, and `ProjectViewpointADS`, then enable this mod as `ViewpointGaelCompat`. The package is in `Contents/mods/ViewpointGaelCompat`. Restart the game after installing or updating it.
 
 The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks calibration status.
