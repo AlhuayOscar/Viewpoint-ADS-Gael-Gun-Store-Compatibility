@@ -12,6 +12,10 @@ require "PVADS_GaelVisualChoices"
 -- Companion to the stock calibrator. Both windows write to the same user profile.
 -- Shot origin X/Y/Z are model-local offsets from the muzzle (X lateral, Y along the barrel, Z up).
 PVADS.GaelRealTimeDot = true
+if PVADS and PVADS.Settings then
+    PVADS.Settings.developer = true
+    PVADS.Settings.closeClip = false
+end
 local Cal = PVADS.Calibrator
 local FIELDS = {
     {"adjX", "Sight X", 0.0002}, {"adjY", "Sight Y", 0.0005},
@@ -606,21 +610,41 @@ local function install()
     pushMarkerScale()
     if not Cal.gaelSliderInstalled then
     Cal.gaelSliderInstalled = true
-    local originalToggle = Cal.toggle
-    Cal.toggle = function(...)
-        originalToggle(...)
-        local main = Cal.window
-        if not main then return end
-        if not Cal.gaelSliderWindow then
+    function PVADS.toggleGaelCalibrator()
+        if PVADS and PVADS.Settings then PVADS.Settings.developer = true end
+        local c = PVADS and PVADS.Calibrator
+        if not c then return end
+        local show = true
+        if c.gaelSliderWindow then
+            show = not c.gaelSliderWindow:isVisible()
+        elseif c.window then
+            show = not c.window:isVisible()
+        end
+        if not c.window then
+            c.window = PVADSCalibWindow:new(60, 120)
+            c.window:initialise()
+            c.window:addToUIManager()
+        end
+        if not c.gaelSliderWindow then
             local sw = getCore():getScreenWidth()
-            Cal.gaelSliderWindow = PVADSGaelSliderWindow:new(math.max(370, sw - 630), 80)
-            Cal.gaelSliderWindow:initialise()
-            Cal.gaelSliderWindow:addToUIManager()
+            local sh = getCore():getScreenHeight()
+            local startX = math.max(10, sw - 630)
+            local startY = math.max(10, math.floor((sh - 690) / 2))
+            c.gaelSliderWindow = PVADSGaelSliderWindow:new(startX, startY)
+            c.gaelSliderWindow:initialise()
+            c.gaelSliderWindow:addToUIManager()
+        end
+        c.window:setVisible(show)
+        c.gaelSliderWindow:setVisible(show)
+        if show then
+            c.gaelSliderWindow:bringToTop()
+            c.window:bringToTop()
         else
-            Cal.gaelSliderWindow:setVisible(main:isVisible())
-            if main:isVisible() then Cal.gaelSliderWindow:onCenter() end
+            if PVADS.Controller then PVADS.Controller.forceADS = false end
         end
     end
+
+    Cal.toggle = PVADS.toggleGaelCalibrator
     local originalClose = PVADSCalibWindow.close
     PVADSCalibWindow.close = function(win, ...)
         originalClose(win, ...)
@@ -709,6 +733,58 @@ local function install()
     end
 end
 
-Events.OnGameStart.Add(install)
-Events.OnGameBoot.Add(install)
+local function onGaelCalibKey(key)
+    -- Project Viewpoint ADS owns the configured key when its controller is
+    -- active. Keep only a fallback here to avoid toggling the window twice.
+    local controller = PVADS and PVADS.Controller
+    if controller and controller.ready then return end
+    local s = PVADS and PVADS.Settings
+    local calibKey = (s and s.calibKey) or Keyboard.KEY_SEMICOLON
+    if key == calibKey and PVADS and PVADS.toggleGaelCalibrator then
+        PVADS.toggleGaelCalibrator()
+    end
+end
+Events.OnKeyStartPressed.Add(onGaelCalibKey)
+
+local function onFillInventoryContextMenu(playerNum, context, items)
+    local player = getSpecificPlayer(playerNum)
+    if not player then return end
+    local weapon = player:getPrimaryHandItem()
+    if weapon and instanceof(weapon, "HandWeapon") and weapon:isRanged() then
+        context:addOption("Abrir Calibrador ADS", nil, function()
+            if PVADS and PVADS.toggleGaelCalibrator then
+                PVADS.toggleGaelCalibrator()
+            end
+        end)
+    end
+end
+Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryContextMenu)
+
+local function onFillWorldContextMenu(playerNum, context, worldobjects, test)
+    if test then return end
+    local player = getSpecificPlayer(playerNum)
+    if not player then return end
+    local weapon = player:getPrimaryHandItem()
+    if weapon and instanceof(weapon, "HandWeapon") and weapon:isRanged() then
+        context:addOption("Abrir Calibrador ADS", nil, function()
+            if PVADS and PVADS.toggleGaelCalibrator then
+                PVADS.toggleGaelCalibrator()
+            end
+        end)
+    end
+end
+Events.OnFillWorldObjectContextMenu.Add(onFillWorldContextMenu)
+
+local function onBootOrStart()
+    if PVADS and PVADS.Settings then
+        PVADS.Settings.developer = true
+        if not PVADS.Settings.calibKey or PVADS.Settings.calibKey == 0 then
+            PVADS.Settings.calibKey = Keyboard.KEY_SEMICOLON
+        end
+    end
+    install()
+end
+
+Events.OnGameStart.Add(onBootOrStart)
+Events.OnGameBoot.Add(onBootOrStart)
 install()

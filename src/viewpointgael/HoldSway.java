@@ -14,7 +14,7 @@ public final class HoldSway {
     private static final float LIMIT = 25;
     private static final long MAX_AGE_NS = 500_000_000L;
     private static volatile State state;
-    private static boolean reported, failed;
+    private static boolean reported, reportedFallback, failed;
     private static final ThreadLocal<Scratch> scratch = ThreadLocal.withInitial(Scratch::new);
     private static final Field ARM_BONES = field("armBones"), ARM_IS_PROP = field("armIsProp"), POSE = field("M"), BARREL = field("dw"), WEAPON = field("W"), BLEND = field("eShared");
 
@@ -46,9 +46,20 @@ public final class HoldSway {
         try {
             Scratch work = scratch.get();
             Matrix4f pose = (Matrix4f) POSE.get(null);
-            if (!GaelWeaponMotion.gripPivot(player, pose, work.pivot)) return;
             ((Matrix4f) WEAPON.get(null)).transformDirection((Vector3f) BARREL.get(null), work.forward);
             pose.transformDirection(work.forward).normalize();
+            if (!GaelWeaponMotion.gripPivot(player, pose, work.pivot)) {
+                // Gael weapon models such as the MP5 can have no self grip
+                // attachment. Pivot around the transformed model origin with
+                // a short rearward offset so their barrel still receives sway.
+                ((Matrix4f) WEAPON.get(null)).transformPosition(0, 0, 0, work.pivot);
+                pose.transformPosition(work.pivot);
+                work.pivot.fma(-0.15f, work.forward);
+                if (!reportedFallback) {
+                    reportedFallback = true;
+                    System.out.println("[ViewpointGael] weapon model has no grip attachment; using model-origin sway pivot");
+                }
+            }
             float blend = BLEND.getFloat(null);
             if (blend <= 0) return;
             buildRotation(work.pivot, work.forward, value.yaw, value.pitch, value.roll, blend, work.rotation);
@@ -66,7 +77,7 @@ public final class HoldSway {
             }
             if (!reported) {
                 reported = true;
-                System.out.println("[ViewpointGael] post-ADS weapon-bone yaw/pitch motion active (v10): " + value.weaponId);
+                System.out.println("[ViewpointGael] post-ADS weapon-bone yaw/pitch motion active (v11): " + value.weaponId);
             }
         } catch (Throwable error) {
             failed = true;

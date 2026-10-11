@@ -7,7 +7,7 @@ import me.zed_0xff.zombie_buddy.Patch;
 
 public class GaelWeaponPivotTest {
     public static void main(String[] args) throws Exception {
-        var hook = Patch_HoldSway.class.getDeclaredMethod("exit",Vector3f.class,Vector3f.class,float.class,Matrix4f.class);
+        var hook = Patch_HoldSway.class.getDeclaredMethod("exit",Object.class);
         int argument = hook.getParameterAnnotations()[0][0] instanceof Patch.Argument value ? value.value() : -1;
         if (argument != 0) throw new AssertionError("Rotation still uses eye instead of weapon sight");
         for (float yaw : new float[]{-8,0,8}) {

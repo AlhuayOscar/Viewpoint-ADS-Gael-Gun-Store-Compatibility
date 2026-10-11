@@ -19,6 +19,18 @@ import zombie.characters.IsoPlayer;
 public final class AimProbe {
     public static volatile boolean suppressPose;
 
+    static {
+        try {
+            Main.main(null);
+        } catch (Throwable t) {
+            System.err.println("[ViewpointGael] Bridge init error: " + t);
+        }
+    }
+
+    public static void reinitBridge() {
+        Main.main(null);
+    }
+
     public static boolean looking() {
         return View.enabled && Look.captured && !FreeCam.active;
     }
