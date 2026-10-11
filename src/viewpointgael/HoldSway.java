@@ -16,7 +16,7 @@ public final class HoldSway {
     private static volatile State state;
     private static boolean reported, reportedFallback, failed;
     private static final ThreadLocal<Scratch> scratch = ThreadLocal.withInitial(Scratch::new);
-    private static final Field ARM_BONES = field("armBones"), ARM_IS_PROP = field("armIsProp"), POSE = field("M"), BARREL = field("dw"), WEAPON = field("W"), BLEND = field("eShared");
+    private static final Field ARM_BONES = field("armBones"), POSE = field("M"), BARREL = field("dw"), WEAPON = field("W"), BLEND = field("eShared");
 
     private static Field field(String name) {
         try { Field value = ADS.class.getDeclaredField(name); value.setAccessible(true); return value; }
@@ -48,7 +48,7 @@ public final class HoldSway {
             Matrix4f pose = (Matrix4f) POSE.get(null);
             ((Matrix4f) WEAPON.get(null)).transformDirection((Vector3f) BARREL.get(null), work.forward);
             pose.transformDirection(work.forward).normalize();
-            if (!GaelWeaponMotion.gripPivot(player, pose, work.pivot)) {
+            if (!GaelWeaponMotion.gripPivot(player, animationPlayer, pose, work.pivot)) {
                 // Gael weapon models such as the MP5 can have no self grip
                 // attachment. Pivot around the transformed model origin with
                 // a short rearward offset so their barrel still receives sway.
@@ -64,10 +64,10 @@ public final class HoldSway {
             if (blend <= 0) return;
             buildRotation(work.pivot, work.forward, value.yaw, value.pitch, value.roll, blend, work.rotation);
             int[] bones = (int[]) ARM_BONES.get(null);
-            boolean[] props = (boolean[]) ARM_IS_PROP.get(null);
             AnimationPlayer ap = (AnimationPlayer) animationPlayer;
-            for (int i = 0; i < bones.length && i < props.length; i++) {
-                if (!props[i]) continue;
+            // Rotate both arm chains and the held prop around the hand joint.
+            // Filtering to armIsProp moves only the gun and leaves the arms behind.
+            for (int i = 0; i < bones.length; i++) {
                 org.lwjgl.util.vector.Matrix4f bone = ap.getModelTransformAt(bones[i]);
                 PZMath.convertMatrix(bone, work.bone);
                 work.bone.transpose();

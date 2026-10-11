@@ -6,6 +6,8 @@ import org.joml.Vector3f;
 import org.joml.Quaternionf;
 import zombie.characters.IsoPlayer;
 import zombie.core.Core;
+import zombie.core.math.PZMath;
+import zombie.core.skinnedmodel.animation.AnimationPlayer;
 import zombie.scripting.objects.ModelAttachment;
 
 /** Samples the physical sight/barrel axis after the actual rendered transforms. */
@@ -82,6 +84,24 @@ public final class GaelWeaponMotion {
         } catch (ReflectiveOperationException error) { return false; }
     }
 
+    /** Resolve the actual hand/prop joint when a Gael model has no self grip attachment. */
+    public static boolean gripPivot(IsoPlayer player, Object animationPlayer, Matrix4f pose, Vector3f result) {
+        if (gripPivot(player, pose, result)) return true;
+        if (player == null || player.primaryHandModel == null || !(animationPlayer instanceof AnimationPlayer ap)) return false;
+        try {
+            String parentBone = player.primaryHandModel.parentBoneName;
+            if (parentBone == null || parentBone.isEmpty()) return false;
+            int index = ap.getSkinningBoneIndex(parentBone, -1);
+            if (index < 0) return false;
+            Scratch work = scratch.get();
+            PZMath.convertMatrix(ap.getModelTransformAt(index), work.bone);
+            work.bone.transpose().getTranslation(result);
+            return Float.isFinite(result.x) && Float.isFinite(result.y) && Float.isFinite(result.z);
+        } catch (Throwable error) {
+            return false;
+        }
+    }
+
     static void physicalDirection(Vector3f calibrated, float yaw, float pitch, float roll,
                                   Matrix4f weapon, Matrix4f pose, Vector3f result, Quaternionf correction) {
         // ADS rotates its reference axis to calibrate the sights before solving
@@ -97,6 +117,7 @@ public final class GaelWeaponMotion {
     private static final class Scratch {
         final Vector3f direction = new Vector3f(), render = new Vector3f();
         final Quaternionf calibration = new Quaternionf();
+        final Matrix4f bone = new Matrix4f();
     }
     private GaelWeaponMotion() {}
 }
