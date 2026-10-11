@@ -733,7 +733,7 @@ local function renderedShotRayActive()
     return ok and tonumber(value) and tonumber(value) >= 4
 end
 
-local function publishRecoilAim(profile, view, dynamicActive or publishContinuousSway)
+local function publishRecoilAim(profile, view, dynamicActive)
     local root = rawget(_G, "ViewpointGael")
     local publish = root and root.Aim and root.Aim.setRecoilAim
     local moveSight = root and root.Aim and (root.Aim.setWeaponMotion or root.Aim.setHoldSway)
