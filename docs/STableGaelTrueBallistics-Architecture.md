@@ -1,5 +1,20 @@
 # STableGaelTrueBallistics: independent implementation
 
+## Development status: not usable yet
+
+**Do not use this as a Workshop replacement or enable it for ordinary play.**
+The independent engine and the single-player firing-to-impact integration are
+implemented in source and compiled, but the gameplay path has not yet been
+verified in Project Zomboid. The multiplayer firing path is intentionally
+disabled for SGTB; PZ's native path remains in control there. Shotguns and NPC
+shots also remain on the native path.
+
+Estimated feature coverage is **25–35% of Viewpoint True Ballistics**, based on
+the comparison below, so roughly **65–75% of comparable feature coverage remains**.
+That is a scope estimate, not a time estimate. The first milestone is to validate
+single-player shots, collision, damage, and firing side effects in game; Workshop
+readiness cannot be estimated reliably until that validation is complete.
+
 This document describes a new implementation. No source files, algorithms, or
 compiled classes from Viewpoint True Ballistics are included here.
 

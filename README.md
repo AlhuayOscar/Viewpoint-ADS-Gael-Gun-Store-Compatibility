@@ -1,5 +1,21 @@
 # Viewpoint Gael Compatibility
 
+## Experimental: NewGaelBallistics (not ready for use)
+
+NewGaelBallistics is under active development and is **not ready for Workshop
+release or normal gameplay**. It currently covers an estimated 25–35% of the
+features in Viewpoint True Ballistics. Its single-player firing and impact path
+has been connected and compiled, but has not yet been validated in gameplay.
+Multiplayer remains on Project Zomboid's native ballistic path; shotguns and NPC
+projectiles are not implemented in SGTB.
+
+Before it can be considered usable, the main remaining work is in-game validation
+of firing and damage behavior, collision calibration (including floors, windows,
+vehicles, and body regions), ammo-specific damage and native side effects, and
+shotgun pellet simulation. A multiplayer replacement additionally needs server
+ownership, request validation, and replication. The full feature comparison and
+milestones are in [the NewGaelBallistics development status](docs/STableGaelTrueBallistics-Architecture.md).
+
 47 pistols manually verified (45 saved calibrations, 2 verified defaults). 32 of 32 revolvers and 15 of 16 one-handed SMGs have saved manual profiles.
 
 Manual = saved personal calibration; Verified default = checked in game without a personal offset; Profile = included calibration awaiting individual confirmation; Pending = no saved calibration.
