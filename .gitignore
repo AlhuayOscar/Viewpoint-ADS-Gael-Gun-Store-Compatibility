@@ -9,10 +9,3 @@ Thumbs.db
 
 backup_original/
 viewpoint/
-
-# Decompiled and temporary build artifacts
-**/compiled_all/
-**/compiled_classes/
-**/decompiled_all/
-**/decompiled_jar/
-

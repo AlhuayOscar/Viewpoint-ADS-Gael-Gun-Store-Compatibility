@@ -1,8 +1,6 @@
 -- Snapshot of Gael weapon/optic calibrations from PVADS_UserProfiles.txt.
 -- PVADS applies the current user profile after these defaults, so later tuning still wins.
 require "PVADS/PVADS_Core"
-require "PVADS_GaelGeneratedProfiles"
-require "PVADS_GaelOpticAdapter"
 
 PVADS.RegisterWeaponOpticOverride("Base.Remington870", "", { adjX = 0.00000, adjZ = -0.00820, adjY = 0.00000, adjPitch = -0.67500, adjYaw = 0.00000, adjRoll = 0.00000, fovMul = 0.40000 })
 PVADS.RegisterWeaponOpticOverride("Base.Springfield1903", "", { fovMul = 0.40000, adjZ = -0.00580, adjPitch = 0.12500, relief = 0.10000 })
