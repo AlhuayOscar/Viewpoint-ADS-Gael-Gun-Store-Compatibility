@@ -7,11 +7,13 @@ import zombie.iso.Vector3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.lang.reflect.Field;
+import viewpointgael.HoldSway;
 
 /** Shares the calibrated ADS shot direction with Build 42's native ballistics. */
 public final class GaelNativeShot {
     private static final double FLOOR_HEIGHT = 2.4494895935058594;
     private static final ThreadLocal<Vector3f> SHOT_DIRECTION = ThreadLocal.withInitial(Vector3f::new);
+    private static final ThreadLocal<Vector3f> SHOT_BASE_DIRECTION = ThreadLocal.withInitial(Vector3f::new);
     private static final ThreadLocal<OriginScratch> ORIGIN_SCRATCH = ThreadLocal.withInitial(OriginScratch::new);
     private static volatile ShotOrigin shotOrigin;
     private static volatile WeaponPose weaponPose;
@@ -40,7 +42,7 @@ public final class GaelNativeShot {
 
     private static float clamp(double value) { return (float) Math.max(-2.0, Math.min(2.0, value)); }
 
-    /** Extra share of the weapon's angular movement between consecutive shots (0 disables carry). */
+    /** Additional share of the measured angular change from the previous shot. */
     public static void setShotMotionGain(double gain) {
         if (Double.isFinite(gain)) shotMotionGain = Math.max(0.0, Math.min(2.0, gain));
     }
@@ -62,6 +64,22 @@ public final class GaelNativeShot {
     public static void publishWeaponPose(Matrix4f pose, String weapon, float angle) {
         if (pose == null || weapon == null || !Float.isFinite(angle)) return;
         weaponPose = new WeaponPose(weapon, new Matrix4f(pose), angle, System.nanoTime());
+    }
+
+    /**
+     * Read the most recent physical ADS barrel axis for a parallel projectile
+     * implementation. This method has no True Ballistics dependency and only
+     * succeeds while the render pose is fresh and belongs to the requested gun.
+     * The output uses PZ ballistics axes, with vertical expressed in tile levels.
+     */
+    public static boolean currentPhysicalShotDirection(String weaponId, Vector3 out) {
+        if (weaponId == null || out == null || !GaelWeaponMotion.ready()) return false;
+        WeaponPose pose = weaponPose;
+        if (pose == null || !weaponId.equals(pose.weaponId)
+                || System.nanoTime() - pose.at > 150_000_000L) return false;
+        Vector3f barrel = SHOT_DIRECTION.get();
+        return GaelWeaponMotion.shotDirection(pose.angle, barrel)
+                && writePhysicalDirection(out, barrel.x, barrel.y, barrel.z);
     }
 
     public static void afterPresence(Object controller, Object direction) {
@@ -142,8 +160,21 @@ public final class GaelNativeShot {
         double length = Math.sqrt(x*x + y*y + u*u);
         if (!Double.isFinite(length) || length < 1e-6) return false;
         x /= length; y /= length; u /= length;
+        Vector3f baseRendered = SHOT_BASE_DIRECTION.get();
+        if (!GaelWeaponMotion.shotDirection(pose.angle, baseRendered, true, false)) return false;
+        double baseX = -baseRendered.x, baseY = -baseRendered.z, baseU = baseRendered.y;
+        double baseLength = Math.sqrt(baseX * baseX + baseY * baseY + baseU * baseU);
+        if (!Double.isFinite(baseLength) || baseLength < 1e-6) return false;
+        baseX /= baseLength; baseY /= baseLength; baseU /= baseLength;
+        // This is the rendered weapon axis without the temporary per-shot carry.
+        // The final projectile ray may receive additional aim-centering and burst
+        // corrections below; mirror their combined angular offset onto the model.
+        double visualBaseYaw = Math.atan2(baseY, baseX);
+        double visualBasePitch = Math.atan2(baseU, Math.hypot(baseX, baseY));
         double physicalX = x, physicalY = y, physicalU = u;
         long shotAt = System.nanoTime();
+        boolean sameBurst = weapon.getFullType().equals(previousShotWeapon)
+                && shotAt > previousShotAt && shotAt - previousShotAt <= SHOT_MOTION_WINDOW_NANOS;
         boolean sameCenteringBurst = shotCenteringActive
                 && weapon.getFullType().equals(previousCenteringWeapon)
                 && shotAt > previousCenteringShotAt
@@ -158,30 +189,55 @@ public final class GaelNativeShot {
             centering = 1.0;
         }
         if (centering > 0) {
+            // Aim-centering previously replaced the already-swung barrel ray,
+            // making the rendered HoldSway disappear from ideal first shots.
+            // Correct the base ADS ray toward the reticle, then preserve the
+            // actual post-ADS weapon sway as an angular offset on top of it.
+            Vector3f baseDirection = SHOT_BASE_DIRECTION.get();
+            if (!GaelWeaponMotion.shotDirection(pose.angle, baseDirection, false)) return false;
+            double centerBaseX = -baseDirection.x, centerBaseY = -baseDirection.z, centerBaseU = baseDirection.y;
+            double swayX = x - centerBaseX, swayY = y - centerBaseY, swayU = u - centerBaseU;
             double yawToCenter = VP.yaw(), pitchToCenter = VP.pitch();
             if (Double.isFinite(yawToCenter) && Double.isFinite(pitchToCenter)) {
                 double horizontal = Math.cos(pitchToCenter);
                 double centerX = Math.cos(yawToCenter) * horizontal;
                 double centerY = Math.sin(yawToCenter) * horizontal;
                 double centerU = Math.sin(pitchToCenter);
-                x += (centerX - x) * centering;
-                y += (centerY - y) * centering;
-                u += (centerU - u) * centering;
+                x = centerBaseX + (centerX - centerBaseX) * centering + swayX;
+                y = centerBaseY + (centerY - centerBaseY) * centering + swayY;
+                u = centerBaseU + (centerU - centerBaseU) * centering + swayU;
                 length = Math.sqrt(x*x + y*y + u*u);
                 if (!Double.isFinite(length) || length < 1e-6) return false;
                 x /= length; y /= length; u /= length;
+
+                baseX = centerBaseX + (centerX - centerBaseX) * centering + (baseX - centerBaseX);
+                baseY = centerBaseY + (centerY - centerBaseY) * centering + (baseY - centerBaseY);
+                baseU = centerBaseU + (centerU - centerBaseU) * centering + (baseU - centerBaseU);
+                baseLength = Math.sqrt(baseX * baseX + baseY * baseY + baseU * baseU);
+                if (!Double.isFinite(baseLength) || baseLength < 1e-6) return false;
+                baseX /= baseLength; baseY /= baseLength; baseU /= baseLength;
             }
         }
         double yaw = Math.atan2(y, x);
         double pitch = Math.atan2(u, Math.hypot(x, y));
-        boolean sameBurst = weapon.getFullType().equals(previousShotWeapon)
-                && shotAt > previousShotAt && shotAt - previousShotAt <= SHOT_MOTION_WINDOW_NANOS;
-        double rawYaw = yaw, rawPitch = pitch;
+        double rawYaw = Math.atan2(baseY, baseX);
+        double rawPitch = Math.atan2(baseU, Math.hypot(baseX, baseY));
+        double carryYaw = 0.0, carryPitch = 0.0;
         if (sameBurst && shotMotionGain > 0) {
-            double deltaYaw = clampRadians(wrapRadians(rawYaw - previousShotYaw), MAX_SHOT_MOTION_DELTA);
-            double deltaPitch = clampRadians(rawPitch - previousShotPitch, MAX_SHOT_MOTION_DELTA);
-            yaw += deltaYaw * shotMotionGain;
-            pitch += deltaPitch * shotMotionGain;
+            double requestedYaw = Math.toDegrees(
+                    clampRadians(wrapRadians(rawYaw - previousShotYaw), MAX_SHOT_MOTION_DELTA)
+                            * shotMotionGain);
+            double requestedPitch = Math.toDegrees(
+                    clampRadians(rawPitch - previousShotPitch, MAX_SHOT_MOTION_DELTA)
+                            * shotMotionGain);
+            // The bullet and the visible barrel receive the same applied correction.
+            // If the visual sway limit is reached, clamp the shot correction too.
+            HoldSway.CarryAdjustment applied = HoldSway.addShotCarry(
+                    weapon.getFullType(), requestedYaw, requestedPitch);
+            carryYaw = Math.toRadians(applied.yawDegrees());
+            carryPitch = Math.toRadians(applied.pitchDegrees());
+            yaw += carryYaw;
+            pitch += carryPitch;
             double horizontal = Math.cos(pitch);
             x = Math.cos(yaw) * horizontal;
             y = Math.sin(yaw) * horizontal;
@@ -244,6 +300,13 @@ public final class GaelNativeShot {
                 changed++;
             }
             if (changed == 0) return false;
+            // Keep the visible barrel in sync with the exact ray handed to True
+            // Ballistics. Previously only the small burst delta was animated,
+            // while the larger first-shot/aim-centering correction affected
+            // the projectile alone, detaching impacts from the gun's movement.
+            HoldSway.mirrorShotDirection(weapon.getFullType(),
+                    Math.toDegrees(wrapRadians(yaw - visualBaseYaw)),
+                    Math.toDegrees(pitch - visualBasePitch));
             previousShotWeapon = weapon.getFullType();
             previousShotAt = shotAt;
             previousShotYaw = rawYaw;
@@ -273,6 +336,12 @@ public final class GaelNativeShot {
         field.setDouble(target, value);
     }
 
+    private static double centeringBurstEffect(int shot) {
+        if (shot <= 3) return 1.0;
+        if (shot <= 5) return 0.40;
+        return Math.max(0.0, 0.40 - (shot - 5) * 0.02);
+    }
+
     private static double wrapRadians(double angle) {
         while (angle > Math.PI) angle -= Math.PI * 2.0;
         while (angle < -Math.PI) angle += Math.PI * 2.0;
@@ -281,12 +350,6 @@ public final class GaelNativeShot {
 
     private static double clampRadians(double angle, double limit) {
         return Math.max(-limit, Math.min(limit, angle));
-    }
-
-    private static double centeringBurstEffect(int shot) {
-        if (shot <= 3) return 1.0;
-        if (shot <= 5) return 0.40;
-        return Math.max(0.0, 0.40 - (shot - 5) * 0.02);
     }
 
     static boolean writeDirection(Vector3 direction, double x, double y, double up) {

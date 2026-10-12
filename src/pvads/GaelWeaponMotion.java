@@ -86,6 +86,17 @@ public final class GaelWeaponMotion {
      * The direction includes the actual model pose, sight calibration, and ADS recoil.
      */
     public static boolean shotDirection(float facing, Vector3f result) {
+        return shotDirection(facing, result, true);
+    }
+
+    /** Returns the ADS barrel direction, optionally leaving post-ADS HoldSway out. */
+    public static boolean shotDirection(float facing, Vector3f result, boolean includeHoldSway) {
+        return shotDirection(facing, result, includeHoldSway, true);
+    }
+
+    /** Optionally exclude the extra post-shot visual correction when measuring new barrel motion. */
+    public static boolean shotDirection(float facing, Vector3f result,
+                                         boolean includeHoldSway, boolean includeShotCarry) {
         if (result == null || !Float.isFinite(facing) || !ADS.P.valid || ADS.P.weaponId == null
                 || !VP.firstPerson() || VP.freeCam()) return false;
         try {
@@ -99,7 +110,10 @@ public final class GaelWeaponMotion {
             }
             // HoldSway rotates the rendered arm/weapon bones after ADS solves its
             // reference axis. Mirror that exact live rotation into the shot ray.
-            HoldSway.applyToShotDirection(ADS.P.weaponId, state.direction);
+            if (includeHoldSway) {
+                if (includeShotCarry) HoldSway.applyToShotDirection(ADS.P.weaponId, state.direction);
+                else HoldSway.applySwayToShotDirection(ADS.P.weaponId, state.direction);
+            }
             ADS.cmsDirToRender(state.direction, facing, result);
             float length2 = result.lengthSquared();
             if (!Float.isFinite(length2) || length2 < 1.0e-8f) return false;

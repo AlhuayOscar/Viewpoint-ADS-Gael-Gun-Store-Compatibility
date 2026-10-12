@@ -281,9 +281,17 @@ end
 PVADS_GaelRecoilBalance.shotCenteringRampMs = function(player)
     local aimingLevel = math.max(0, math.min(10,
         tonumber(player and player:getPerkLevel(Perks.Aiming)) or 0))
+    local milestoneBonus = 0
+    for _, level in ipairs({ 3, 5, 7, 10 }) do
+        if aimingLevel >= level then milestoneBonus = milestoneBonus + 1 end
+    end
+    -- Each Aiming level improves correction speed by 1%; levels 3, 5, 7,
+    -- and 10 each add another 1%. Keep the existing 0.05 s/level bonus too.
+    local correctionSpeed = 1 + (aimingLevel + milestoneBonus) * 0.01
     return math.max(PVADS_GaelRecoilBalance.shotCenteringRampStepMs,
         PVADS_GaelRecoilBalance.shotCenteringRampBaseMs
             - aimingLevel * PVADS_GaelRecoilBalance.shotCenteringAimReductionMs)
+            / correctionSpeed
 end
 
 local function fitnessLevel(player)
@@ -930,8 +938,8 @@ local function updateIronFocus(player)
     local root = rawget(_G, "ViewpointGael")
     local setShotOrigin = root and root.Aim and root.Aim.setShotOrigin
     local setWeaponReference = root and root.Aim and root.Aim.setWeaponReferenceAlignment
-    local setShotMotionGain = root and root.Aim and root.Aim.setShotMotionGain
     local setShotCentering = root and root.Aim and root.Aim.setShotCentering
+    local setShotMotionGain = root and root.Aim and root.Aim.setShotMotionGain
     local sandbox = SandboxVars and SandboxVars.ViewpointGaelCompat
     if setWeaponReference then
         pcall(setWeaponReference, profile and profile.weaponId or "",

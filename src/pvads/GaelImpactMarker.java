@@ -1,6 +1,7 @@
 package pvads;
 
 import java.lang.reflect.Field;
+import stgael.ballistics.BallisticVector3;
 import zombie.core.Core;
 import zombie.characters.IsoPlayer;
 
@@ -26,6 +27,30 @@ public final class GaelImpactMarker {
                 label = "Disparo " + seq + " en vuelo";
             }
         } catch (Throwable ignored) {}
+    }
+
+    /** Starts a marker sequence for the independent SGTB projectile runtime. */
+    public static long sgtbShotStarted() {
+        long seq = shotSequence + 1L;
+        shotSequence = seq;
+        hasImpact = false;
+        screenX = screenY = Double.NaN;
+        label = "SGTB: disparo " + seq + " en vuelo";
+        return seq;
+    }
+
+    /** Stores an SGTB terminal collision in the same world coordinates as the HUD camera. */
+    public static void sgtbImpact(long seq, BallisticVector3 point,
+                                  double metresPerTile, String kind) {
+        if (point == null || seq < shotSequence) return;
+        if (!Double.isFinite(metresPerTile) || metresPerTile <= 0.0) return;
+        double px = point.x() / metresPerTile, py = point.y() / metresPerTile, pu = point.z();
+        if (!Double.isFinite(px) || !Double.isFinite(py) || !Double.isFinite(pu)) return;
+        x = px; y = py; u = pu; shotSequence = seq;
+        hasImpact = true;
+        label = "SGTB impacto: " + (kind == null ? "mundo" : kind)
+                + " (X " + fmt(px) + ", Y " + fmt(py) + " tiles; altura " + fmt(pu) + " m)";
+        project();
     }
 
     public static void terminalImpact(Object manager, Object projectile) {
@@ -122,6 +147,24 @@ public final class GaelImpactMarker {
         double focal = height / (2.0 * Math.tan(fov / 2.0));
         screenX = Core.getInstance().getScreenWidth() * 0.5 + right / depth * focal;
         screenY = height * 0.5 - up / depth * focal;
+    }
+
+    /** Project one SGTB world point with the same camera snapshot as the impact marker. */
+    public static String projectWorldPoint(double worldX, double worldY, double worldU) {
+        if (!cameraReady || !Double.isFinite(worldX) || !Double.isFinite(worldY)
+                || !Double.isFinite(worldU)) return "";
+        double dx = worldX - camX, dy = worldY - camY, dz = worldU - camU;
+        double cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+        double depth = dx * cy * cp + dy * sy * cp + dz * sp;
+        if (depth <= 0.02) return "";
+        double right = -dx * sy + dy * cy;
+        double up = -dx * cy * sp - dy * sy * sp + dz * cp;
+        double height = Core.getInstance().getScreenHeight();
+        double focal = height / (2.0 * Math.tan(fov / 2.0));
+        double px = Core.getInstance().getScreenWidth() * 0.5 + right / depth * focal;
+        double py = height * 0.5 - up / depth * focal;
+        if (!Double.isFinite(px) || !Double.isFinite(py)) return "";
+        return fmt(px) + "," + fmt(py);
     }
 
     public static boolean visible() {

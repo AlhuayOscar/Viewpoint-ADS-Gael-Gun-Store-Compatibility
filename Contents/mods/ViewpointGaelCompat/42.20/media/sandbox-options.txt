@@ -16,6 +16,14 @@ option ViewpointGaelCompat.ShotCenteringAssist
     translation = ViewpointGaelCompat_ShotCenteringAssist,
 }
 
+option ViewpointGaelCompat.SGTBDebugTrajectory
+{
+    type = boolean,
+    default = false,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_SGTBDebugTrajectory,
+}
+
 option ViewpointGaelCompat.CrouchIronFocus
 {
     type = boolean,

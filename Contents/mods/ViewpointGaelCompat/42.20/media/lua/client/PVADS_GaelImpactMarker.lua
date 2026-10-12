@@ -23,13 +23,39 @@ function ImpactMarker:onMouseUp()
     return false
 end
 
+local function renderSGTBDebugTrajectory(panel, aim)
+    local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
+    if not (vars and vars.SGTBDebugTrajectory) or not aim.ballisticTrailCount or not aim.ballisticTrailPath then return end
+    local okCount, count = pcall(aim.ballisticTrailCount)
+    if not okCount then return end
+    count = math.min(8, math.max(0, tonumber(count) or 0))
+    for trailIndex = 0, count - 1 do
+        local okPath, encoded = pcall(aim.ballisticTrailPath, trailIndex)
+        if okPath and type(encoded) == "string" then
+            local previousX, previousY
+            for pair in string.gmatch(encoded, "[^;]+") do
+                local sx, sy = string.match(pair, "([^,]+),([^,]+)")
+                sx, sy = tonumber(sx), tonumber(sy)
+                if sx and sy then
+                    if previousX then
+                        panel:drawLine2(previousX, previousY, sx, sy, 0.10, 0.82, 1.00, 0.78)
+                    end
+                    previousX, previousY = sx, sy
+                end
+            end
+        end
+    end
+end
+
 function ImpactMarker:render()
     local core = getCore()
     if self.width ~= core:getScreenWidth() then self:setWidth(core:getScreenWidth()) end
     if self.height ~= core:getScreenHeight() then self:setHeight(core:getScreenHeight()) end
     local root = rawget(_G, "ViewpointGael")
     local aim = root and root.Aim
-    if not aim or not aim.impactVisible then return end
+    if not aim then return end
+    renderSGTBDebugTrajectory(self, aim)
+    if not aim.impactVisible then return end
     local ok, visible = pcall(aim.impactVisible)
     if not ok or visible ~= true then return end
     local okX, x = pcall(aim.impactScreenX)

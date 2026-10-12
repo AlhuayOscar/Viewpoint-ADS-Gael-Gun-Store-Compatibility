@@ -4,6 +4,8 @@
     "Sandbox_ViewpointGaelCompat_ThirdPersonCrosshair_tooltip": "Shows two side bars and a center vertical bar while aiming a firearm in Viewpoint third person. The gap widens with movement, endurance exertion, and arm pain or stiffness. Enabled by default.",
     "Sandbox_ViewpointGaelCompat_ShotCenteringAssist": "Experimental: ease True Ballistics shots toward aim center",
     "Sandbox_ViewpointGaelCompat_ShotCenteringAssist_tooltip": "While ADS is held and the character is stationary, correction advances in 0.1-second steps. It takes 1.1 seconds to complete; each Aiming level reduces that time by 0.05 seconds. Under ideal conditions it reaches 99 percent; it loses 10 percentage points per Endurance level and 5 per arm-pain level. Under ideal conditions, shots 1-3 aim exactly at center when the ramp completes; shots 4-5 retain 40 percent of the correction, then it drops by 2 points per shot until zero on shot 25. Resets when moving or when ADS ends. Enabled by default.",
+    "Sandbox_ViewpointGaelCompat_SGTBDebugTrajectory": "Show SGTB debug trajectory",
+    "Sandbox_ViewpointGaelCompat_SGTBDebugTrajectory_tooltip": "Draw recent points from SGTB-owned projectile paths on screen. Calibration aid only; disabled by default.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: Crouch enables Iron Sights FOV Change",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "While crouched and aiming through iron sights, narrow only the view FOV. Attached optics and saved weapon calibrations are unaffected.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Crouched iron sight FOV multiplier",

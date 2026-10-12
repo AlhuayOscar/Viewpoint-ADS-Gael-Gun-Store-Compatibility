@@ -8,6 +8,9 @@ import pvads.GaelSightProjection;
 import pvads.GaelWeaponMotion;
 import pvads.GaelImpactMarker;
 import pvads.GaelNativeShot;
+import stgael.ballistics.BallisticProfile;
+import stgael.pz.PzBallisticProfileCatalog;
+import stgael.pz.PzBallisticRuntime;
 import viewpoint.core.View;
 import viewpoint.input.FreeCam;
 import viewpoint.input.Look;
@@ -105,6 +108,14 @@ public final class AimProbe {
         GaelNativeShot.setShotCentering(amount, aiming);
     }
 
+    /** Override one PZ ammo category's independent projectile parameters. */
+    public static void registerBallisticProfile(String ammoTypeKey, double muzzleVelocity,
+                                                double gravity, double dragPerSecond,
+                                                double maxDistance, double maxFlightSeconds) {
+        PzBallisticProfileCatalog.register(ammoTypeKey, new BallisticProfile(muzzleVelocity,
+                gravity, dragPerSecond, maxDistance, maxFlightSeconds));
+    }
+
     public static double sightTargetDistance() {
         GaelSightProjection.Line line = GaelSightProjection.currentLine();
         return line == null ? Double.NaN : line.distance();
@@ -114,6 +125,12 @@ public final class AimProbe {
     public static double impactScreenX() { return GaelImpactMarker.screenX(); }
     public static double impactScreenY() { return GaelImpactMarker.screenY(); }
     public static String impactLabel() { return GaelImpactMarker.label(); }
+
+    public static int ballisticTrailCount() { return PzBallisticRuntime.diagnosticTrailCount(); }
+
+    public static String ballisticTrailPath(int index) {
+        return PzBallisticRuntime.diagnosticTrailPath(index);
+    }
 
     public static Double aimX() {
         MousePick.Hit hit = AimProbe.fresh();

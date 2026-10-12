@@ -14,7 +14,9 @@ public final class HoldSway {
     private static final float LIMIT = 25;
     private static final long MAX_AGE_NS = 500_000_000L;
     private static volatile State state;
-    private static boolean reported, reportedFallback, failed;
+    private static volatile ShotCarry shotCarry;
+    private static final long SHOT_CARRY_WINDOW_NS = 300_000_000L;
+    private static boolean reported, reportedFallback, reportedFailure;
     private static final ThreadLocal<Scratch> scratch = ThreadLocal.withInitial(Scratch::new);
     private static final Field ARM_BONES = field("armBones"), POSE = field("M"), BARREL = field("dw"), WEAPON = field("W"), BLEND = field("eShared");
 
@@ -35,33 +37,102 @@ public final class HoldSway {
         return true;
     }
 
+    /** Mirror the extra per-shot ballistic correction in the visible arm/weapon pose. */
+    public static CarryAdjustment addShotCarry(String weapon, double yawDegrees, double pitchDegrees) {
+        if (weapon == null || !Double.isFinite(yawDegrees) || !Double.isFinite(pitchDegrees)) {
+            return new CarryAdjustment(0.0, 0.0);
+        }
+        long now = System.nanoTime();
+        ShotCarry previous = activeCarry(weapon, now);
+        float fade = carryFade(previous, now);
+        double previousYaw = previous == null ? 0.0 : previous.yaw * fade;
+        double previousPitch = previous == null ? 0.0 : previous.pitch * fade;
+        float yaw = (float) Math.max(-LIMIT, Math.min(LIMIT,
+                previousYaw + yawDegrees));
+        float pitch = (float) Math.max(-LIMIT, Math.min(LIMIT,
+                previousPitch + pitchDegrees));
+        shotCarry = new ShotCarry(weapon, yaw, pitch, now);
+        return new CarryAdjustment(yaw - previousYaw, pitch - previousPitch);
+    }
+
+    /** Set the visible post-shot pose to the final projectile ray relative to the unsnapped weapon axis. */
+    public static void mirrorShotDirection(String weapon, double yawDegrees, double pitchDegrees) {
+        if (weapon == null || !Double.isFinite(yawDegrees) || !Double.isFinite(pitchDegrees)) return;
+        // This is not ordinary recoil sway: it mirrors the angular correction
+        // already applied to the projectile. Clamping it to LIMIT made the gun
+        // stop moving while the bullet kept correcting toward the reticle.
+        float yaw = (float) yawDegrees;
+        float pitch = (float) pitchDegrees;
+        shotCarry = new ShotCarry(weapon, yaw, pitch, System.nanoTime());
+    }
+
+    private static ShotCarry activeCarry(String weapon, long now) {
+        ShotCarry value = shotCarry;
+        return value != null && value.weaponId.equals(weapon)
+                && now >= value.at && now - value.at < SHOT_CARRY_WINDOW_NS ? value : null;
+    }
+
+    private static float carryFade(ShotCarry value, long now) {
+        if (value == null || now < value.at) return 0.0f;
+        float t = Math.min(1.0f, (now - value.at) / (float) SHOT_CARRY_WINDOW_NS);
+        return 1.0f - t * t * (3.0f - 2.0f * t);
+    }
+
     /** Apply the same live post-ADS bone rotation to the direction used by ballistics. */
     public static void applyToShotDirection(String weaponId, Vector3f direction) {
+        applyToShotDirection(weaponId, direction, true);
+    }
+
+    /** Apply only the regular animation sway, excluding the extra shot-carry overlay. */
+    public static void applySwayToShotDirection(String weaponId, Vector3f direction) {
+        applyToShotDirection(weaponId, direction, false);
+    }
+
+    private static void applyToShotDirection(String weaponId, Vector3f direction,
+                                             boolean includeShotCarry) {
         State value = state;
-        if (direction == null || weaponId == null || value == null
-                || !weaponId.equals(value.weaponId) || System.nanoTime() - value.at > MAX_AGE_NS
-                || (value.yaw == 0 && value.pitch == 0 && value.roll == 0)) return;
+        long now = System.nanoTime();
+        ShotCarry carry = includeShotCarry ? activeCarry(weaponId, now) : null;
+        boolean hasState = value != null && weaponId != null && weaponId.equals(value.weaponId)
+                && now >= value.at && now - value.at <= MAX_AGE_NS;
+        if (direction == null || weaponId == null || (!hasState && carry == null)) return;
         float blend;
         try { blend = BLEND.getFloat(null); }
         catch (IllegalAccessException error) { return; }
         if (!Float.isFinite(blend) || blend <= 0) return;
+        float fade = carryFade(carry, now);
+        float yaw = (hasState ? value.yaw : 0.0f) + (carry == null ? 0.0f : carry.yaw * fade);
+        float pitch = (hasState ? value.pitch : 0.0f) + (carry == null ? 0.0f : carry.pitch * fade);
+        float roll = hasState ? value.roll : 0.0f;
+        if (yaw == 0.0f && pitch == 0.0f && roll == 0.0f) return;
         Scratch work = scratch.get();
         work.forward.set(direction);
         if (work.forward.lengthSquared() < 1.0e-8f) return;
         work.forward.normalize();
         work.pivot.zero();
-        buildRotation(work.pivot, work.forward, value.yaw, value.pitch, value.roll, blend, work.rotation);
+        buildRotation(work.pivot, work.forward, yaw, pitch, roll, blend, work.rotation);
         work.rotation.transformDirection(direction).normalize();
     }
 
     /** Apply after ADS has finished composing and writing the final arm/weapon bone transforms. */
     public static void applyToWeaponBones(Object animationPlayer) {
         State value = state;
-        if (failed || value == null || System.nanoTime()-value.at > MAX_AGE_NS
-                || (value.yaw == 0 && value.pitch == 0 && value.roll == 0)) return;
+        long now = System.nanoTime();
+        ShotCarry carry = shotCarry;
+        boolean hasState = value != null && now >= value.at && now - value.at <= MAX_AGE_NS;
+        boolean hasCarry = carry != null && now >= carry.at
+                && now - carry.at < SHOT_CARRY_WINDOW_NS;
+        if (!hasState && !hasCarry) return;
         IsoPlayer player = IsoPlayer.players[0];
+        // ADS.posed is also called for remote players. Its OnExit patch runs
+        // for those calls too, but ADS.armBones belongs to the local skeleton;
+        // applying those indices to a remote AnimationPlayer can throw and
+        // permanently disable recoil sway for the rest of the session.
+        if (player == null || animationPlayer != player.getAnimationPlayer()) return;
         var item = player == null ? null : player.getPrimaryHandItem();
-        if (item == null || !value.weaponId.equals(item.getFullType())) return;
+        String weaponId = hasState ? value.weaponId : carry.weaponId;
+        if (item == null || !weaponId.equals(item.getFullType())) return;
+        hasCarry = hasCarry && weaponId.equals(carry.weaponId);
         try {
             Scratch work = scratch.get();
             Matrix4f pose = (Matrix4f) POSE.get(null);
@@ -81,7 +152,19 @@ public final class HoldSway {
             }
             float blend = BLEND.getFloat(null);
             if (blend <= 0) return;
-            buildRotation(work.pivot, work.forward, value.yaw, value.pitch, value.roll, blend, work.rotation);
+            float carryAmount = carryFade(hasCarry ? carry : null, now);
+            float yaw = (hasState ? value.yaw : 0.0f) + (hasCarry ? carry.yaw * carryAmount : 0.0f);
+            float pitch = (hasState ? value.pitch : 0.0f) + (hasCarry ? carry.pitch * carryAmount : 0.0f);
+            float roll = hasState ? value.roll : 0.0f;
+            if (yaw == 0.0f && pitch == 0.0f && roll == 0.0f) return;
+            buildRotation(work.pivot, work.forward, yaw, pitch, roll, blend, work.rotation);
+            // `pivot` and `forward` are in rendered/world space, while
+            // AnimationPlayer model transforms are in model space. Conjugate
+            // the world rotation through ADS.M so the same angular change is
+            // applied in the coordinate system used by the bone matrices.
+            work.localRotation.set(pose).invert()
+                    .mul(work.rotation)
+                    .mul(pose);
             int[] bones = (int[]) ARM_BONES.get(null);
             AnimationPlayer ap = (AnimationPlayer) animationPlayer;
             // Rotate both arm chains and the held prop around the hand joint.
@@ -90,7 +173,7 @@ public final class HoldSway {
                 org.lwjgl.util.vector.Matrix4f bone = ap.getModelTransformAt(bones[i]);
                 PZMath.convertMatrix(bone, work.bone);
                 work.bone.transpose();
-                work.rotation.mul(work.bone, work.bone);
+                work.localRotation.mul(work.bone, work.bone);
                 work.bone.transpose();
                 PZMath.convertMatrix(work.bone, bone);
             }
@@ -99,8 +182,12 @@ public final class HoldSway {
                 System.out.println("[ViewpointGael] post-ADS weapon-bone yaw/pitch motion active (v11): " + value.weaponId);
             }
         } catch (Throwable error) {
-            failed = true;
-            System.err.println("[ViewpointGael] angular weapon motion unavailable: " + error);
+            // Bone layouts can briefly be unavailable while PZ swaps models.
+            // Keep retrying on later frames instead of latching sway off.
+            if (!reportedFailure) {
+                reportedFailure = true;
+                System.err.println("[ViewpointGael] angular weapon motion frame skipped: " + error);
+            }
         }
     }
 
@@ -138,9 +225,11 @@ public final class HoldSway {
     }
 
     private record State(String weaponId, float yaw, float pitch, float roll, long at) {}
+    private record ShotCarry(String weaponId, float yaw, float pitch, long at) {}
+    public record CarryAdjustment(double yawDegrees, double pitchDegrees) {}
     private static final class Scratch {
         final Vector3f pivot = new Vector3f(), right = new Vector3f(), forward = new Vector3f();
-        final Matrix4f rotation = new Matrix4f(), bone = new Matrix4f();
+        final Matrix4f rotation = new Matrix4f(), localRotation = new Matrix4f(), bone = new Matrix4f();
     }
     private HoldSway() {}
 }

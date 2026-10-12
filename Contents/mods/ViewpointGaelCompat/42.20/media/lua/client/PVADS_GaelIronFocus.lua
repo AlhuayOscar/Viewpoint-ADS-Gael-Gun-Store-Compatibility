@@ -930,8 +930,8 @@ local function updateIronFocus(player)
     local root = rawget(_G, "ViewpointGael")
     local setShotOrigin = root and root.Aim and root.Aim.setShotOrigin
     local setWeaponReference = root and root.Aim and root.Aim.setWeaponReferenceAlignment
-    local setShotMotionGain = root and root.Aim and root.Aim.setShotMotionGain
     local setShotCentering = root and root.Aim and root.Aim.setShotCentering
+    local setShotMotionGain = root and root.Aim and root.Aim.setShotMotionGain
     local sandbox = SandboxVars and SandboxVars.ViewpointGaelCompat
     if setWeaponReference then
         pcall(setWeaponReference, profile and profile.weaponId or "",

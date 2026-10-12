@@ -11,8 +11,6 @@
 package viewpointgael;
 
 import me.zed_0xff.zombie_buddy.Patch;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 
 @Patch(className="pvads.ADS", methodName="posed", strictMatch=true)
 public final class Patch_HoldSway {

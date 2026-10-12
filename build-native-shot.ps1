@@ -33,7 +33,7 @@ foreach ($apiJar in $apiJars) {
     if (!(Test-Path -LiteralPath $apiJar)) { throw "Required API jar not found: $apiJar" }
 }
 $classPath = $apiJars -join ';'
-$sources = @('src\pvads\GaelNativeShot.java', 'src\pvads\GaelWeaponMotion.java', 'src\pvads\GaelImpactMarker.java', 'src\viewpointgael\Patch_WeaponMotion.java', 'src\viewpointgael\HoldSway.java', 'src\viewpointgael\Patch_HoldSway.java', 'src\viewpointgael\Patch_ShotOrigin.java', 'src\pvads\GaelBarrelRay.java', 'src\viewpointgael\AimProbe.java', 'src\viewpointgael\Patch_NativeShot.java', 'src\viewpointgael\Patch_TBDeflect.java', 'src\viewpointgael\Patch_TBLaunch.java', 'src\viewpointgael\Patch_AimClickFreeCursor.java', 'src\viewpointgael\Patch_TBImpact.java', 'src\viewpointgael\Patch_TBWorldImpact.java', 'src\viewpointgael\Patch_TBExpire.java', 'src\viewpointgael\Patch_TBShot.java', 'src\viewpointgael\Patch_ImpactCamera.java', 'src\viewpoint\input\ThirdPerson.java', 'src\viewpointgael\Main.java', 'src\viewpointgael\Patch_ViewpointThirdPerson.java', 'src\viewpointgael\Patch_ADSThirdPerson.java', 'tests\GaelNativeShotTest.java', 'tests\GaelMirroredShotTest.java', 'tests\GaelLuaRecoilTest.java', 'tests\GaelPhysicalAxisTest.java', 'tests\GaelWeaponPivotTest.java') | ForEach-Object { Join-Path $PSScriptRoot $_ }
+$sources = @('src\pvads\GaelNativeShot.java', 'src\pvads\GaelWeaponMotion.java', 'src\pvads\GaelImpactMarker.java', 'src\viewpointgael\Patch_WeaponMotion.java', 'src\viewpointgael\HoldSway.java', 'src\viewpointgael\Patch_HoldSway.java', 'src\viewpointgael\Patch_ShotOrigin.java', 'src\pvads\GaelBarrelRay.java', 'src\viewpointgael\AimProbe.java', 'src\viewpointgael\Patch_NativeShot.java', 'src\viewpointgael\Patch_TBDeflect.java', 'src\viewpointgael\Patch_TBLaunch.java', 'src\viewpointgael\Patch_TBSuppressDuplicateSpawn.java', 'src\viewpointgael\Patch_AimClickFreeCursor.java', 'src\viewpointgael\Patch_TBImpact.java', 'src\viewpointgael\Patch_TBWorldImpact.java', 'src\viewpointgael\Patch_TBExpire.java', 'src\viewpointgael\Patch_TBShot.java', 'src\viewpointgael\Patch_ImpactCamera.java', 'src\viewpoint\input\ThirdPerson.java', 'src\viewpointgael\Main.java', 'src\viewpointgael\Patch_ViewpointThirdPerson.java', 'src\viewpointgael\Patch_ADSThirdPerson.java', 'src\viewpointgael\Patch_GaelBallisticRuntime.java', 'src\viewpointgael\Patch_GaelBallisticFiring.java', 'src\viewpointgael\Patch_GaelBallisticLaunch.java', 'src\viewpointgael\Patch_GaelSuppressNativeHit.java', 'src\viewpointgael\Patch_GaelBallisticRangeDamage.java', 'src\viewpointgael\Patch_GaelBallisticHitReaction.java', 'src\viewpointgael\Patch_GaelBallisticHelmetFall.java', 'src\stgael\ballistics\BallisticCollision.java', 'src\stgael\ballistics\BallisticCollisionResolver.java', 'src\stgael\ballistics\BallisticEngine.java', 'src\stgael\ballistics\BallisticProfile.java', 'src\stgael\ballistics\BallisticProjectile.java', 'src\stgael\ballistics\BallisticSegment.java', 'src\stgael\ballistics\BallisticVector3.java', 'src\stgael\pz\PzBallisticCoordinates.java', 'src\stgael\pz\PzBallisticProfileCatalog.java', 'src\stgael\pz\PzBallisticRuntime.java', 'src\stgael\pz\PzBallisticService.java', 'src\stgael\pz\PzCharacterCollisionResolver.java', 'src\stgael\pz\PzCollisionResolver.java', 'src\stgael\pz\PzImpactDamageHandler.java', 'src\stgael\pz\PzProjectileLauncher.java', 'src\stgael\pz\PzWorldCollisionResolver.java', 'src\stgael\pz\PzVehicleCollisionResolver.java', 'tests\GaelNativeShotTest.java', 'tests\GaelMirroredShotTest.java', 'tests\GaelLuaRecoilTest.java', 'tests\GaelPhysicalAxisTest.java', 'tests\GaelWeaponPivotTest.java') | ForEach-Object { Join-Path $PSScriptRoot $_ }
 if ($CompilerJar) {
     if (!(Test-Path -LiteralPath $CompilerJar)) { throw "Compiler jar not found: $CompilerJar" }
     & $javaPath -jar $CompilerJar "-$JavaLanguageLevel" -proc:none -classpath $classPath -d $buildRoot @sources
@@ -70,11 +70,17 @@ $classFiles = @(
   "pvads/GaelBarrelRay.class", "pvads/GaelImpactMarker.class", "viewpointgael/AimProbe.class", "viewpointgael/Main.class",
   "viewpointgael/Patch_NativeShot.class", "viewpointgael/Patch_ShotOrigin.class", "viewpointgael/Patch_TBImpact.class", "viewpointgael/Patch_TBWorldImpact.class",
   "viewpointgael/Patch_TBDeflect.class",
-  "viewpointgael/Patch_TBAimPhysical.class", "viewpointgael/Patch_TBLaunch.class", "viewpointgael/Patch_AimClickFreeCursor.class",
+  "viewpointgael/Patch_TBAimPhysical.class", "viewpointgael/Patch_TBLaunch.class", "viewpointgael/Patch_TBSuppressDuplicateSpawn.class", "viewpointgael/Patch_AimClickFreeCursor.class",
   "viewpointgael/Patch_TBExpire.class", "viewpointgael/Patch_TBShot.class", "viewpointgael/Patch_ImpactCamera.class",
-  "viewpointgael/Patch_ViewpointThirdPerson.class", "viewpointgael/Patch_ADSThirdPerson.class", "viewpoint/input/ThirdPerson.class",
+  "viewpointgael/Patch_ViewpointThirdPerson.class", "viewpointgael/Patch_ADSThirdPerson.class", "viewpointgael/Patch_GaelBallisticRuntime.class", "viewpointgael/Patch_GaelBallisticFiring.class", "viewpointgael/Patch_GaelBallisticLaunch.class", "viewpointgael/Patch_GaelSuppressNativeHit.class", "viewpointgael/Patch_GaelBallisticRangeDamage.class", "viewpointgael/Patch_GaelBallisticHitReaction.class", "viewpointgael/Patch_GaelBallisticHelmetFall.class", "viewpoint/input/ThirdPerson.class",
+  "stgael/ballistics/BallisticCollision.class", "stgael/ballistics/BallisticCollision`$Kind.class", "stgael/ballistics/BallisticCollisionResolver.class",
+  "stgael/ballistics/BallisticEngine.class", "stgael/ballistics/BallisticEngine`$Impact.class", "stgael/ballistics/BallisticProfile.class",
+  "stgael/ballistics/BallisticProjectile.class", "stgael/ballistics/BallisticSegment.class", "stgael/ballistics/BallisticVector3.class",
+  "stgael/pz/PzBallisticCoordinates.class", "stgael/pz/PzBallisticProfileCatalog.class", "stgael/pz/PzBallisticRuntime.class", "stgael/pz/PzBallisticRuntime`$ShotData.class", "stgael/pz/PzBallisticRuntime`$ShotContext.class", "stgael/pz/PzBallisticRuntime`$TrailView.class", "stgael/pz/PzBallisticService.class", "stgael/pz/PzBallisticService`$ShotData.class", "stgael/pz/PzCharacterCollisionResolver.class", "stgael/pz/PzCollisionResolver.class",
+  "stgael/pz/PzImpactDamageHandler.class", "stgael/pz/PzImpactDamageHandler`$DamagePlan.class", "stgael/pz/PzImpactDamageHandler`$ImpactCache.class", "stgael/pz/PzImpactDamageHandler`$Result.class", "stgael/pz/PzImpactDamageHandler`$Status.class",
+  "stgael/pz/PzProjectileLauncher.class", "stgael/pz/PzWorldCollisionResolver.class", "stgael/pz/PzVehicleCollisionResolver.class",
   "pvads/GaelWeaponMotion.class", "pvads/GaelWeaponMotion`$Fields.class", "pvads/GaelWeaponMotion`$Scratch.class", "pvads/GaelWeaponMotion`$Sample.class", "pvads/GaelWeaponMotion`$ReferenceAlignment.class",
-  "viewpointgael/Patch_WeaponMotion.class", "viewpointgael/HoldSway.class", "viewpointgael/HoldSway`$Scratch.class", "viewpointgael/HoldSway`$State.class",
+  "viewpointgael/Patch_WeaponMotion.class", "viewpointgael/HoldSway.class", "viewpointgael/HoldSway`$CarryAdjustment.class", "viewpointgael/HoldSway`$Scratch.class", "viewpointgael/HoldSway`$ShotCarry.class", "viewpointgael/HoldSway`$State.class",
   "viewpointgael/Patch_HoldSway.class"
 )
 foreach ($cf in $classFiles) {
@@ -101,6 +107,23 @@ foreach ($buildVersion in @('42', '42.20')) {
             throw "Active mod deployment path not found for Build ${buildVersion}: $deployJar"
         }
         Copy-Item -LiteralPath $stagedJar -Destination $deployJar
+        $deployResources = @(
+            'media\sandbox-options.txt',
+            'media\lua\client\PVADS_GaelImpactMarker.lua',
+            'media\lua\shared\Translate\EN\Sandbox.json',
+            'media\lua\shared\Translate\ES\Sandbox.json'
+        )
+        foreach ($resource in $deployResources) {
+            $sourceResource = Join-Path $PSScriptRoot "Contents\mods\ViewpointGaelCompat\$buildVersion\$resource"
+            $destinationResource = Join-Path $DeployRoot "$buildVersion\$resource"
+            if (!(Test-Path -LiteralPath $sourceResource)) {
+                throw "Deployment resource missing for Build ${buildVersion}: $sourceResource"
+            }
+            if (!(Test-Path -LiteralPath (Split-Path -Parent $destinationResource))) {
+                throw "Active mod resource path not found for Build ${buildVersion}: $destinationResource"
+            }
+            Copy-Item -LiteralPath $sourceResource -Destination $destinationResource
+        }
     }
 }
 if ($SkipVerification) {
