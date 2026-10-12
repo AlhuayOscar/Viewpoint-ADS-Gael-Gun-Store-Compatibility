@@ -7,12 +7,18 @@ import zombie.iso.Vector3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /** Shares the calibrated ADS shot direction with Build 42's native ballistics. */
 public final class GaelNativeShot {
     private static final double FLOOR_HEIGHT = 2.4494895935058594;
     private static final ThreadLocal<Vector3f> SHOT_DIRECTION = ThreadLocal.withInitial(Vector3f::new);
     private static final ThreadLocal<OriginScratch> ORIGIN_SCRATCH = ThreadLocal.withInitial(OriginScratch::new);
+    private static final ThreadLocal<ShotAssist> PENDING_ASSIST = new ThreadLocal<>();
+    private static final Map<Object, ShotAssist> GUIDED_PROJECTILES =
+            Collections.synchronizedMap(new WeakHashMap<>());
     private static volatile ShotOrigin shotOrigin;
     private static volatile WeaponPose weaponPose;
     private static boolean announced;
@@ -20,6 +26,7 @@ public final class GaelNativeShot {
     private static boolean trueBallisticsAnnounced;
     private static boolean trueBallisticsProjectilesAnnounced;
     private static boolean trueBallisticsProjectilesMissingAnnounced;
+    private static boolean trueBallisticsAssistAnnounced;
     private static volatile double shotMotionGain = 0.35;
     private static volatile double shotCentering;
     private static volatile boolean shotCenteringActive;
@@ -64,6 +71,24 @@ public final class GaelNativeShot {
     public static void publishWeaponPose(Matrix4f pose, String weapon, float angle) {
         if (pose == null || weapon == null || !Float.isFinite(angle)) return;
         weaponPose = new WeaponPose(weapon, new Matrix4f(pose), angle, System.nanoTime());
+    }
+
+    /** Physical ADS weapon axis in tile-space units for Viewpoint launcher aim. */
+    public static double launcherAxis(int component) {
+        IsoPlayer player = IsoPlayer.players[0];
+        WeaponPose pose = weaponPose;
+        if (player == null || !player.isAiming() || !VP.firstPerson() || VP.freeCam()
+                || pose == null || System.nanoTime() - pose.at > 500_000_000L
+                || !(player.getPrimaryHandItem() instanceof HandWeapon weapon)
+                || !pose.weaponId.equals(weapon.getFullType())) return Double.NaN;
+        Vector3f direction = SHOT_DIRECTION.get();
+        if (!GaelWeaponMotion.shotDirection(pose.angle, direction)) return Double.NaN;
+        return switch (component) {
+            case 0 -> -direction.x;
+            case 1 -> -direction.z;
+            case 2 -> direction.y / FLOOR_HEIGHT;
+            default -> Double.NaN;
+        };
     }
 
     public static void afterPresence(Object controller, Object direction) {
@@ -156,26 +181,10 @@ public final class GaelNativeShot {
         int centeringShotIndex = sameCenteringBurst ? centeringBurstShotCount + 1 : 1;
         double centering = shotCenteringActive
                 ? shotCentering * centeringBurstEffect(centeringShotIndex) : 0.0;
-        // Short gameplay aim assist: after a full ADS ramp, the first three
-        // shots snap to the camera-center ray in ideal conditions, overriding
-        // the weapon's physical barrel direction. Condition penalties apply.
+        // Keep the actual barrel direction at launch. Eligible shots will curve
+        // toward True Ballistics' camera-ray aim point during their first tiles.
         if (shotCenteringActive && centeringShotIndex <= 3 && shotCentering >= 0.99) {
             centering = 1.0;
-        }
-        if (centering > 0) {
-            double yawToCenter = VP.yaw(), pitchToCenter = VP.pitch();
-            if (Double.isFinite(yawToCenter) && Double.isFinite(pitchToCenter)) {
-                double horizontal = Math.cos(pitchToCenter);
-                double centerX = Math.cos(yawToCenter) * horizontal;
-                double centerY = Math.sin(yawToCenter) * horizontal;
-                double centerU = Math.sin(pitchToCenter);
-                x += (centerX - x) * centering;
-                y += (centerY - y) * centering;
-                u += (centerU - u) * centering;
-                length = Math.sqrt(x*x + y*y + u*u);
-                if (!Double.isFinite(length) || length < 1e-6) return false;
-                x /= length; y /= length; u /= length;
-            }
         }
         double yaw = Math.atan2(y, x);
         double pitch = Math.atan2(u, Math.hypot(x, y));
@@ -197,6 +206,27 @@ public final class GaelNativeShot {
             setNumber(direction, "x", x);
             setNumber(direction, "y", y);
             setNumber(direction, "u", u);
+            ShotAssist pendingAssist = null;
+            if (centering > 0) {
+                Object aimPoint = solution.getClass().getField("aimPoint").get(solution);
+                double targetX = getNumber(aimPoint, "x");
+                double targetY = getNumber(aimPoint, "y");
+                double targetU = getNumber(aimPoint, "u");
+                if (Double.isFinite(targetX) && Double.isFinite(targetY) && Double.isFinite(targetU)) {
+                    AssistAngle angle = assistAngleFactor(solution, x, y, u,
+                            targetX, targetY, targetU);
+                    double strength = centering * angle.factor;
+                    System.out.println("[ViewpointGael] shot-assist weapon=" + weapon.getFullType()
+                            + " burstShot=" + centeringShotIndex
+                            + " centering=" + centering
+                            + " muzzleAimAngle=" + angle.degrees
+                            + " angleFactor=" + angle.factor
+                            + " strength=" + strength);
+                    if (strength > 0.01) pendingAssist = new ShotAssist(targetX, targetY,
+                            targetU, strength, 0.0, 0.0, 0.0);
+                }
+            }
+            PENDING_ASSIST.set(pendingAssist);
             previousShotWeapon = weapon.getFullType();
             previousShotAt = shotAt;
             previousShotYaw = rawYaw;
@@ -225,6 +255,7 @@ public final class GaelNativeShot {
     public static boolean correctTrueBallisticsShot(Object manager, Object group) {
         IsoPlayer player = IsoPlayer.players[0];
         if (manager == null || group == null || player == null) return false;
+        PENDING_ASSIST.remove();
         try {
             Field solutionField = manager.getClass().getDeclaredField("sol");
             solutionField.setAccessible(true);
@@ -235,6 +266,8 @@ public final class GaelNativeShot {
             double x = getNumber(direction, "x");
             double y = getNumber(direction, "y");
             double u = getNumber(direction, "u");
+            ShotAssist pendingAssist = PENDING_ASSIST.get();
+            PENDING_ASSIST.remove();
             Object activeValue = manager.getClass().getMethod("activeProjectiles").invoke(manager);
             if (!(activeValue instanceof java.util.List<?> active)) return false;
             int changed = 0;
@@ -245,7 +278,17 @@ public final class GaelNativeShot {
                 setNumber(velocity, "x", x * speed);
                 setNumber(velocity, "y", y * speed);
                 setNumber(velocity, "u", u * speed);
+                if (pendingAssist != null) {
+                    GUIDED_PROJECTILES.put(projectile, pendingAssist.withProgress(
+                            getNumber(projectile, "age"), getNumber(projectile, "traveled")));
+                }
                 changed++;
+            }
+            if (player.getPrimaryHandItem() instanceof HandWeapon weapon
+                    && "Base.M4".equals(weapon.getFullType())) {
+                System.out.println("[ViewpointGael] shot-assist launch weapon=Base.M4 projectiles=" + changed
+                        + " guided=" + (pendingAssist != null)
+                        + " strength=" + (pendingAssist == null ? 0.0 : pendingAssist.strength));
             }
             if (changed == 0) {
                 if (!trueBallisticsProjectilesMissingAnnounced) {
@@ -259,11 +302,92 @@ public final class GaelNativeShot {
                 System.out.println("[ViewpointGael] redirected " + changed
                         + " live True Ballistics projectile(s) to match the visible weapon deviation");
             }
+            if (pendingAssist != null && !trueBallisticsAssistAnnounced) {
+                trueBallisticsAssistAnnounced = true;
+                System.out.println("[ViewpointGael] first-shot aim assist curves toward the blue aim ray over the first 4 tiles");
+            }
             return true;
         } catch (ReflectiveOperationException | RuntimeException error) {
             System.err.println("[ViewpointGael] Could not redirect live True Ballistics projectiles: " + error);
             return false;
         }
+    }
+
+    /** Smoothly curve assisted projectiles toward the camera-ray hit point. */
+    public static void guideTrueBallisticsProjectile(Object projectile, double frameSeconds) {
+        if (projectile == null || !Double.isFinite(frameSeconds) || frameSeconds <= 0) return;
+        ShotAssist assist = GUIDED_PROJECTILES.get(projectile);
+        if (assist == null) return;
+        try {
+            double age = getNumber(projectile, "age");
+            double traveled = getNumber(projectile, "traveled");
+            double ageSinceLaunch = Math.max(0.0, age - assist.startAge);
+            double distanceSinceLaunch = Math.max(assist.guidedDistance,
+                    traveled - assist.startTravel);
+            if (ageSinceLaunch >= AIM_ASSIST_MAX_SECONDS
+                    || distanceSinceLaunch >= AIM_ASSIST_MAX_DISTANCE) {
+                GUIDED_PROJECTILES.remove(projectile);
+                return;
+            }
+
+            Object position = projectile.getClass().getField("position").get(projectile);
+            Object velocity = projectile.getClass().getField("velocity").get(projectile);
+            double vx = getNumber(velocity, "x"), vy = getNumber(velocity, "y");
+            double vu = getNumber(velocity, "u");
+            double speed = Math.sqrt(vx * vx + vy * vy + vu * vu);
+            if (!Double.isFinite(speed) || speed < 1.0e-6) {
+                GUIDED_PROJECTILES.remove(projectile);
+                return;
+            }
+            double dx = assist.targetX - getNumber(position, "x");
+            double dy = assist.targetY - getNumber(position, "y");
+            double du = assist.targetU - getNumber(position, "u");
+            double targetLength = Math.sqrt(dx * dx + dy * dy + du * du);
+            if (!Double.isFinite(targetLength) || targetLength < 1.0e-4) {
+                GUIDED_PROJECTILES.remove(projectile);
+                return;
+            }
+            dx /= targetLength;
+            dy /= targetLength;
+            du /= targetLength;
+
+            double remaining = AIM_ASSIST_MAX_DISTANCE - distanceSinceLaunch;
+            double stepDistance = Math.min(remaining,
+                    Math.min(1.0, speed * Math.min(frameSeconds, 0.05)));
+            if (stepDistance <= 0) return;
+            double alpha = 1.0 - Math.exp(-AIM_ASSIST_CURVE_RATE * stepDistance * assist.strength);
+            double nx = vx / speed + (dx - vx / speed) * alpha;
+            double ny = vy / speed + (dy - vy / speed) * alpha;
+            double nu = vu / speed + (du - vu / speed) * alpha;
+            double nextLength = Math.sqrt(nx * nx + ny * ny + nu * nu);
+            if (!Double.isFinite(nextLength) || nextLength < 1.0e-6) return;
+            setNumber(velocity, "x", nx / nextLength * speed);
+            setNumber(velocity, "y", ny / nextLength * speed);
+            setNumber(velocity, "u", nu / nextLength * speed);
+            GUIDED_PROJECTILES.put(projectile, assist.advance(stepDistance));
+        } catch (ReflectiveOperationException | RuntimeException error) {
+            GUIDED_PROJECTILES.remove(projectile);
+        }
+    }
+
+    private static final double AIM_ASSIST_MAX_SECONDS = 0.12;
+    private static final double AIM_ASSIST_MAX_DISTANCE = 4.0;
+    private static final double AIM_ASSIST_CURVE_RATE = 0.9;
+
+    private static AssistAngle assistAngleFactor(Object solution, double x, double y, double u,
+                                                double targetX, double targetY, double targetU)
+            throws ReflectiveOperationException {
+        Object muzzle = solution.getClass().getField("muzzle").get(solution);
+        double dx = targetX - getNumber(muzzle, "x");
+        double dy = targetY - getNumber(muzzle, "y");
+        double du = targetU - getNumber(muzzle, "u");
+        double length = Math.sqrt(dx * dx + dy * dy + du * du);
+        if (!Double.isFinite(length) || length < 1.0e-4) return new AssistAngle(0.0, 0.0);
+        double dot = (x * dx + y * dy + u * du) / length;
+        double angle = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dot))));
+        // Small sway gets strong help; large deviations are mostly left alone.
+        double factor = Math.max(0.0, Math.min(1.0, (40.0 - Math.max(8.0, angle)) / 32.0));
+        return new AssistAngle(angle, factor);
     }
 
     private static double getNumber(Object target, String name) throws ReflectiveOperationException {
@@ -307,6 +431,17 @@ public final class GaelNativeShot {
 
     private record ShotOrigin(String weaponId, float x, float y, float z, long at) {}
     private record WeaponPose(String weaponId, Matrix4f model, float angle, long at) {}
+    private record AssistAngle(double degrees, double factor) {}
+    private record ShotAssist(double targetX, double targetY, double targetU, double strength,
+                              double startAge, double startTravel, double guidedDistance) {
+        ShotAssist withProgress(double age, double traveled) {
+            return new ShotAssist(targetX, targetY, targetU, strength, age, traveled, 0.0);
+        }
+        ShotAssist advance(double distance) {
+            return new ShotAssist(targetX, targetY, targetU, strength,
+                    startAge, startTravel, guidedDistance + distance);
+        }
+    }
     private static final class OriginScratch {
         final Vector3f modelOffset = new Vector3f();
         final Vector3 worldOffset = new Vector3();

@@ -33,12 +33,12 @@ foreach ($apiJar in $apiJars) {
     if (!(Test-Path -LiteralPath $apiJar)) { throw "Required API jar not found: $apiJar" }
 }
 $classPath = $apiJars -join ';'
-$sources = @('src\pvads\GaelNativeShot.java', 'src\pvads\GaelWeaponMotion.java', 'src\pvads\GaelImpactMarker.java', 'src\viewpointgael\Patch_WeaponMotion.java', 'src\viewpointgael\HoldSway.java', 'src\viewpointgael\Patch_HoldSway.java', 'src\pvads\GaelBarrelRay.java', 'src\viewpointgael\AimProbe.java', 'src\viewpointgael\Patch_NativeShot.java', 'src\viewpointgael\Patch_TBDeflect.java', 'src\viewpointgael\Patch_TBMuzzle.java', 'src\viewpointgael\Patch_TBLaunch.java', 'src\viewpointgael\Patch_AimClickFreeCursor.java', 'src\viewpointgael\Patch_TBImpact.java', 'src\viewpointgael\Patch_TBWorldImpact.java', 'src\viewpointgael\Patch_TBExpire.java', 'src\viewpointgael\Patch_TBShot.java', 'src\viewpointgael\Patch_ImpactCamera.java', 'src\viewpoint\input\ThirdPerson.java', 'src\viewpointgael\Main.java', 'src\viewpointgael\Patch_ViewpointThirdPerson.java', 'src\viewpointgael\Patch_ADSThirdPerson.java', 'tests\GaelNativeShotTest.java', 'tests\GaelMirroredShotTest.java', 'tests\GaelLuaRecoilTest.java', 'tests\GaelPhysicalAxisTest.java', 'tests\GaelWeaponPivotTest.java') | ForEach-Object { Join-Path $PSScriptRoot $_ }
+$sources = @('src\pvads\GaelNativeShot.java', 'src\pvads\GaelWeaponMotion.java', 'src\pvads\GaelImpactMarker.java', 'src\viewpointgael\Patch_WeaponMotion.java', 'src\viewpointgael\HoldSway.java', 'src\viewpointgael\Patch_HoldSway.java', 'src\pvads\GaelBarrelRay.java', 'src\viewpointgael\AimProbe.java', 'src\viewpointgael\Patch_NativeShot.java', 'src\viewpointgael\Patch_TBDeflect.java', 'src\viewpointgael\Patch_TBMuzzle.java', 'src\viewpointgael\Patch_TBLaunch.java', 'src\viewpointgael\Patch_TBProjectileGuide.java', 'src\viewpointgael\Patch_AimClickFreeCursor.java', 'src\viewpointgael\Patch_TBImpact.java', 'src\viewpointgael\Patch_TBWorldImpact.java', 'src\viewpointgael\Patch_TBExpire.java', 'src\viewpointgael\Patch_TBShot.java', 'src\viewpointgael\Patch_ImpactCamera.java', 'src\viewpoint\input\ThirdPerson.java', 'src\viewpointgael\Main.java', 'src\viewpointgael\Patch_ViewpointThirdPerson.java', 'src\viewpointgael\Patch_ADSThirdPerson.java', 'tests\GaelNativeShotTest.java', 'tests\GaelMirroredShotTest.java', 'tests\GaelLuaRecoilTest.java', 'tests\GaelPhysicalAxisTest.java', 'tests\GaelWeaponPivotTest.java') | ForEach-Object { Join-Path $PSScriptRoot $_ }
 if ($CompilerJar) {
     if (!(Test-Path -LiteralPath $CompilerJar)) { throw "Compiler jar not found: $CompilerJar" }
     & $javaPath -jar $CompilerJar "-$JavaLanguageLevel" -proc:none -classpath $classPath -d $buildRoot @sources
 } elseif (Test-Path -LiteralPath $javacPath) {
-    & $javacPath --release 21 -proc:none -classpath $classPath -d $buildRoot @sources
+    & $javacPath --release $JavaLanguageLevel -proc:none -classpath $classPath -d $buildRoot @sources
 } else {
     throw "Java compiler not found: $javacPath (pass -JavacExe or -CompilerJar)"
 }
@@ -66,10 +66,10 @@ Copy-Item -LiteralPath $baseJar -Destination $stagedJar
 Add-Type -AssemblyName System.IO.Compression; Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [System.IO.Compression.ZipFile]::Open($stagedJar, [System.IO.Compression.ZipArchiveMode]::Update)
 $classFiles = @(
-  "pvads/GaelNativeShot.class", "pvads/GaelNativeShot`$ShotOrigin.class", "pvads/GaelNativeShot`$WeaponPose.class", "pvads/GaelNativeShot`$ShotImpulse.class", "pvads/GaelNativeShot`$OriginScratch.class",
+  "pvads/GaelNativeShot.class", "pvads/GaelNativeShot`$ShotOrigin.class", "pvads/GaelNativeShot`$WeaponPose.class", "pvads/GaelNativeShot`$ShotImpulse.class", "pvads/GaelNativeShot`$OriginScratch.class", "pvads/GaelNativeShot`$ShotAssist.class",
   "pvads/GaelBarrelRay.class", "pvads/GaelImpactMarker.class", "viewpointgael/AimProbe.class", "viewpointgael/Main.class",
   "viewpointgael/Patch_NativeShot.class", "viewpointgael/Patch_ShotOrigin.class", "viewpointgael/Patch_TBImpact.class", "viewpointgael/Patch_TBWorldImpact.class",
-  "viewpointgael/Patch_TBDeflect.class", "viewpointgael/Patch_TBMuzzle.class", "viewpointgael/Patch_TBAimSolution.class", "viewpointgael/Patch_TBLaunch.class",
+  "viewpointgael/Patch_TBDeflect.class", "viewpointgael/Patch_TBMuzzle.class", "viewpointgael/Patch_TBAimSolution.class", "viewpointgael/Patch_TBLaunch.class", "viewpointgael/Patch_TBProjectileGuide.class",
   "viewpointgael/Patch_AimClickFreeCursor.class",
   "viewpointgael/Patch_TBExpire.class", "viewpointgael/Patch_TBShot.class", "viewpointgael/Patch_ImpactCamera.class",
   "viewpointgael/Patch_ViewpointThirdPerson.class", "viewpointgael/Patch_ADSThirdPerson.class", "viewpoint/input/ThirdPerson.class",

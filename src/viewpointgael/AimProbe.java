@@ -84,6 +84,9 @@ public final class AimProbe {
     }
 
     public static boolean weaponMotionReady() { return GaelWeaponMotion.ready(); }
+    public static double launcherAxisX() { return GaelNativeShot.launcherAxis(0); }
+    public static double launcherAxisY() { return GaelNativeShot.launcherAxis(1); }
+    public static double launcherAxisZ() { return GaelNativeShot.launcherAxis(2); }
 
     public static void setWeaponReferenceAlignment(String weapon, double yaw, double pitch, double roll) {
         GaelWeaponMotion.setReferenceAlignment(weapon, yaw, pitch, roll);
@@ -114,6 +117,12 @@ public final class AimProbe {
     public static double impactScreenX() { return GaelImpactMarker.screenX(); }
     public static double impactScreenY() { return GaelImpactMarker.screenY(); }
     public static String impactLabel() { return GaelImpactMarker.label(); }
+    public static void projectLauncherImpact(double x, double y, double floor) {
+        GaelImpactMarker.projectWorldPoint(x, y, floor * 2.449489742783178 + 0.1);
+    }
+    public static boolean launcherImpactVisible() { return GaelImpactMarker.worldPointVisible(); }
+    public static double launcherImpactScreenX() { return GaelImpactMarker.worldPointScreenX(); }
+    public static double launcherImpactScreenY() { return GaelImpactMarker.worldPointScreenY(); }
 
     public static Double aimX() {
         MousePick.Hit hit = AimProbe.fresh();

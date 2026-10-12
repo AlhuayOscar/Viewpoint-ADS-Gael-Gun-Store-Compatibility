@@ -21,6 +21,65 @@ local function looking()
     return ok and on == true
 end
 
+-- Shared camera-ray target for Gael's projectile launchers in Viewpoint modes.
+GGS_ViewpointLauncherMode = GGS_ViewpointLauncherMode or {}
+function GGS_ViewpointLauncherMode.active(playerObj)
+    if playerObj and playerObj.isLocalPlayer and not playerObj:isLocalPlayer() then return false end
+    return looking()
+end
+
+function GGS_ViewpointLauncherMode.target(playerObj, maxDistance)
+    if not GGS_ViewpointLauncherMode.active(playerObj) then return nil end
+    local aim = api()
+    if not (aim and aim.aimX and aim.aimY and aim.aimZ) then return nil end
+    local requestedRange = tonumber(aim.sightTargetDistance and aim.sightTargetDistance())
+    -- The sight bridge clamps foreground/self hits (such as the RPG model) to
+    -- 2 tiles. Treat that as an invalid aim pick and continue along Viewpoint's
+    -- live look ray instead of detonating beside the shooter.
+    if not requestedRange or requestedRange ~= requestedRange or requestedRange == math.huge
+        or requestedRange <= 2.75 then
+        requestedRange = tonumber(maxDistance) or 60
+    end
+    requestedRange = math.max(1, requestedRange)
+    local okX, hitX = pcall(aim.aimX)
+    local okY, hitY = pcall(aim.aimY)
+    local okZ, hitZ = pcall(aim.aimZ)
+    local px, py, pz = playerObj:getX(), playerObj:getY(), playerObj:getZ()
+    local dx, dy, dz
+    if okX and okY and okZ and tonumber(hitX) and tonumber(hitY) and tonumber(hitZ) then
+        dx, dy, dz = tonumber(hitX) - px, tonumber(hitY) - py, tonumber(hitZ) - pz
+    else
+        dx, dy, dz = 0, 0, 0
+    end
+    local distance = math.sqrt(dx * dx + dy * dy)
+    if distance < 2.75 then
+        local yaw = tonumber(aim.yaw and aim.yaw()) or 0
+        local pitch = tonumber(aim.pitch and aim.pitch()) or 0
+        local reach = requestedRange
+        local flat = math.cos(pitch)
+        dx, dy, dz = math.cos(yaw) * flat * reach,
+            math.sin(yaw) * flat * reach, math.sin(pitch) * reach / 2.44949
+        distance = math.sqrt(dx * dx + dy * dy)
+    end
+    -- In first person, preserve the real rendered Gael weapon axis (including
+    -- ADS recoil/sway) and use the camera hit only to choose launch distance.
+    local ax = tonumber(aim.launcherAxisX and aim.launcherAxisX())
+    local ay = tonumber(aim.launcherAxisY and aim.launcherAxisY())
+    local az = tonumber(aim.launcherAxisZ and aim.launcherAxisZ())
+    local horizontal = ax and ay and math.sqrt(ax * ax + ay * ay) or 0
+    -- Some Gael launcher models do not share the rifle sight-axis calibration.
+    -- Reject an axis that points away from the selected camera target; otherwise
+    -- the RPG can resolve its impact back into the shooter's own tile.
+    local alignment = horizontal > 0.01 and distance > 0.01
+        and (ax * dx + ay * dy) / (horizontal * distance) or -1
+    if ax and ay and az and ax == ax and ay == ay and az == az
+        and horizontal > 0.01 and horizontal < math.huge and alignment > 0.25 then
+        dx, dy, dz = ax / horizontal * distance, ay / horizontal * distance, az / horizontal * distance
+    end
+    if distance <= 0.01 then return nil end
+    return px + dx, py + dy, pz + dz
+end
+
 local function setSuppress(on)
     local aim = api()
     if aim and aim.setSuppressPose then

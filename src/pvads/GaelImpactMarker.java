@@ -6,8 +6,10 @@ import zombie.characters.IsoPlayer;
 
 /** Captures terminal points from optional Viewpoint True Ballistics and projects them for the HUD. */
 public final class GaelImpactMarker {
+    private static final ThreadLocal<double[]> PROJECTION = ThreadLocal.withInitial(() -> new double[2]);
     private static volatile double x, y, u;
     private static volatile double screenX = Double.NaN, screenY = Double.NaN;
+    private static volatile double worldScreenX = Double.NaN, worldScreenY = Double.NaN;
     private static volatile String label = "";
     private static volatile long shotSequence = -1;
     private static volatile boolean hasImpact;
@@ -111,18 +113,40 @@ public final class GaelImpactMarker {
     }
 
     private static void project() {
-        if (!cameraReady) { screenX = screenY = Double.NaN; return; }
-        double dx = x - camX, dy = y - camY, dz = u - camU;
+        double[] point = projectPoint(x, y, u);
+        screenX = point[0]; screenY = point[1];
+    }
+
+    /** Projects a launcher impact using the active Viewpoint camera, independent of the firearm marker. */
+    public static void projectWorldPoint(double worldX, double worldY, double worldU) {
+        double[] point = projectPoint(worldX, worldY, worldU);
+        worldScreenX = point[0]; worldScreenY = point[1];
+    }
+
+    private static double[] projectPoint(double worldX, double worldY, double worldU) {
+        double[] point = PROJECTION.get();
+        if (!cameraReady) { point[0] = point[1] = Double.NaN; return point; }
+        double dx = worldX - camX, dy = worldY - camY, dz = worldU - camU;
         double cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
         double depth = dx * cy * cp + dy * sy * cp + dz * sp;
-        if (depth <= 0.02) { screenX = screenY = Double.NaN; return; }
+        if (depth <= 0.02) { point[0] = point[1] = Double.NaN; return point; }
         double right = -dx * sy + dy * cy;
         double up = -dx * cy * sp - dy * sy * sp + dz * cp;
         double height = Core.getInstance().getScreenHeight();
         double focal = height / (2.0 * Math.tan(fov / 2.0));
-        screenX = Core.getInstance().getScreenWidth() * 0.5 + right / depth * focal;
-        screenY = height * 0.5 - up / depth * focal;
+        point[0] = Core.getInstance().getScreenWidth() * 0.5 + right / depth * focal;
+        point[1] = height * 0.5 - up / depth * focal;
+        return point;
     }
+
+    public static boolean worldPointVisible() {
+        return Double.isFinite(worldScreenX) && Double.isFinite(worldScreenY)
+                && worldScreenX >= 0 && worldScreenY >= 0
+                && worldScreenX < Core.getInstance().getScreenWidth()
+                && worldScreenY < Core.getInstance().getScreenHeight();
+    }
+    public static double worldPointScreenX() { return worldScreenX; }
+    public static double worldPointScreenY() { return worldScreenY; }
 
     public static boolean visible() {
         project();
