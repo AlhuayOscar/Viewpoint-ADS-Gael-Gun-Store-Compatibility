@@ -19,10 +19,16 @@ public final class GaelNativeShot {
     private static boolean originAnnounced;
     private static boolean trueBallisticsAnnounced;
     private static volatile double shotMotionGain = 0.35;
+    private static volatile double shotCentering;
+    private static volatile boolean shotCenteringActive;
     private static String previousShotWeapon;
     private static long previousShotAt;
     private static double previousShotYaw, previousShotPitch;
+    private static String previousCenteringWeapon;
+    private static long previousCenteringShotAt;
+    private static int centeringBurstShotCount;
     private static final long SHOT_MOTION_WINDOW_NANOS = 300_000_000L;
+    private static final long CENTERING_BURST_WINDOW_NANOS = 1_000_000_000L;
     private static final double MAX_SHOT_MOTION_DELTA = Math.toRadians(2.0);
 
     /** Model-space offsets from the weapon's normal muzzle point; units are the weapon mesh's units. */
@@ -37,6 +43,19 @@ public final class GaelNativeShot {
     /** Extra share of the weapon's angular movement between consecutive shots (0 disables carry). */
     public static void setShotMotionGain(double gain) {
         if (Double.isFinite(gain)) shotMotionGain = Math.max(0.0, Math.min(2.0, gain));
+    }
+
+    /** Blend the projectile's physical barrel axis toward the camera-center aim ray. */
+    public static void setShotCentering(double amount, boolean aiming) {
+        shotCenteringActive = aiming;
+        if (!aiming) {
+            shotCentering = 0.0;
+            previousCenteringWeapon = null;
+            previousCenteringShotAt = 0L;
+            centeringBurstShotCount = 0;
+            return;
+        }
+        if (Double.isFinite(amount)) shotCentering = Math.max(0.0, Math.min(1.0, amount));
     }
 
     /** Immutable render-thread snapshot consumed by the firing thread. */
@@ -123,9 +142,38 @@ public final class GaelNativeShot {
         double length = Math.sqrt(x*x + y*y + u*u);
         if (!Double.isFinite(length) || length < 1e-6) return false;
         x /= length; y /= length; u /= length;
+        double physicalX = x, physicalY = y, physicalU = u;
+        long shotAt = System.nanoTime();
+        boolean sameCenteringBurst = shotCenteringActive
+                && weapon.getFullType().equals(previousCenteringWeapon)
+                && shotAt > previousCenteringShotAt
+                && shotAt - previousCenteringShotAt <= CENTERING_BURST_WINDOW_NANOS;
+        int centeringShotIndex = sameCenteringBurst ? centeringBurstShotCount + 1 : 1;
+        double centering = shotCenteringActive
+                ? shotCentering * centeringBurstEffect(centeringShotIndex) : 0.0;
+        // Short gameplay aim assist: after a full ADS ramp, the first three
+        // shots snap to the camera-center ray in ideal conditions, overriding
+        // the weapon's physical barrel direction. Condition penalties apply.
+        if (shotCenteringActive && centeringShotIndex <= 3 && shotCentering >= 0.99) {
+            centering = 1.0;
+        }
+        if (centering > 0) {
+            double yawToCenter = VP.yaw(), pitchToCenter = VP.pitch();
+            if (Double.isFinite(yawToCenter) && Double.isFinite(pitchToCenter)) {
+                double horizontal = Math.cos(pitchToCenter);
+                double centerX = Math.cos(yawToCenter) * horizontal;
+                double centerY = Math.sin(yawToCenter) * horizontal;
+                double centerU = Math.sin(pitchToCenter);
+                x += (centerX - x) * centering;
+                y += (centerY - y) * centering;
+                u += (centerU - u) * centering;
+                length = Math.sqrt(x*x + y*y + u*u);
+                if (!Double.isFinite(length) || length < 1e-6) return false;
+                x /= length; y /= length; u /= length;
+            }
+        }
         double yaw = Math.atan2(y, x);
         double pitch = Math.atan2(u, Math.hypot(x, y));
-        long shotAt = System.nanoTime();
         boolean sameBurst = weapon.getFullType().equals(previousShotWeapon)
                 && shotAt > previousShotAt && shotAt - previousShotAt <= SHOT_MOTION_WINDOW_NANOS;
         double rawYaw = yaw, rawPitch = pitch;
@@ -153,9 +201,9 @@ public final class GaelNativeShot {
             double bl = Math.sqrt(bx*bx + by*by + bu*bu);
             double dx = 0, dy = 0, du = 0;
             if (Double.isFinite(bl) && bl > 0.5) {
-                dx = (x - bx / bl) * 0.55;
-                dy = (y - by / bl) * 0.55;
-                du = (u - bu / bl) * 0.55;
+                dx = (physicalX - bx / bl) * 0.55;
+                dy = (physicalY - by / bl) * 0.55;
+                du = (physicalU - bu / bl) * 0.55;
                 double shift = Math.sqrt(dx*dx + dy*dy + du*du);
                 if (!Double.isFinite(shift)) return false;
                 if (shift > 0.25) { double scale = 0.25 / shift; dx *= scale; dy *= scale; du *= scale; }
@@ -200,6 +248,11 @@ public final class GaelNativeShot {
             previousShotAt = shotAt;
             previousShotYaw = rawYaw;
             previousShotPitch = rawPitch;
+            if (shotCenteringActive) {
+                previousCenteringWeapon = weapon.getFullType();
+                previousCenteringShotAt = shotAt;
+                centeringBurstShotCount = centeringShotIndex;
+            }
             if (!trueBallisticsAnnounced) {
                 trueBallisticsAnnounced = true;
                 System.out.println("[ViewpointGael] corrected live True Ballistics projectiles: muzzle position and pitch/yaw direction now follow the physical ADS weapon axis");
@@ -228,6 +281,12 @@ public final class GaelNativeShot {
 
     private static double clampRadians(double angle, double limit) {
         return Math.max(-limit, Math.min(limit, angle));
+    }
+
+    private static double centeringBurstEffect(int shot) {
+        if (shot <= 3) return 1.0;
+        if (shot <= 5) return 0.40;
+        return Math.max(0.0, 0.40 - (shot - 5) * 0.02);
     }
 
     static boolean writeDirection(Vector3 direction, double x, double y, double up) {

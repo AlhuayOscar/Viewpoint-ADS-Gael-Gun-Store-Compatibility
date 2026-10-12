@@ -35,6 +35,10 @@ public final class AimProbe {
         return View.enabled && Look.captured && !FreeCam.active;
     }
 
+    public static boolean isThirdPerson() {
+        return View.thirdPerson;
+    }
+
     public static void setSuppressPose(boolean bl) {
         suppressPose = bl;
     }
@@ -95,6 +99,10 @@ public final class AimProbe {
 
     public static void setShotMotionGain(double gain) {
         GaelNativeShot.setShotMotionGain(gain);
+    }
+
+    public static void setShotCentering(double amount, boolean aiming) {
+        GaelNativeShot.setShotCentering(amount, aiming);
     }
 
     public static double sightTargetDistance() {

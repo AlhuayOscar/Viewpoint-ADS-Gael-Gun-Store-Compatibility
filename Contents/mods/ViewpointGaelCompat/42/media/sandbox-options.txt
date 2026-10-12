@@ -1,5 +1,21 @@
 VERSION = 1,
 
+option ViewpointGaelCompat.ThirdPersonCrosshair
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_ThirdPersonCrosshair,
+}
+
+option ViewpointGaelCompat.ShotCenteringAssist
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_ShotCenteringAssist,
+}
+
 option ViewpointGaelCompat.CrouchIronFocus
 {
     type = boolean,

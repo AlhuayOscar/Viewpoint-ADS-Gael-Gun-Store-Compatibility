@@ -1,5 +1,9 @@
 {
     "Sandbox_ViewpointGaelCompat": "Viewpoint Gael Compatibility",
+    "Sandbox_ViewpointGaelCompat_ThirdPersonCrosshair": "Experimental: DayZ-style third-person firearm crosshair",
+    "Sandbox_ViewpointGaelCompat_ThirdPersonCrosshair_tooltip": "Shows two side bars and a center vertical bar while aiming a firearm in Viewpoint third person. The gap widens with movement, endurance exertion, and arm pain or stiffness. Enabled by default.",
+    "Sandbox_ViewpointGaelCompat_ShotCenteringAssist": "Experimental: ease True Ballistics shots toward aim center",
+    "Sandbox_ViewpointGaelCompat_ShotCenteringAssist_tooltip": "While ADS is held and the character is stationary, correction advances in 0.1-second steps. It takes 1.1 seconds to complete; each Aiming level reduces that time by 0.05 seconds. Under ideal conditions it reaches 99 percent; it loses 10 percentage points per Endurance level and 5 per arm-pain level. Under ideal conditions, shots 1-3 aim exactly at center when the ramp completes; shots 4-5 retain 40 percent of the correction, then it drops by 2 points per shot until zero on shot 25. Resets when moving or when ADS ends. Enabled by default.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: Crouch enables Iron Sights FOV Change",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "While crouched and aiming through iron sights, narrow only the view FOV. Attached optics and saved weapon calibrations are unaffected.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Crouched iron sight FOV multiplier",
@@ -21,7 +25,7 @@
     "Sandbox_ViewpointGaelCompat_ShotRecoilAffectsAim": "Apply new mod recoil to aim + ADS recoil",
     "Sandbox_ViewpointGaelCompat_ShotRecoilAffectsAim_tooltip": "The purple aim marker and shot direction follow the new mod recoil pitch and yaw in addition to Viewpoint ADS native recoil. Applies only to Gael firearms while aiming down sights; disabling keeps the usual shot direction. Enabled by default.",
     "Sandbox_ViewpointGaelCompat_ShotMotionCarry": "Additional shot deviation from movement",
-    "Sandbox_ViewpointGaelCompat_ShotMotionCarry_tooltip": "Adds a fraction of the weapon's Pitch/Yaw change between consecutive shots to each bullet's direction. 0 disables the effect; 0.35 adds 35% of the measured change. The measured change is capped at 2 degrees per axis before applying the factor, and resets after 0.3 seconds without firing.",
+    "Sandbox_ViewpointGaelCompat_ShotMotionCarry_tooltip": "Adds a fraction of the weapon's Pitch/Yaw change between consecutive shots to each bullet's direction. 0 disables the effect; 0.35 adds 35 percent of the measured change. The measured change is capped at 2 degrees per axis before applying the factor, and resets after 0.3 seconds without firing.",
     "Sandbox_ViewpointGaelCompat_BoltPitchMotion": "Experimental: Pitch movement while racking a firearm",
     "Sandbox_ViewpointGaelCompat_BoltPitchMotion_tooltip": "While the game performs the firearm rack/bolt action, sight Pitch moves upward or downward with 50%% chance for either direction, by 2–4 degrees. A slight random Yaw movement accompanies it. Both motions return smoothly to their saved alignment 10–30%% before the action ends, with slightly varied timing. Follows the action regardless of the key bound to it. Enabled by default."
 }

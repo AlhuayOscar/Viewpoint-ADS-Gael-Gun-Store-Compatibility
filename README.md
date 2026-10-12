@@ -73,8 +73,7 @@ After a burst, the custom Pitch/Yaw recoil now has a chance to settle fully at
 the ADS center instead of always reaching it. The chance is 90% for shots 1–3,
 80% for shots 4–5, then falls linearly to 60% by shot 26 (remaining at 60% for
 longer bursts). When a full return does not occur, the weapon settles at 35% of
-that shot's recoil offset and holds that residual while ADS remains active. The
-existing short hold and smooth recovery timing remain in place.
+that shot's recoil offset and holds that residual while ADS remains active. The return slows as the burst builds, with extra delay from Endurance loss and arm pain. Total recovery is capped at 2 seconds.
 
 Version 9 routes dynamic roll through the grip rotation alongside yaw/pitch,
 leaving all three saved angular calibration values stable. Walking adds up to
@@ -122,6 +121,12 @@ The [current weapon checklist](docs/GaelGunStore_B42_checklist.xlsx) tracks cali
 The sandbox option is enabled by default. While crouched, ADS with an unmounted iron sight narrows the view to 70% of that weapon's calibrated ADS FOV. The sandbox multiplier can be adjusted from 0.30 to 1.00 for testing. Standing restores its calibrated FOV. Weapon alignment and saved profiles are unchanged; attached reflex sights and scopes keep their normal behavior. This is a local test feature and needs an in-game visual check.
 
 The additional sandbox option **Experimental: Fixed -0.3 ADS FOV (mouse wheel)** is also enabled by default. With iron sights in ADS, wheel up focuses by subtracting 0.30 from the calibrated `fovMul` (minimum 0.30); wheel down restores normal ADS FOV. The wheel choice overrides crouch focus until ADS ends. Scopes retain their existing wheel zoom.
+
+## Experimental third-person firearm crosshair
+
+The **DayZ-style third-person firearm crosshair** sandbox option is enabled by default. It shows two short side bars and a center vertical bar while aiming a firearm in Viewpoint third person. The gap opens with walking, running or sprinting, Endurance exertion, and arm pain or stiffness. It is hidden in first person and can be disabled in Sandbox Settings.
+
+The **Ease True Ballistics shots toward aim center** option is also enabled by default. While ADS stays held, it blends the projectile direction from the measured weapon axis toward the camera-center aim ray over 1.1 seconds in 0.1-second steps, with 0.05 seconds removed per Aiming level. In ideal conditions, correction caps at 99%; each Endurance level removes 10 percentage points and each arm-pain level removes 5. The aid runs only while the character is stationary. After the full ramp, shots 1-3 aim exactly at the camera center under ideal conditions, temporarily overriding the physical barrel direction. Shots 4-5 retain 40% of the adjusted correction, then it loses 2 percentage points per shot through shot 25, where it reaches 0%. The weapon animation and muzzle position remain physical; only the shot direction receives the correction. Releasing ADS resets the blend and burst count.
 
 ## Experimental firearm range
 

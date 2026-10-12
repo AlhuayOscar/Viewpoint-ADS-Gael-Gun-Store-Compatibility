@@ -53,6 +53,10 @@ local focusDeniedUntil = nil
 local focusBlurManager = nil
 local focusBlurPreviousEffect = false
 local focusSwayScale = 1.00
+PVADS_GaelRecoilBalance.shotCenteringSince = nil
+PVADS_GaelRecoilBalance.shotCenteringRampBaseMs = 1100
+PVADS_GaelRecoilBalance.shotCenteringRampStepMs = 100
+PVADS_GaelRecoilBalance.shotCenteringAimReductionMs = 50
 local SWAY_BASE_LIMIT = 0.4 -- Reference amplitude for the original motion speed.
 local SWAY_SPEED_INTERVAL = 0.25
 local SWAY_STEP_MIN = 0.008
@@ -140,6 +144,9 @@ local PISTOL_RECOIL_BONUS = {
 }
 local RECOIL_RISE_MS = 110
 local RECOIL_HOLD_MS = 250
+PVADS_GaelRecoilBalance.returnMaxMs = 2000
+PVADS_GaelRecoilBalance.burstReturnDelayMs = 100
+PVADS_GaelRecoilBalance.conditionReturnDelayMs = 50
 local recoilRiseMs, recoilHoldMs = RECOIL_RISE_MS, RECOIL_HOLD_MS
 local recoilDurationMs = 750
 local recoilStartedAt, recoilStartPitch, recoilPitch, recoilPeakPitch = nil, 0, 0, 0
@@ -252,6 +259,31 @@ local function armMuscleFatigue(player)
     end
     -- The health panel shows muscle stiffness from 5 and marks 20+ as more than minor.
     return PVADS_GaelRecoilBalance.armPenalty(stiffness, pain)
+end
+
+PVADS_GaelRecoilBalance.armPainLevel = function(player)
+    local damage = player and player:getBodyDamage()
+    if not damage then return 0 end
+    local pain = 0
+    for _, partType in ipairs(ARM_PARTS) do
+        local part = damage:getBodyPart(partType)
+        if part then pain = math.max(pain, tonumber(part:getPain()) or 0) end
+    end
+    return math.min(4, math.floor(math.max(0, math.min(100, pain)) / 25))
+end
+
+PVADS_GaelRecoilBalance.shotCenteringConditionMultiplier = function(player)
+    local exertionLevel = enduranceLevel(player)
+    return math.max(0, 0.99 - exertionLevel * 0.10
+        - PVADS_GaelRecoilBalance.armPainLevel(player) * 0.05)
+end
+
+PVADS_GaelRecoilBalance.shotCenteringRampMs = function(player)
+    local aimingLevel = math.max(0, math.min(10,
+        tonumber(player and player:getPerkLevel(Perks.Aiming)) or 0))
+    return math.max(PVADS_GaelRecoilBalance.shotCenteringRampStepMs,
+        PVADS_GaelRecoilBalance.shotCenteringRampBaseMs
+            - aimingLevel * PVADS_GaelRecoilBalance.shotCenteringAimReductionMs)
 end
 
 local function fitnessLevel(player)
@@ -847,6 +879,10 @@ local function resetIronFocusState(player, now)
     resetSightSway(nil)
     resetMotionSway()
     focusSwayScale = 1.00
+    PVADS_GaelRecoilBalance.shotCenteringSince = nil
+    local root = rawget(_G, "ViewpointGael")
+    local clearShotCentering = root and root.Aim and root.Aim.setShotCentering
+    if clearShotCentering then pcall(clearShotCentering, 0, false) end
     recoilStartedAt, recoilStartPitch, recoilPitch, recoilPeakPitch = nil, 0, 0, 0
     recoilStartYaw, recoilYaw, recoilPeakYaw = 0, 0, 0
     recoilReturnPitch, recoilReturnYaw = 0, 0
@@ -895,6 +931,7 @@ local function updateIronFocus(player)
     local setShotOrigin = root and root.Aim and root.Aim.setShotOrigin
     local setWeaponReference = root and root.Aim and root.Aim.setWeaponReferenceAlignment
     local setShotMotionGain = root and root.Aim and root.Aim.setShotMotionGain
+    local setShotCentering = root and root.Aim and root.Aim.setShotCentering
     local sandbox = SandboxVars and SandboxVars.ViewpointGaelCompat
     if setWeaponReference then
         pcall(setWeaponReference, profile and profile.weaponId or "",
@@ -904,6 +941,25 @@ local function updateIronFocus(player)
     end
     if setShotMotionGain then
         pcall(setShotMotionGain, tonumber(sandbox and sandbox.ShotMotionCarry) or 0.35)
+    end
+    if controller and controller.ready and controller.lastWant
+        and player:isPlayerMoving() == false
+        and (not sandbox or sandbox.ShotCenteringAssist ~= false) then
+        PVADS_GaelRecoilBalance.shotCenteringSince =
+            PVADS_GaelRecoilBalance.shotCenteringSince or focusNow
+        local elapsed = math.max(0, focusNow - PVADS_GaelRecoilBalance.shotCenteringSince)
+        local rampDuration = PVADS_GaelRecoilBalance.shotCenteringRampMs(player)
+        local rampSteps = math.ceil(rampDuration / PVADS_GaelRecoilBalance.shotCenteringRampStepMs)
+        local completedSteps = elapsed >= rampDuration and rampSteps
+            or math.min(rampSteps, math.floor(elapsed / PVADS_GaelRecoilBalance.shotCenteringRampStepMs))
+        local t = completedSteps / rampSteps
+        if setShotCentering then
+            pcall(setShotCentering, t
+                * PVADS_GaelRecoilBalance.shotCenteringConditionMultiplier(player), true)
+        end
+    else
+        PVADS_GaelRecoilBalance.shotCenteringSince = nil
+        if setShotCentering then pcall(setShotCentering, 0, false) end
     end
     if profile and setShotOrigin then
         pcall(setShotOrigin, profile.weaponId or "",
@@ -1158,6 +1214,12 @@ local function onWeaponFired(player, weapon)
                 recoilDurationMs = recoilHoldMs
                     + (recoilDurationMs - recoilHoldMs) / recoverySpeed
             end
+            local burstRecoveryDelay = math.min(1000,
+                math.max(0, burstShotCount - 3) * PVADS_GaelRecoilBalance.burstReturnDelayMs)
+            local conditionRecoveryDelay = (exertion + PVADS_GaelRecoilBalance.armPainLevel(player))
+                * PVADS_GaelRecoilBalance.conditionReturnDelayMs
+            recoilDurationMs = math.min(PVADS_GaelRecoilBalance.returnMaxMs,
+                recoilDurationMs + burstRecoveryDelay + conditionRecoveryDelay)
             local bonus = weaponWeight > HEAVY_RECOIL_WEIGHT and HEAVY_RECOIL_BONUS
                 or (PISTOL_RECOIL_BONUS[weapon:getFullType()] or 0)
             minPitch = minPitch + bonus

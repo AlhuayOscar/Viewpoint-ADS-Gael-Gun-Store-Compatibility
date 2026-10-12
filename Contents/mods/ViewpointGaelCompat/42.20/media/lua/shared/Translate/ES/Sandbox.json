@@ -1,5 +1,9 @@
 {
     "Sandbox_ViewpointGaelCompat": "Compatibilidad Viewpoint Gael",
+    "Sandbox_ViewpointGaelCompat_ThirdPersonCrosshair": "Experimental: retícula de armas en tercera persona estilo DayZ",
+    "Sandbox_ViewpointGaelCompat_ThirdPersonCrosshair_tooltip": "Muestra dos barras laterales y una vertical central al apuntar con un arma de fuego en tercera persona de Viewpoint. La separación aumenta al moverte, por agotamiento y por dolor o rigidez en los brazos. Activada por defecto.",
+    "Sandbox_ViewpointGaelCompat_ShotCenteringAssist": "Experimental: corregir gradualmente los disparos de True Ballistics al centro",
+    "Sandbox_ViewpointGaelCompat_ShotCenteringAssist_tooltip": "Mientras mantenés ADS y el personaje está quieto, la corrección avanza en pasos cada 0,1 segundos. Tarda 1,1 segundos en completarse; cada nivel de Puntería reduce ese tiempo 0,05 segundos. En condiciones ideales llega al 99 por ciento; pierde 10 puntos por nivel de resistencia y 5 por nivel de dolor en brazos. Los disparos 1-3 apuntan exactamente al centro al completar la rampa si las condiciones son ideales; los disparos 4-5 conservan el 40 por ciento de la corrección y luego baja 2 puntos por disparo hasta llegar a cero en el 25. Se reinicia al moverse o dejar de apuntar. Activada por defecto.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus": "Experimental: agacharse cambia el FOV de las miras de hierro",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocus_tooltip": "Al apuntar agachado con miras de hierro, reduce solo el FOV. No cambia las miras acopladas ni las calibraciones guardadas.",
     "Sandbox_ViewpointGaelCompat_CrouchIronFocusMultiplier": "Multiplicador de FOV para miras de hierro agachado",
@@ -21,7 +25,7 @@
     "Sandbox_ViewpointGaelCompat_ShotRecoilAffectsAim": "Aplicar también el recoil nuevo del mod al arma + recoil de ADS",
     "Sandbox_ViewpointGaelCompat_ShotRecoilAffectsAim_tooltip": "El punto morado y la dirección de los disparos siguen el pitch y yaw del recoil nuevo del mod, sumados al recoil propio de Viewpoint ADS. Solo afecta a armas de Gael mientras se apunta en ADS; desactivarlo conserva la dirección de disparo habitual. Activado por defecto.",
     "Sandbox_ViewpointGaelCompat_ShotMotionCarry": "Desviación adicional por movimiento entre disparos",
-    "Sandbox_ViewpointGaelCompat_ShotMotionCarry_tooltip": "Añade una fracción del cambio de Pitch/Yaw del arma entre disparos consecutivos a la dirección de cada bala. 0 desactiva el efecto; 0,35 añade un 35 % del cambio medido. El cambio medido se limita a 2 grados por eje antes de aplicar el factor y se reinicia tras 0,3 segundos sin disparar.",
+    "Sandbox_ViewpointGaelCompat_ShotMotionCarry_tooltip": "Añade una fracción del cambio de Pitch/Yaw del arma entre disparos consecutivos a la dirección de cada bala. 0 desactiva el efecto; 0,35 añade un 35 por ciento del cambio medido. El cambio medido se limita a 2 grados por eje antes de aplicar el factor y se reinicia tras 0,3 segundos sin disparar.",
     "Sandbox_ViewpointGaelCompat_BoltPitchMotion": "Experimental: movimiento de Pitch al accionar el cerrojo",
     "Sandbox_ViewpointGaelCompat_BoltPitchMotion_tooltip": "Mientras el juego realiza la acción de cerrojo/corredera, el Pitch de la mira se mueve hacia arriba o abajo con 50 %% de probabilidad para cada dirección, entre 2 y 4 grados. Un leve movimiento aleatorio de Yaw lo acompaña. Ambos vuelven suavemente a su alineación guardada entre un 10 y un 30 %% antes de que termine la acción, con tiempos variables. Sigue la acción sin depender de la tecla asignada. Activado por defecto."
 }
