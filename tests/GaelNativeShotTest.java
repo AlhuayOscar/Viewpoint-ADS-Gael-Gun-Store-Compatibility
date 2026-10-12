@@ -12,6 +12,13 @@ public final class GaelNativeShotTest {
                 Object.class, Object.class, Object.class);
         check(java.lang.reflect.Modifier.isStatic(target.getModifiers()), "ADS muzzle hook changed");
         Vector3 direction = new Vector3();
+        check(GaelNativeShot.writePhysicalDirection(direction, -1, 0, 0), "physical direction rejected");
+        check(direction.x > 0.999f && Math.abs(direction.y) < 1e-6f && Math.abs(direction.z) < 1e-6f,
+            "render X did not map to native world X");
+        check(GaelNativeShot.writePhysicalDirection(direction, 0, 0, -1), "yawed physical direction rejected");
+        check(direction.y > 0.999f && Math.abs(direction.x) < 1e-6f, "render Y did not map to native world Y");
+        check(GaelNativeShot.writePhysicalDirection(direction, 0, Math.sqrt(6), 0), "pitched physical direction rejected");
+        check(direction.z > 0.999f, "render up did not map to native vertical direction");
         double[][] inputs = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0.4, -0.3, 0.8}};
         for (double[] input : inputs) {
             double[] ray = {0, 0, 0, input[0], input[1], input[2], 60};

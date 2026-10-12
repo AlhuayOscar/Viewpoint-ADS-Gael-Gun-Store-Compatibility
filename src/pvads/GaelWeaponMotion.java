@@ -71,6 +71,31 @@ public final class GaelWeaponMotion {
 
     public static boolean ready() { return current() != null; }
 
+    /**
+     * Returns the direction of the rendered weapon axis in native world coordinates.
+     * The direction includes the actual model pose, sight calibration, and ADS recoil.
+     */
+    public static boolean shotDirection(float facing, Vector3f result) {
+        if (result == null || !Float.isFinite(facing) || !ADS.P.valid || ADS.P.weaponId == null
+                || !VP.firstPerson() || VP.freeCam()) return false;
+        try {
+            Scratch state = scratch.get();
+            physicalDirection((Vector3f) Fields.direction.get(null), ADS.P.adjYaw,
+                    ADS.P.adjPitch, ADS.P.adjRoll, (Matrix4f) Fields.W.get(null),
+                    (Matrix4f) Fields.M.get(null), state.direction, state.calibration);
+            if (Fields.presence.getBoolean(null)) {
+                Presence.fullCorrection().transformDirection(state.direction).normalize();
+            }
+            ADS.cmsDirToRender(state.direction, facing, result);
+            float length2 = result.lengthSquared();
+            if (!Float.isFinite(length2) || length2 < 1.0e-8f) return false;
+            result.normalize();
+            return Float.isFinite(result.x) && Float.isFinite(result.y) && Float.isFinite(result.z);
+        } catch (Throwable error) {
+            return false;
+        }
+    }
+
     public static boolean gripPivot(IsoPlayer player, Matrix4f pose, Vector3f result) {
         if (player == null || player.primaryHandModel == null) return false;
         var model = player.primaryHandModel;

@@ -29,8 +29,8 @@ public class GaelPhysicalAxisTest {
                         GaelBarrelRay.setSeparationScale(1);
                         if (!GaelBarrelRay.fromScreen(ray,barrel.x(),barrel.y(),1366,768,1,Math.PI/2,0)) throw new AssertionError("Physical axis could not drive mirrored ray");
                         var marker = GaelSightProjection.project(0,0,0,-ray[3],ray[5],-ray[4],Math.PI/2,0,1,1366,768,60);
-                        if (marker == null || (marker.x()-683)*(barrel.x()-683) > 1e-5
-                                || (marker.y()-384)*(barrel.y()-384) > 1e-5) throw new AssertionError("Marker stayed on physical barrel side of crosshair");
+                        if (marker == null || (marker.x()-683)*(barrel.x()-683) < -1e-5
+                                || (marker.y()-384)*(barrel.y()-384) < -1e-5) throw new AssertionError("Shot marker did not follow physical barrel deviation");
                         count++;
                     }
                 }

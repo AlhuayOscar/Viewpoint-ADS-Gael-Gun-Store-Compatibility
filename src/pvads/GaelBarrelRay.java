@@ -3,10 +3,8 @@ package pvads;
 import zombie.characters.IsoPlayer;
 import zombie.core.Core;
 
-/** One mirrored direction for the rendered ADS axis, HUD and native shots. */
+/** Carries the rendered ADS weapon-axis deviation into the shot and impact HUD. */
 public final class GaelBarrelRay {
-    private static final double GAIN_START_DEGREES = 1.0;
-    private static final double GAIN_FULL_DEGREES = 10.0;
     private static volatile double separationScale = 1.0;
 
     public static void setSeparationScale(double value) {
@@ -34,10 +32,11 @@ public final class GaelBarrelRay {
         // Start at the fixed screen center. Only the rendered angular deviation
         // drives the endpoint; projected weapon position (ovWin) is irrelevant.
         double centerX = width * 0.5, centerY = height * 0.5;
-        double angle = Math.toDegrees(Math.atan(Math.hypot(x - centerX, y - centerY) / focal));
-        double multiplier = separationScale * angularGain(angle);
-        double targetX = centerX - multiplier * (x - centerX);
-        double targetY = centerY - multiplier * (y - centerY);
+        // Carry the weapon's visible angular deviation from the reticle centre to the shot
+        // in the same direction. A previous subtraction mirrored the bullet away from the gun.
+        double multiplier = separationScale;
+        double targetX = centerX + multiplier * (x - centerX);
+        double targetY = centerY + multiplier * (y - centerY);
         double horizontal = (targetX - width * 0.5) / focal;
         double vertical = (height * 0.5 - targetY) / focal;
         double cy = Math.cos(yaw), sy = Math.sin(yaw);
@@ -53,12 +52,9 @@ public final class GaelBarrelRay {
         return true;
     }
 
-    // Smooth additional response, measured in degrees rather than screen pixels.
-    // One shared gain keeps yaw/pitch proportion and direction intact.
+    // Kept for the test/diagnostic API. The ray now uses the measured deviation 1:1.
     static double angularGain(double angleDegrees) {
-        double t = Math.max(0, Math.min(1,
-                (angleDegrees - GAIN_START_DEGREES) / (GAIN_FULL_DEGREES - GAIN_START_DEGREES)));
-        return 1 + t * t * (3 - 2 * t);
+        return Double.isFinite(angleDegrees) ? 1.0 : Double.NaN;
     }
 
     private GaelBarrelRay() {}

@@ -37,8 +37,8 @@ public final class GaelMirroredShotTest {
         double focal = 768 / (2 * Math.tan(fov / 2));
         double angle = Math.toDegrees(Math.atan(Math.hypot(horizontal, vertical) / focal));
         double gain = GaelBarrelRay.angularGain(angle);
-        check(Math.abs((marker.x()-centerX) + scale*gain*horizontal) < 1e-5, "yaw did not mirror/scale");
-        check(Math.abs((marker.y()-centerY) + scale*gain*vertical) < 1e-5, "pitch did not mirror/scale");
+        check(Math.abs((marker.x()-centerX) - scale*gain*horizontal) < 1e-5, "yaw did not follow weapon deviation");
+        check(Math.abs((marker.y()-centerY) - scale*gain*vertical) < 1e-5, "pitch did not follow weapon deviation");
         check(shot[0] == 4 && shot[1] == 5 && shot[2] == 6 && shot[6] == 60, "origin/zero changed");
         Vector3 nativeDirection = new Vector3();
         check(GaelNativeShot.writeDirection(nativeDirection, shot), "native direction rejected");
@@ -49,32 +49,28 @@ public final class GaelMirroredShotTest {
     }
 
     private static void verifyProgression() {
-        check(GaelBarrelRay.angularGain(0) == 1 && GaelBarrelRay.angularGain(1) == 1, "small-angle gain changed");
-        check(GaelBarrelRay.angularGain(5.5) == 1.5, "midpoint gain incorrect");
-        check(GaelBarrelRay.angularGain(10) == 2 && GaelBarrelRay.angularGain(45) == 2, "large-angle gain incorrect");
-        double previous = 1;
+        check(GaelBarrelRay.angularGain(0) == 1 && GaelBarrelRay.angularGain(1) == 1
+                && GaelBarrelRay.angularGain(45) == 1, "deviation multiplier changed with angle");
         for (double angle = 0; angle <= 20; angle += 0.1) {
             double gain = GaelBarrelRay.angularGain(angle);
-            check(gain >= previous && gain <= 2, "gain not monotonic/bounded");
-            previous = gain;
+            check(gain == 1 && Double.isFinite(gain), "deviation multiplier changed with angle");
         }
-        // Equal angular errors must get equal gain at different FOVs/resolutions.
+        // Equal angular errors must remain 1:1 at different FOVs/resolutions.
         for (int height : new int[]{768, 1080, 1440}) {
             int width = height * 16 / 9;
             for (double fov : new double[]{0.45, 1.0, 1.7}) {
-                for (double[] response : new double[][]{{1,1}, {5.5,1.5}, {10,2}, {20,2}}) {
-                    double angle = response[0], expectedGain = response[1];
+                for (double angle : new double[]{1, 5.5, 10, 20}) {
                     double focal = height / (2 * Math.tan(fov / 2));
                     double error = focal * Math.tan(Math.toRadians(angle));
                     double[] shot = {4,5,6,1,0,0,60};
                     GaelBarrelRay.setSeparationScale(2.25);
                     check(GaelBarrelRay.fromScreen(shot, width*0.5 + error, height*0.5, width,height,fov,0,0), "angular case rejected");
                     GaelSightProjection.Point point = GaelSightProjection.project(0,0,0,-shot[3],shot[5],-shot[4],0,0,fov,width,height,60);
-                    check(point != null && Math.abs((width*0.5-point.x())/error - 2.25*expectedGain) < 1e-6, "FOV/resolution changed angular gain");
+                    check(point != null && Math.abs((point.x()-width*0.5)/error - 2.25) < 1e-6, "FOV/resolution changed measured deviation");
                 }
             }
         }
-        System.out.println("Progression: monotonic 1x–2x curve and 36 FOV/resolution cases passed");
+        System.out.println("Progression: exact 1:1 angular deviation and 36 FOV/resolution cases passed");
     }
 
     private static void check(boolean condition, String message) {
