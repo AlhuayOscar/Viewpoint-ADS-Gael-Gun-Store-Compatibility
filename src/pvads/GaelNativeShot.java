@@ -18,6 +18,8 @@ public final class GaelNativeShot {
     private static boolean announced;
     private static boolean originAnnounced;
     private static boolean trueBallisticsAnnounced;
+    private static boolean trueBallisticsProjectilesAnnounced;
+    private static boolean trueBallisticsProjectilesMissingAnnounced;
     private static volatile double shotMotionGain = 0.35;
     private static volatile double shotCentering;
     private static volatile boolean shotCenteringActive;
@@ -206,11 +208,60 @@ public final class GaelNativeShot {
             }
             if (!trueBallisticsAnnounced) {
                 trueBallisticsAnnounced = true;
-                System.out.println("[ViewpointGael] True Ballistics now uses the physical ADS weapon axis before projectile spawn");
+                System.out.println("[ViewpointGael] solved True Ballistics direction now follows the rendered ADS weapon axis");
             }
             return true;
         } catch (ReflectiveOperationException | RuntimeException error) {
             System.err.println("[ViewpointGael] Could not correct the True Ballistics aim solution: " + error);
+            return false;
+        }
+    }
+
+    /**
+     * AimProvider.solve is not reliably patchable in every load order. At launch
+     * exit, True Ballistics has solved the ray and created this group's
+     * projectiles, so update the solution and their velocities before physics ticks.
+     */
+    public static boolean correctTrueBallisticsShot(Object manager, Object group) {
+        IsoPlayer player = IsoPlayer.players[0];
+        if (manager == null || group == null || player == null) return false;
+        try {
+            Field solutionField = manager.getClass().getDeclaredField("sol");
+            solutionField.setAccessible(true);
+            Object solution = solutionField.get(manager);
+            if (!correctTrueBallisticsSolution(player, player.getPrimaryHandItem(), solution)) return false;
+
+            Object direction = solution.getClass().getField("direction").get(solution);
+            double x = getNumber(direction, "x");
+            double y = getNumber(direction, "y");
+            double u = getNumber(direction, "u");
+            Object activeValue = manager.getClass().getMethod("activeProjectiles").invoke(manager);
+            if (!(activeValue instanceof java.util.List<?> active)) return false;
+            int changed = 0;
+            for (Object projectile : active) {
+                if (projectile.getClass().getField("group").get(projectile) != group) continue;
+                double speed = getNumber(projectile, "muzzleVelocity");
+                Object velocity = projectile.getClass().getField("velocity").get(projectile);
+                setNumber(velocity, "x", x * speed);
+                setNumber(velocity, "y", y * speed);
+                setNumber(velocity, "u", u * speed);
+                changed++;
+            }
+            if (changed == 0) {
+                if (!trueBallisticsProjectilesMissingAnnounced) {
+                    trueBallisticsProjectilesMissingAnnounced = true;
+                    System.err.println("[ViewpointGael] True Ballistics launch hook found no live projectiles for the shot group");
+                }
+                return false;
+            }
+            if (!trueBallisticsProjectilesAnnounced) {
+                trueBallisticsProjectilesAnnounced = true;
+                System.out.println("[ViewpointGael] redirected " + changed
+                        + " live True Ballistics projectile(s) to match the visible weapon deviation");
+            }
+            return true;
+        } catch (ReflectiveOperationException | RuntimeException error) {
+            System.err.println("[ViewpointGael] Could not redirect live True Ballistics projectiles: " + error);
             return false;
         }
     }
