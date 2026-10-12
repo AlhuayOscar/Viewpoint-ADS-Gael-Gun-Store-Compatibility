@@ -35,6 +35,25 @@ public final class HoldSway {
         return true;
     }
 
+    /** Apply the same live post-ADS bone rotation to the direction used by ballistics. */
+    public static void applyToShotDirection(String weaponId, Vector3f direction) {
+        State value = state;
+        if (direction == null || weaponId == null || value == null
+                || !weaponId.equals(value.weaponId) || System.nanoTime() - value.at > MAX_AGE_NS
+                || (value.yaw == 0 && value.pitch == 0 && value.roll == 0)) return;
+        float blend;
+        try { blend = BLEND.getFloat(null); }
+        catch (IllegalAccessException error) { return; }
+        if (!Float.isFinite(blend) || blend <= 0) return;
+        Scratch work = scratch.get();
+        work.forward.set(direction);
+        if (work.forward.lengthSquared() < 1.0e-8f) return;
+        work.forward.normalize();
+        work.pivot.zero();
+        buildRotation(work.pivot, work.forward, value.yaw, value.pitch, value.roll, blend, work.rotation);
+        work.rotation.transformDirection(direction).normalize();
+    }
+
     /** Apply after ADS has finished composing and writing the final arm/weapon bone transforms. */
     public static void applyToWeaponBones(Object animationPlayer) {
         State value = state;

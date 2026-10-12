@@ -74,11 +74,16 @@ public final class AimProbe {
     }
 
     public static int shotMirrorVersion() {
-        // Version 11 adds per-weapon model-space shot-origin calibration.
-        return 11;
+        // Version 12 removes only saved alignment from the physical axis and
+        // preserves active recoil/hold offsets.
+        return 12;
     }
 
     public static boolean weaponMotionReady() { return GaelWeaponMotion.ready(); }
+
+    public static void setWeaponReferenceAlignment(String weapon, double yaw, double pitch, double roll) {
+        GaelWeaponMotion.setReferenceAlignment(weapon, yaw, pitch, roll);
+    }
 
     public static void setShotSeparationScale(double d) {
         GaelBarrelRay.setSeparationScale(d);
@@ -86,6 +91,10 @@ public final class AimProbe {
 
     public static boolean setShotOrigin(String weapon, double x, double y, double z) {
         return GaelNativeShot.setShotOrigin(weapon, x, y, z);
+    }
+
+    public static void setShotMotionGain(double gain) {
+        GaelNativeShot.setShotMotionGain(gain);
     }
 
     public static double sightTargetDistance() {

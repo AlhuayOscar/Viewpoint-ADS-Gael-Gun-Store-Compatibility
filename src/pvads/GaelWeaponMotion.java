@@ -9,10 +9,12 @@ import zombie.core.Core;
 import zombie.core.math.PZMath;
 import zombie.core.skinnedmodel.animation.AnimationPlayer;
 import zombie.scripting.objects.ModelAttachment;
+import viewpointgael.HoldSway;
 
 /** Samples the physical sight/barrel axis after the actual rendered transforms. */
 public final class GaelWeaponMotion {
     private static volatile Sample sample;
+    private static volatile ReferenceAlignment referenceAlignment;
     private static boolean failed;
     private static boolean announced;
     private static final ThreadLocal<Scratch> scratch = ThreadLocal.withInitial(Scratch::new);
@@ -32,18 +34,26 @@ public final class GaelWeaponMotion {
         }
     }
 
+    /** Publishes the stable, saved sight alignment so dynamic recoil is not mistaken for calibration. */
+    public static void setReferenceAlignment(String weapon, double yaw, double pitch, double roll) {
+        if (weapon == null || !Double.isFinite(yaw) || !Double.isFinite(pitch) || !Double.isFinite(roll)) return;
+        referenceAlignment = new ReferenceAlignment(weapon, (float) yaw, (float) pitch, (float) roll, System.nanoTime());
+    }
+
     public static void capture(IsoPlayer player, float facing) {
         if (failed || player == null || player != IsoPlayer.players[0] || !ADS.P.valid
                 || ADS.P.weaponId == null || !VP.firstPerson() || VP.freeCam()) return;
         try {
             Scratch state = scratch.get();
             GaelNativeShot.publishWeaponPose((Matrix4f) Fields.drawnPose.get(null), ADS.P.weaponId, facing);
-            physicalDirection((Vector3f) Fields.direction.get(null), ADS.P.adjYaw,
-                    ADS.P.adjPitch, ADS.P.adjRoll, (Matrix4f) Fields.W.get(null),
+            ReferenceAlignment alignment = referenceAlignment(ADS.P.weaponId);
+            physicalDirection((Vector3f) Fields.direction.get(null), alignment.yaw,
+                    alignment.pitch, alignment.roll, (Matrix4f) Fields.W.get(null),
                     (Matrix4f) Fields.M.get(null), state.direction, state.calibration);
             if (Fields.presence.getBoolean(null)) {
                 Presence.fullCorrection().transformDirection(state.direction).normalize();
             }
+            HoldSway.applyToShotDirection(ADS.P.weaponId, state.direction);
             ADS.cmsDirToRender(state.direction, facing, state.render);
             Core core = Core.getInstance();
             GaelSightProjection.Point point = GaelSightProjection.project(0,0,0,
@@ -80,12 +90,16 @@ public final class GaelWeaponMotion {
                 || !VP.firstPerson() || VP.freeCam()) return false;
         try {
             Scratch state = scratch.get();
-            physicalDirection((Vector3f) Fields.direction.get(null), ADS.P.adjYaw,
-                    ADS.P.adjPitch, ADS.P.adjRoll, (Matrix4f) Fields.W.get(null),
+            ReferenceAlignment alignment = referenceAlignment(ADS.P.weaponId);
+            physicalDirection((Vector3f) Fields.direction.get(null), alignment.yaw,
+                    alignment.pitch, alignment.roll, (Matrix4f) Fields.W.get(null),
                     (Matrix4f) Fields.M.get(null), state.direction, state.calibration);
             if (Fields.presence.getBoolean(null)) {
                 Presence.fullCorrection().transformDirection(state.direction).normalize();
             }
+            // HoldSway rotates the rendered arm/weapon bones after ADS solves its
+            // reference axis. Mirror that exact live rotation into the shot ray.
+            HoldSway.applyToShotDirection(ADS.P.weaponId, state.direction);
             ADS.cmsDirToRender(state.direction, facing, result);
             float length2 = result.lengthSquared();
             if (!Float.isFinite(length2) || length2 < 1.0e-8f) return false;
@@ -138,7 +152,17 @@ public final class GaelWeaponMotion {
         pose.transformDirection(result).normalize();
     }
 
+    private static ReferenceAlignment referenceAlignment(String weaponId) {
+        ReferenceAlignment value = referenceAlignment;
+        if (value != null && weaponId.equals(value.weaponId)
+                && System.nanoTime() - value.at <= 500_000_000L) return value;
+        // Keep compatibility with older Lua bridges; the current bridge publishes
+        // the stable saved values every frame, leaving animated offsets in the ray.
+        return new ReferenceAlignment(weaponId, ADS.P.adjYaw, ADS.P.adjPitch, ADS.P.adjRoll, System.nanoTime());
+    }
+
     private record Sample(GaelSightProjection.Point point, String weapon, long at) {}
+    private record ReferenceAlignment(String weaponId, float yaw, float pitch, float roll, long at) {}
     private static final class Scratch {
         final Vector3f direction = new Vector3f(), render = new Vector3f();
         final Quaternionf calibration = new Quaternionf();

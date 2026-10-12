@@ -144,6 +144,7 @@ local recoilRiseMs, recoilHoldMs = RECOIL_RISE_MS, RECOIL_HOLD_MS
 local recoilDurationMs = 750
 local recoilStartedAt, recoilStartPitch, recoilPitch, recoilPeakPitch = nil, 0, 0, 0
 local recoilStartYaw, recoilYaw, recoilPeakYaw = 0, 0, 0
+local recoilReturnPitch, recoilReturnYaw = 0, 0
 local boltAction, boltPitch, boltTarget, boltLastAt = nil, 0, 0, nil
 local boltYaw, boltYawTarget = 0, 0
 local boltSpeedScale = 1.0
@@ -633,6 +634,7 @@ local function updateShotRecoil(controller, profile, now)
     if not enabled or isCalibratingBlocked() then
         recoilStartedAt, recoilStartPitch, recoilPitch, recoilPeakPitch = nil, 0, 0, 0
         recoilStartYaw, recoilYaw, recoilPeakYaw = 0, 0, 0
+        recoilReturnPitch, recoilReturnYaw = 0, 0
         releaseRegripArmed, releaseTriggerSeen, releaseRegripAt = false, false, nil
         releaseRegripYaw, releaseRegripPitch = 0, 0
         return false
@@ -640,8 +642,10 @@ local function updateShotRecoil(controller, profile, now)
     if not recoilStartedAt then return false end
     local age = math.max(0, now - recoilStartedAt)
     if age >= recoilDurationMs then
-        recoilStartedAt, recoilStartPitch, recoilPitch, recoilPeakPitch = nil, 0, 0, 0
-        recoilStartYaw, recoilYaw, recoilPeakYaw = 0, 0, 0
+        recoilStartedAt = nil
+        recoilPitch, recoilYaw = recoilReturnPitch, recoilReturnYaw
+        recoilStartPitch, recoilPeakPitch = recoilPitch, recoilPitch
+        recoilStartYaw, recoilPeakYaw = recoilYaw, recoilYaw
         return false
     end
     local peakPitch, peakYaw = recoilPeakPitch, recoilPeakYaw
@@ -659,8 +663,8 @@ local function updateShotRecoil(controller, profile, now)
         recoilPitch, recoilYaw = peakPitch, peakYaw
     else
         local remaining = 1 - smoothstep((age - recoilHoldMs) / (recoilDurationMs - recoilHoldMs))
-        recoilPitch = peakPitch * remaining
-        recoilYaw = peakYaw * remaining
+        recoilPitch = recoilReturnPitch + (peakPitch - recoilReturnPitch) * remaining
+        recoilYaw = recoilReturnYaw + (peakYaw - recoilReturnYaw) * remaining
     end
     return true
 end
@@ -845,6 +849,7 @@ local function resetIronFocusState(player, now)
     focusSwayScale = 1.00
     recoilStartedAt, recoilStartPitch, recoilPitch, recoilPeakPitch = nil, 0, 0, 0
     recoilStartYaw, recoilYaw, recoilPeakYaw = 0, 0, 0
+    recoilReturnPitch, recoilReturnYaw = 0, 0
     boltAction, boltPitch, boltTarget, boltLastAt = nil, 0, 0, nil
     boltYaw, boltYawTarget = 0, 0
     boltSpeedScale = 1.0
@@ -888,6 +893,18 @@ local function updateIronFocus(player)
     local profile = controller and controller.profile
     local root = rawget(_G, "ViewpointGael")
     local setShotOrigin = root and root.Aim and root.Aim.setShotOrigin
+    local setWeaponReference = root and root.Aim and root.Aim.setWeaponReferenceAlignment
+    local setShotMotionGain = root and root.Aim and root.Aim.setShotMotionGain
+    local sandbox = SandboxVars and SandboxVars.ViewpointGaelCompat
+    if setWeaponReference then
+        pcall(setWeaponReference, profile and profile.weaponId or "",
+            tonumber(profile and profile.adjYaw) or 0,
+            tonumber(profile and profile.adjPitch) or 0,
+            tonumber(profile and profile.adjRoll) or 0)
+    end
+    if setShotMotionGain then
+        pcall(setShotMotionGain, tonumber(sandbox and sandbox.ShotMotionCarry) or 0.35)
+    end
     if profile and setShotOrigin then
         pcall(setShotOrigin, profile.weaponId or "",
             tonumber(profile.shotX) or 0, tonumber(profile.shotY) or 0,
@@ -946,7 +963,8 @@ local function updateIronFocus(player)
     local regripActive = updateReleaseRegrip(player, controller, now)
     local recoilActive = updateShotRecoil(controller, profile, now)
     local boltActive = updateBoltPitch(player, controller, profile, now)
-    local dynamicActive = swayActive or recoilActive or boltActive or regripActive
+    local recoilOffsetActive = recoilActive or recoilPitch ~= 0 or recoilYaw ~= 0
+    local dynamicActive = swayActive or recoilOffsetActive or boltActive or regripActive
     local hadDynamicProfile = lastFov ~= nil or lastSwayPushAt ~= nil
     lastProfile, lastFov = profile, focusFov
 
@@ -983,7 +1001,7 @@ local function updateIronFocus(player)
                 view.adjRoll = (tonumber(profile.adjRoll) or 0) + walkRoll * focusScale
             end
         end
-        if recoilActive then
+        if recoilOffsetActive then
             view.adjYaw = (tonumber(view.adjYaw) or tonumber(profile.adjYaw) or 0) + recoilYaw
         end
         if boltActive then
@@ -993,9 +1011,9 @@ local function updateIronFocus(player)
             view.adjYaw = (tonumber(view.adjYaw) or tonumber(profile.adjYaw) or 0)
                 + releaseRegripYaw
         end
-        if recoilActive or boltActive then
+        if recoilOffsetActive or boltActive then
             view.adjPitch = (tonumber(view.adjPitch) or tonumber(profile.adjPitch) or 0)
-                - (recoilActive and recoilPitch or 0) - (boltActive and boltPitch or 0)
+                - (recoilOffsetActive and recoilPitch or 0) - (boltActive and boltPitch or 0)
         end
         if regripActive then
             view.adjPitch = (tonumber(view.adjPitch) or tonumber(profile.adjPitch) or 0)
@@ -1199,6 +1217,21 @@ local function onWeaponFired(player, weapon)
                 or math.max(pitchTarget, direction * recoilPitch))
             recoilPeakYaw = yawDirection * (longBurstBonus > 0 and yawTarget
                 or math.max(yawTarget, yawDirection * recoilYaw))
+            local centerChance
+            if burstShotCount <= 3 then
+                centerChance = 0.90
+            elseif burstShotCount <= 5 then
+                centerChance = 0.80
+            else
+                centerChance = 0.80 - 0.20 * math.min(1, (burstShotCount - 5) / 21)
+            end
+            if ZombRand(1000) < math.floor(centerChance * 1000) then
+                recoilReturnPitch, recoilReturnYaw = 0, 0
+            else
+                -- A failed full recovery still settles most of the kick, leaving
+                -- a smaller, persistent offset for the next shot in this burst.
+                recoilReturnPitch, recoilReturnYaw = recoilPeakPitch * 0.35, recoilPeakYaw * 0.35
+            end
         end
     end
 end

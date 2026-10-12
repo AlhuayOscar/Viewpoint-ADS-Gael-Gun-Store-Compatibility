@@ -45,8 +45,11 @@ motion path only, retaining each weapon's saved calibration. The extra character
 aim offset is disabled because the native shot already uses the shared ray.
 Ordinary recoil ranges and recovery times are restored to the documented values
 (2–5 degrees base pitch before reductions; 0.3–0.5 seconds for light weapons).
-The calibrator title shows `Working v11` only when the loaded Java bridge reports
-version 11, plus `Axis OK` or `Axis unavailable`. A Lua reload alone cannot make an
+The calibrator title shows `Working v12` only when the loaded Java bridge reports
+version 12, plus `Axis OK` or `Axis unavailable`. The physical shot bridge removes
+only the stable saved sight alignment when reconstructing the barrel axis, so the
+live Gael recoil and hold offsets remain in the direction passed to True Ballistics.
+A Lua reload alone cannot make an
 old jar look current. Missing/stale physical samples hide the point and leave the
 native shot unchanged, rather than displaying the wrong reference-axis fallback.
 
@@ -57,6 +60,21 @@ and use the 70% weight directly. ADS `gunKick` uses 70% and `gunBack` uses 30%.
 The 1–3 / 4–5 / later shot stages and the 26-shot regrip policy remain intact.
 Balanced profiles are temporary copies, so saved calibrations are not changed
 and repeated profile updates cannot multiply the weights again.
+
+True Ballistics shot motion carry (sandbox option `ShotMotionCarry`, default
+0.35) adds a fraction of the physical weapon's yaw/pitch change since the
+previous shot to the current shot direction. It compares raw per-shot barrel
+angles, wraps yaw across the ±180° boundary, resets after 0.3 seconds or a weapon
+change, and caps the measured change at 2° per axis before applying the gain.
+Set it to 0 to keep the physical barrel direction without the extra carry. This
+is a tunable gameplay response; validate it against debug trajectories in game.
+
+After a burst, the custom Pitch/Yaw recoil now has a chance to settle fully at
+the ADS center instead of always reaching it. The chance is 90% for shots 1–3,
+80% for shots 4–5, then falls linearly to 60% by shot 26 (remaining at 60% for
+longer bursts). When a full return does not occur, the weapon settles at 35% of
+that shot's recoil offset and holds that residual while ADS remains active. The
+existing short hold and smooth recovery timing remain in place.
 
 Version 9 routes dynamic roll through the grip rotation alongside yaw/pitch,
 leaving all three saved angular calibration values stable. Walking adds up to

@@ -18,6 +18,12 @@ public final class GaelNativeShot {
     private static boolean announced;
     private static boolean originAnnounced;
     private static boolean trueBallisticsAnnounced;
+    private static volatile double shotMotionGain = 0.35;
+    private static String previousShotWeapon;
+    private static long previousShotAt;
+    private static double previousShotYaw, previousShotPitch;
+    private static final long SHOT_MOTION_WINDOW_NANOS = 300_000_000L;
+    private static final double MAX_SHOT_MOTION_DELTA = Math.toRadians(2.0);
 
     /** Model-space offsets from the weapon's normal muzzle point; units are the weapon mesh's units. */
     public static boolean setShotOrigin(String weapon, double x, double y, double z) {
@@ -27,6 +33,11 @@ public final class GaelNativeShot {
     }
 
     private static float clamp(double value) { return (float) Math.max(-2.0, Math.min(2.0, value)); }
+
+    /** Extra share of the weapon's angular movement between consecutive shots (0 disables carry). */
+    public static void setShotMotionGain(double gain) {
+        if (Double.isFinite(gain)) shotMotionGain = Math.max(0.0, Math.min(2.0, gain));
+    }
 
     /** Immutable render-thread snapshot consumed by the firing thread. */
     public static void publishWeaponPose(Matrix4f pose, String weapon, float angle) {
@@ -111,13 +122,28 @@ public final class GaelNativeShot {
         double x = -rendered.x, y = -rendered.z, u = rendered.y;
         double length = Math.sqrt(x*x + y*y + u*u);
         if (!Double.isFinite(length) || length < 1e-6) return false;
+        x /= length; y /= length; u /= length;
+        double yaw = Math.atan2(y, x);
+        double pitch = Math.atan2(u, Math.hypot(x, y));
+        long shotAt = System.nanoTime();
+        boolean sameBurst = weapon.getFullType().equals(previousShotWeapon)
+                && shotAt > previousShotAt && shotAt - previousShotAt <= SHOT_MOTION_WINDOW_NANOS;
+        double rawYaw = yaw, rawPitch = pitch;
+        if (sameBurst && shotMotionGain > 0) {
+            double deltaYaw = clampRadians(wrapRadians(rawYaw - previousShotYaw), MAX_SHOT_MOTION_DELTA);
+            double deltaPitch = clampRadians(rawPitch - previousShotPitch, MAX_SHOT_MOTION_DELTA);
+            yaw += deltaYaw * shotMotionGain;
+            pitch += deltaPitch * shotMotionGain;
+            double horizontal = Math.cos(pitch);
+            x = Math.cos(yaw) * horizontal;
+            y = Math.sin(yaw) * horizontal;
+            u = Math.sin(pitch);
+        }
         try {
             Field solutionField = manager.getClass().getDeclaredField("sol");
             solutionField.setAccessible(true);
             Object solution = solutionField.get(manager);
             Object direction = solution.getClass().getField("direction").get(solution);
-            x /= length; y /= length; u /= length;
-
             // True Ballistics reads a model muzzle before the ADS arm/weapon bone
             // correction reaches the projectile. Move that spawn point by the
             // weapon's angular change around the grip (approximate grip-to-muzzle
@@ -170,6 +196,10 @@ public final class GaelNativeShot {
                 changed++;
             }
             if (changed == 0) return false;
+            previousShotWeapon = weapon.getFullType();
+            previousShotAt = shotAt;
+            previousShotYaw = rawYaw;
+            previousShotPitch = rawPitch;
             if (!trueBallisticsAnnounced) {
                 trueBallisticsAnnounced = true;
                 System.out.println("[ViewpointGael] corrected live True Ballistics projectiles: muzzle position and pitch/yaw direction now follow the physical ADS weapon axis");
@@ -188,6 +218,16 @@ public final class GaelNativeShot {
     private static void setNumber(Object target, String name, double value) throws ReflectiveOperationException {
         Field field = target.getClass().getField(name);
         field.setDouble(target, value);
+    }
+
+    private static double wrapRadians(double angle) {
+        while (angle > Math.PI) angle -= Math.PI * 2.0;
+        while (angle < -Math.PI) angle += Math.PI * 2.0;
+        return angle;
+    }
+
+    private static double clampRadians(double angle, double limit) {
+        return Math.max(-limit, Math.min(limit, angle));
     }
 
     static boolean writeDirection(Vector3 direction, double x, double y, double up) {
