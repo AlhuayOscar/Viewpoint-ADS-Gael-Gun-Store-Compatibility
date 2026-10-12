@@ -114,6 +114,7 @@ local LONG_BURST_ANCHOR_STEP = 0.175
 local LONG_BURST_PITCH_IMPULSE = 0.625
 local LONG_BURST_YAW_IMPULSE = 0.500
 local RELEASE_REGRIP_SHOTS = 26
+local POST_REGRIP_RECOIL_MULTIPLIER = 1.50
 local RELEASE_REGRIP_MS = 400
 local RELEASE_REGRIP_HOLD_MS = 600
 local RELEASE_REGRIP_RETURN_MS = 400
@@ -1180,6 +1181,11 @@ local function onWeaponFired(player, weapon)
             else
                 local t = math.min(1, (burstShotCount - 25) / 15)
                 burstScale = 3.00 + t * (6.00 - 3.00)
+            end
+            -- Sustained automatic fire past the regrip threshold should keep
+            -- building recoil instead of becoming too forgiving.
+            if automatic and burstShotCount > RELEASE_REGRIP_SHOTS then
+                burstScale = burstScale * POST_REGRIP_RECOIL_MULTIPLIER
             end
             local longBurstBonus = automatic and burstShotCount > LONG_BURST_RECOIL_SHOTS
                 and LONG_BURST_RECOIL_BONUS or 0

@@ -31,7 +31,7 @@ public final class GaelNativeShot {
     private static final long CENTERING_BURST_WINDOW_NANOS = 1_000_000_000L;
     private static final double MAX_SHOT_MOTION_DELTA = Math.toRadians(2.0);
 
-    /** Model-space offsets from the weapon's normal muzzle point; units are the weapon mesh's units. */
+    /** Model-space offsets applied to True Ballistics' actual muzzle; units are weapon mesh units. */
     public static boolean setShotOrigin(String weapon, double x, double y, double z) {
         if (weapon == null || !Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) return false;
         shotOrigin = new ShotOrigin(weapon, clamp(x), clamp(y), clamp(z), System.nanoTime());
@@ -87,52 +87,56 @@ public final class GaelNativeShot {
         }
     }
 
-    /** Runs after Project Viewpoint's LeanShot callback, so this remains the final muzzle offset. */
-    public static void afterLean(Object controller, Object muzzle) {
-        IsoPlayer player = IsoPlayer.players[0];
-        ShotOrigin offset = shotOrigin;
-        WeaponPose pose = weaponPose;
-        if (!(muzzle instanceof Vector3 start) || player == null || offset == null
-                || System.nanoTime() - offset.at > 500_000_000L
-                || pose == null || System.nanoTime() - pose.at > 500_000_000L
-                || player.getBallisticsController() != controller || !player.isAiming()
-                || !(player.getPrimaryHandItem() instanceof HandWeapon weapon)
-                || !weapon.isAimedFirearm() || !VP.firstPerson() || VP.freeCam()
-                || !offset.weaponId.equals(weapon.getFullType()) || !pose.weaponId.equals(weapon.getFullType())
-                || (offset.x == 0f && offset.y == 0f && offset.z == 0f)) return;
-        try {
-            OriginScratch work = ORIGIN_SCRATCH.get();
-            pose.model.transformDirection(work.modelOffset.set(offset.x, offset.y, offset.z));
-            work.worldOffset.set(work.modelOffset.x, work.modelOffset.y, work.modelOffset.z);
-            Model.vectorToWorldCoords(0f, 0f, 0f, pose.angle, work.worldOffset);
-            if (!Float.isFinite(work.worldOffset.x) || !Float.isFinite(work.worldOffset.y)
-                    || !Float.isFinite(work.worldOffset.z)) return;
-            start.x += work.worldOffset.x;
-            start.y += work.worldOffset.y;
-            start.z += work.worldOffset.z;
-            if (!originAnnounced) {
-                originAnnounced = true;
-                System.out.println("[ViewpointGael] calibrated shot origin applied in weapon model space");
-            }
-        } catch (Throwable error) {
-            System.err.println("[ViewpointGael] calibrated shot origin unavailable: " + error);
-        }
-    }
-
     static boolean writeDirection(Vector3 direction, double[] ray) {
         if (ray == null || ray.length < 6) return false;
         return writeDirection(direction, ray[3], ray[4], ray[5]);
     }
 
-    /** Force the projectile objects True Ballistics already created to use the live ADS pose. */
-    public static boolean correctTrueBallisticsShot(Object manager, Object group) {
+    /**
+     * Move True Ballistics' resolved muzzle before AimProvider checks nearby walls
+     * and before BallisticsManager spawns a projectile or records its debug trail.
+     */
+    public static void applyTrueBallisticsMuzzleCalibration(Object character, Object muzzle) {
         IsoPlayer player = IsoPlayer.players[0];
         WeaponPose pose = weaponPose;
-        if (manager == null || group == null || player == null || !player.isAiming()
+        ShotOrigin calibration = shotOrigin;
+        if (character != player || player == null || !player.isAiming()
                 || !(player.getPrimaryHandItem() instanceof HandWeapon weapon)
                 || !weapon.isAimedFirearm() || !VP.firstPerson() || VP.freeCam()
+                || pose == null || calibration == null
+                || System.nanoTime() - pose.at > 500_000_000L
+                || System.nanoTime() - calibration.at > 500_000_000L
+                || !pose.weaponId.equals(weapon.getFullType())
+                || !calibration.weaponId.equals(weapon.getFullType())
+                || (calibration.x == 0f && calibration.y == 0f && calibration.z == 0f)) return;
+        try {
+            OriginScratch work = ORIGIN_SCRATCH.get();
+            pose.model.transformDirection(work.modelOffset.set(calibration.x, calibration.y, calibration.z));
+            work.worldOffset.set(work.modelOffset.x, work.modelOffset.y, work.modelOffset.z);
+            Model.vectorToWorldCoords(0f, 0f, 0f, pose.angle, work.worldOffset);
+            if (!Float.isFinite(work.worldOffset.x) || !Float.isFinite(work.worldOffset.y)
+                    || !Float.isFinite(work.worldOffset.z)) return;
+            // PZ world X/Y/up to True Ballistics tile X/Y/meters-up axes.
+            setNumber(muzzle, "x", getNumber(muzzle, "x") - work.worldOffset.x);
+            setNumber(muzzle, "y", getNumber(muzzle, "y") - work.worldOffset.y);
+            setNumber(muzzle, "u", getNumber(muzzle, "u") + work.worldOffset.z);
+            if (!originAnnounced) {
+                originAnnounced = true;
+                System.out.println("[ViewpointGael] calibrated muzzle applied during True Ballistics muzzle resolution");
+            }
+        } catch (ReflectiveOperationException | RuntimeException error) {
+            System.err.println("[ViewpointGael] Could not calibrate the True Ballistics muzzle: " + error);
+        }
+    }
+
+    /** Apply Gael's physical ADS axis before True Ballistics creates projectiles and debug trails. */
+    public static boolean correctTrueBallisticsSolution(Object shooter, Object weaponObject, Object solution) {
+        IsoPlayer player = IsoPlayer.players[0];
+        WeaponPose pose = weaponPose;
+        if (shooter != player || !(weaponObject instanceof HandWeapon weapon) || player == null
+                || !player.isAiming() || !weapon.isAimedFirearm() || !VP.firstPerson() || VP.freeCam()
                 || !GaelWeaponMotion.ready() || pose == null
-                || System.nanoTime() - pose.at > 150_000_000L
+                || System.nanoTime() - pose.at > 500_000_000L
                 || !pose.weaponId.equals(weapon.getFullType())) return false;
         Vector3f rendered = SHOT_DIRECTION.get();
         if (!GaelWeaponMotion.shotDirection(pose.angle, rendered)) return false;
@@ -142,7 +146,6 @@ public final class GaelNativeShot {
         double length = Math.sqrt(x*x + y*y + u*u);
         if (!Double.isFinite(length) || length < 1e-6) return false;
         x /= length; y /= length; u /= length;
-        double physicalX = x, physicalY = y, physicalU = u;
         long shotAt = System.nanoTime();
         boolean sameCenteringBurst = shotCenteringActive
                 && weapon.getFullType().equals(previousCenteringWeapon)
@@ -188,62 +191,10 @@ public final class GaelNativeShot {
             u = Math.sin(pitch);
         }
         try {
-            Field solutionField = manager.getClass().getDeclaredField("sol");
-            solutionField.setAccessible(true);
-            Object solution = solutionField.get(manager);
             Object direction = solution.getClass().getField("direction").get(solution);
-            // True Ballistics reads a model muzzle before the ADS arm/weapon bone
-            // correction reaches the projectile. Move that spawn point by the
-            // weapon's angular change around the grip (approximate grip-to-muzzle
-            // lever, capped to avoid malformed model transforms causing jumps).
-            Object barrel = solution.getClass().getField("barrel").get(solution);
-            double bx = getNumber(barrel, "x"), by = getNumber(barrel, "y"), bu = getNumber(barrel, "u");
-            double bl = Math.sqrt(bx*bx + by*by + bu*bu);
-            double dx = 0, dy = 0, du = 0;
-            if (Double.isFinite(bl) && bl > 0.5) {
-                dx = (physicalX - bx / bl) * 0.55;
-                dy = (physicalY - by / bl) * 0.55;
-                du = (physicalU - bu / bl) * 0.55;
-                double shift = Math.sqrt(dx*dx + dy*dy + du*du);
-                if (!Double.isFinite(shift)) return false;
-                if (shift > 0.25) { double scale = 0.25 / shift; dx *= scale; dy *= scale; du *= scale; }
-            }
-            Object muzzle = solution.getClass().getField("muzzle").get(solution);
-            setNumber(muzzle, "x", getNumber(muzzle, "x") + dx);
-            setNumber(muzzle, "y", getNumber(muzzle, "y") + dy);
-            setNumber(muzzle, "u", getNumber(muzzle, "u") + du);
             setNumber(direction, "x", x);
             setNumber(direction, "y", y);
             setNumber(direction, "u", u);
-
-            // This is deliberately after launch: it rewrites the live projectile
-            // velocity and spawn coordinates, even if another aim hook overwrote
-            // AimSolution.direction earlier in the same trigger pull.
-            Object activeValue = manager.getClass().getMethod("activeProjectiles").invoke(manager);
-            if (!(activeValue instanceof java.util.List<?> active)) return false;
-            int changed = 0;
-            for (Object projectile : active) {
-                if (projectile.getClass().getField("group").get(projectile) != group) continue;
-                Object origin = projectile.getClass().getField("origin").get(projectile);
-                Object position = projectile.getClass().getField("position").get(projectile);
-                Object previous = projectile.getClass().getField("previousPosition").get(projectile);
-                setNumber(origin, "x", getNumber(origin, "x") + dx);
-                setNumber(origin, "y", getNumber(origin, "y") + dy);
-                setNumber(origin, "u", getNumber(origin, "u") + du);
-                setNumber(position, "x", getNumber(position, "x") + dx);
-                setNumber(position, "y", getNumber(position, "y") + dy);
-                setNumber(position, "u", getNumber(position, "u") + du);
-                setNumber(previous, "x", getNumber(previous, "x") + dx);
-                setNumber(previous, "y", getNumber(previous, "y") + dy);
-                setNumber(previous, "u", getNumber(previous, "u") + du);
-                double speed = getNumber(projectile, "muzzleVelocity");
-                Object velocity = projectile.getClass().getField("velocity").get(projectile);
-                setNumber(velocity, "x", x * speed);
-                setNumber(velocity, "y", y * speed);
-                setNumber(velocity, "u", u * speed);
-                changed++;
-            }
-            if (changed == 0) return false;
             previousShotWeapon = weapon.getFullType();
             previousShotAt = shotAt;
             previousShotYaw = rawYaw;
@@ -255,11 +206,11 @@ public final class GaelNativeShot {
             }
             if (!trueBallisticsAnnounced) {
                 trueBallisticsAnnounced = true;
-                System.out.println("[ViewpointGael] corrected live True Ballistics projectiles: muzzle position and pitch/yaw direction now follow the physical ADS weapon axis");
+                System.out.println("[ViewpointGael] True Ballistics now uses the physical ADS weapon axis before projectile spawn");
             }
             return true;
         } catch (ReflectiveOperationException | RuntimeException error) {
-            System.err.println("[ViewpointGael] Could not correct the live True Ballistics projectile: " + error);
+            System.err.println("[ViewpointGael] Could not correct the True Ballistics aim solution: " + error);
             return false;
         }
     }

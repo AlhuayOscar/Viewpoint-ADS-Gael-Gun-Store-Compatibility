@@ -10,7 +10,7 @@ require "PVADS_GaelWeaponCatalog"
 require "PVADS_GaelVisualChoices"
 
 -- Companion to the stock calibrator. Both windows write to the same user profile.
--- Shot origin X/Y/Z are model-local offsets from the muzzle (X lateral, Y along the barrel, Z up).
+-- Muzzle X/Y/Z move True Ballistics' real weapon muzzle in model space (X lateral, Y forward, Z up).
 PVADS.GaelRealTimeDot = true
 if PVADS and PVADS.Settings then
     PVADS.Settings.developer = true
@@ -21,8 +21,8 @@ local FIELDS = {
     {"adjX", "Sight X", 0.0002}, {"adjY", "Sight Y", 0.0005},
     {"adjZ", "Sight Z", 0.0002}, {"adjPitch", "Pitch", 0.025},
     {"adjYaw", "Yaw", 0.025}, {"adjRoll", "Roll", 0.1},
-    {"shotX", "Shot origin X (local)", 0.0002}, {"shotY", "Shot origin Y (forward)", 0.0005},
-    {"shotZ", "Shot origin Z (up)", 0.0002},
+    {"shotX", "Muzzle X (lateral)", 0.0002}, {"shotY", "Muzzle Y (forward)", 0.0005},
+    {"shotZ", "Muzzle Z (up)", 0.0002},
     {"relief", "Relief", 0.001}, {"fovMul", "ADS FOV", 0.005},
     {"opticHeight", "Optic height", 0.0002}, {"lensScale", "Lens size", 0.01, 1},
     {"adsTime", "ADS time", 0.005},

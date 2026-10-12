@@ -131,7 +131,7 @@ public final class GaelWeaponMotion {
             String parentBone = player.primaryHandModel.parentBoneName;
             if (parentBone == null || parentBone.isEmpty()) return false;
             int index = ap.getSkinningBoneIndex(parentBone, -1);
-            if (index < 0) return false;
+            if (index < 0 || index >= ap.getModelTransformsCount()) return false;
             Scratch work = scratch.get();
             PZMath.convertMatrix(ap.getModelTransformAt(index), work.bone);
             work.bone.transpose().getTranslation(result);

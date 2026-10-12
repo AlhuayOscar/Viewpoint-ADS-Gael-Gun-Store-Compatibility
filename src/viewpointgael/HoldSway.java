@@ -14,7 +14,7 @@ public final class HoldSway {
     private static final float LIMIT = 25;
     private static final long MAX_AGE_NS = 500_000_000L;
     private static volatile State state;
-    private static boolean reported, reportedFallback, failed;
+    private static boolean reported, reportedFallback, reportedInvalidBone, failed;
     private static final ThreadLocal<Scratch> scratch = ThreadLocal.withInitial(Scratch::new);
     private static final Field ARM_BONES = field("armBones"), POSE = field("M"), BARREL = field("dw"), WEAPON = field("W"), BLEND = field("eShared");
 
@@ -84,10 +84,20 @@ public final class HoldSway {
             buildRotation(work.pivot, work.forward, value.yaw, value.pitch, value.roll, blend, work.rotation);
             int[] bones = (int[]) ARM_BONES.get(null);
             AnimationPlayer ap = (AnimationPlayer) animationPlayer;
+            int transformCount = ap.getModelTransformsCount();
             // Rotate both arm chains and the held prop around the hand joint.
             // Filtering to armIsProp moves only the gun and leaves the arms behind.
             for (int i = 0; i < bones.length; i++) {
-                org.lwjgl.util.vector.Matrix4f bone = ap.getModelTransformAt(bones[i]);
+                int boneIndex = bones[i];
+                if (boneIndex < 0 || boneIndex >= transformCount) {
+                    if (!reportedInvalidBone) {
+                        reportedInvalidBone = true;
+                        System.err.println("[ViewpointGael] skipping ADS arm/weapon bone " + boneIndex
+                                + " outside this model's " + transformCount + " transforms");
+                    }
+                    continue;
+                }
+                org.lwjgl.util.vector.Matrix4f bone = ap.getModelTransformAt(boneIndex);
                 PZMath.convertMatrix(bone, work.bone);
                 work.bone.transpose();
                 work.rotation.mul(work.bone, work.bone);
