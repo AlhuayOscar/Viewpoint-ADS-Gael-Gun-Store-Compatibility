@@ -782,6 +782,12 @@ function PVADS_GaelIronFocus_publishRecoilAim(profile, view, dynamicActive)
     -- angles and made bullets stay near the center while the weapon kept rising.
     local viewYaw, viewPitch = dYaw, dPitch
     local totalYaw, totalPitch = viewYaw, viewPitch
+    local player = getSpecificPlayer(0)
+    local weapon = player and player.getPrimaryHandItem and player:getPrimaryHandItem() or nil
+    local fireMode = weapon and weapon.getFireMode and weapon:getFireMode() or nil
+    local automatic = fireMode and string.lower(tostring(fireMode)) == "auto"
+        or (weapon and weapon.isAutomatic and weapon:isAutomatic()) or false
+    if automatic then totalPitch = -totalPitch end
 
     PVADS.GaelDynamicScreenX = totalYaw * pxPerDeg
     PVADS.GaelDynamicScreenY = totalPitch * pxPerDeg
@@ -789,7 +795,7 @@ function PVADS_GaelIronFocus_publishRecoilAim(profile, view, dynamicActive)
     local aimLogNow = getTimestampMs()
     if not PVADS_GaelIronFocus_lastAimLogAt or aimLogNow - PVADS_GaelIronFocus_lastAimLogAt >= 1000 then
         PVADS_GaelIronFocus_lastAimLogAt = aimLogNow
-        print(string.format("[ViewpointGaelCompat][aim] weapon=%s profile=(%.2f,%.2f) ray=(%.2f,%.2f) scale=%.2f", tostring(profile.weaponId), dYaw, dPitch, totalYaw, totalPitch, ANGULAR_DEVIATION_SCALE))
+        print(string.format("[ViewpointGaelCompat][aim] weapon=%s profile=(%.2f,%.2f) ray=(%.2f,%.2f) autoPitchReverse=%s scale=%.2f", tostring(profile.weaponId), dYaw, dPitch, totalYaw, totalPitch, tostring(automatic), ANGULAR_DEVIATION_SCALE))
     end
 
     if publish then
@@ -1246,8 +1252,14 @@ function PVADS_GaelIronFocus_applyShotRecoil(player, weapon, shotAt, profile)
                 amount, yawAmount, direction, yawDirection = PVADS_GaelIronFocus_applyLongBurstPattern(
                     amount, yawAmount, direction, yawDirection)
             end
-            local reversePitch = tonumber(profile and profile.recoilPitchReverse) == 1
-            if reversePitch then direction = -direction end
+            local reverseSetting = tonumber(profile and profile.recoilPitchReverse)
+            -- Automatic firearms default to reversed pitch and yaw; a saved 0
+            -- is an explicit per-profile opt-out, while 1 forces it on.
+            local reversePitchYaw = reverseSetting == 1 or (reverseSetting == nil and automatic)
+            if reversePitchYaw then
+                direction = -direction
+                yawDirection = -yawDirection
+            end
             local gripScale = PVADS_GaelGrip.recoilMultiplier(weapon)
             local strengthScale = PVADS_GaelIronFocus_strengthMultiplier(player)
             amount = amount * strengthScale
@@ -1258,7 +1270,7 @@ function PVADS_GaelIronFocus_applyShotRecoil(player, weapon, shotAt, profile)
                 or math.max(pitchTarget, direction * recoilPitch))
             recoilPeakYaw = yawDirection * (longBurstBonus > 0 and yawTarget
                 or math.max(yawTarget, yawDirection * recoilYaw))
-            print(string.format("[ViewpointGaelCompat][recoil] shot weapon=%s burst=%d pitch=%.2f yaw=%.2f reversePitch=%s strength=%.2f", tostring(weapon:getFullType()), burstShotCount, recoilPeakPitch, recoilPeakYaw, tostring(reversePitch), strengthScale))
+            print(string.format("[ViewpointGaelCompat][recoil] shot weapon=%s burst=%d pitch=%.2f yaw=%.2f reversePitchYaw=%s strength=%.2f", tostring(weapon:getFullType()), burstShotCount, recoilPeakPitch, recoilPeakYaw, tostring(reversePitchYaw), strengthScale))
 end
 
 function PVADS_GaelIronFocus_onWeaponFired(player, weapon)

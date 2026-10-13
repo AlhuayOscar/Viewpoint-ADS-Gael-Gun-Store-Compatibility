@@ -62,6 +62,17 @@ if not PVADS.gaelVisualChoicesInstalled then
     end
 
     local originalResolveProfile = PVADS.ResolveProfile
+    local lastResolvedProfileDiagnostic = {}
+    local function diagnosticValues(values)
+        if not values then return "none" end
+        local fields = { "adjX", "adjY", "adjZ", "adjPitch", "adjYaw", "adjRoll", "fovMul", "relief", "adsTime", "mode", "reticle", "recoilPitchReverse" }
+        local out = {}
+        for _, name in ipairs(fields) do
+            local value = values[name]
+            if value ~= nil then out[#out + 1] = name .. "=" .. tostring(value) end
+        end
+        return #out > 0 and table.concat(out, ",") or "empty"
+    end
     PVADS.ResolveProfile = function(weapon)
         local profile = originalResolveProfile(weapon)
         for name in pairs(globalFields) do
@@ -70,13 +81,26 @@ if not PVADS.gaelVisualChoicesInstalled then
                 profile[name] = (tonumber(profile[name]) or (unitDefaults[name] and 1 or 0)) + delta
             end
         end
+        local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId or "")
+        local user = PVADS.User and PVADS.User[key]
+        local diagnostic = string.format("[ViewpointGaelCompat][profiles][resolve] key=%s user={%s} opticFields={%s} final={%s}",
+            key, diagnosticValues(user), diagnosticValues(profile.userWeapon), diagnosticValues(profile))
+        if lastResolvedProfileDiagnostic[key] ~= diagnostic then
+            lastResolvedProfileDiagnostic[key] = diagnostic
+            print(diagnostic)
+        end
         return profile
     end
 
     function PVADS.loadUserProfiles()
         PVADS.User = {}
+        PVADS.GaelDeletedProfileKeys = {}
+        local loaded = 0
         local reader = getFileReader(FILE, false)
-        if not reader then return end
+        if not reader then
+            print("[ViewpointGaelCompat][profiles] load: file not found; starting empty")
+            return
+        end
         while true do
             local line = reader:readLine()
             if not line then break end
@@ -94,12 +118,44 @@ if not PVADS.gaelVisualChoicesInstalled then
                     end
                 end
                 PVADS.User[key] = profile
+                loaded = loaded + 1
             end
         end
         reader:close()
+        print(string.format("[ViewpointGaelCompat][profiles] loaded %d user profiles from %s", loaded, FILE))
     end
 
     function PVADS.saveUserProfiles()
+        -- The stock writer truncates the file. Keep disk entries missing from
+        -- the live table unless the player explicitly reset that profile.
+        local preserved = 0
+        local reader = getFileReader(FILE, false)
+        if reader then
+            while true do
+                local line = reader:readLine()
+                if not line then break end
+                local key, fields = string.match(line, "^([^=]+)=>(.*)$")
+                if key and PVADS.User[key] == nil
+                    and not (PVADS.GaelDeletedProfileKeys and PVADS.GaelDeletedProfileKeys[key]) then
+                    local profile = {}
+                    for name, value in string.gmatch(fields, "([%w_]+)=([^;]+)") do
+                        local number = tonumber(value)
+                        if number then
+                            profile[name] = number
+                        elseif name == "mode" and modes[value] then
+                            profile.mode = value
+                        elseif name == "reticle" and reticles[value] then
+                            profile.reticle = value
+                        end
+                    end
+                    if next(profile) then
+                        PVADS.User[key] = profile
+                        preserved = preserved + 1
+                    end
+                end
+            end
+            reader:close()
+        end
         local writer = getFileWriter(FILE, true, false)
         if not writer then return false end
         writer:write("# Project Viewpoint ADS - personal calibration. Format: weapon|optic=>key=value;...\r\n")
@@ -118,6 +174,10 @@ if not PVADS.gaelVisualChoicesInstalled then
             writer:write(key .. "=>" .. table.concat(fields, ";") .. ";\r\n")
         end
         writer:close()
+        local saved = 0
+        for _ in pairs(PVADS.User) do saved = saved + 1 end
+        PVADS.GaelDeletedProfileKeys = {}
+        print(string.format("[ViewpointGaelCompat][profiles] saved %d user profiles to %s (restored %d missing in-memory entries)", saved, FILE, preserved))
         return true
     end
 

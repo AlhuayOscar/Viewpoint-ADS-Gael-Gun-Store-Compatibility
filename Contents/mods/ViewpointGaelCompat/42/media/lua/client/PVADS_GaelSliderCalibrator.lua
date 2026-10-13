@@ -63,6 +63,37 @@ local function selected()
     return weapon and PVADS.userKey(weapon) or nil
 end
 
+local function selectedWeaponIsAutomatic()
+    local pl = getSpecificPlayer(0)
+    local weapon = PVADS.Controller.weapon(pl)
+    if not weapon then return false end
+    local fireMode = weapon.getFireMode and weapon:getFireMode()
+    return fireMode and string.lower(tostring(fireMode)) == "auto"
+        or (fireMode == nil and weapon.isAutomatic and weapon:isAutomatic()) or false
+end
+
+local function recoilReverseEnabled(values)
+    local setting = values and tonumber(values.recoilPitchReverse)
+    if setting ~= nil then return setting == 1 end
+    return selectedWeaponIsAutomatic()
+end
+
+-- Keep explicit resets distinguishable from profiles that went missing in
+-- memory, so the guarded writer can preserve the latter without undoing Reset.
+if PVADSCalibWindow and PVADSCalibWindow.onReset and not PVADS.gaelStockResetWrapped then
+    PVADS.gaelStockResetWrapped = true
+    local stockOnReset = PVADSCalibWindow.onReset
+    PVADSCalibWindow.onReset = function(self, ...)
+        local key = selected()
+        local result = stockOnReset(self, ...)
+        if key and PVADS.User[key] == nil then
+            PVADS.GaelDeletedProfileKeys = PVADS.GaelDeletedProfileKeys or {}
+            PVADS.GaelDeletedProfileKeys[key] = true
+        end
+        return result
+    end
+end
+
 local function current(field, global)
     if global then return PVADS.GaelGlobalValue(field[1]) end
     local p = PVADS.Controller.profile
@@ -76,6 +107,7 @@ local function apply(field, amount, global)
     local key = global and PVADS.GaelGlobalKey or selected()
     if not key then return false end
     PVADS.User[key] = PVADS.User[key] or {}
+    if PVADS.GaelDeletedProfileKeys then PVADS.GaelDeletedProfileKeys[key] = nil end
     PVADS.User[key][field[1]] = amount
     PVADS.Controller.refresh(true)
     return true
@@ -169,7 +201,7 @@ function PVADSGaelSliderWindow:createChildren()
     self.choiceInfoY = y + bh + 4
     y = y + bh + 23
     self.recoilPitchReverseButton = ISButton:new(8, y, 220, bh,
-        "RecoilPitchReverse?: NO", self, PVADSGaelSliderWindow.onRecoilPitchReverse)
+        "RecoilPitchYawReverse?: NO", self, PVADSGaelSliderWindow.onRecoilPitchReverse)
     self.recoilPitchReverseButton:initialise(); self:addChild(self.recoilPitchReverseButton)
     y = y + bh + 6
     for i, field in ipairs(FIELDS) do
@@ -231,9 +263,9 @@ end
 function PVADSGaelSliderWindow:syncRecoilPitchReverse()
     local key = selected()
     local values = key and PVADS.User[key]
-    local reverse = values and tonumber(values.recoilPitchReverse) == 1
+    local reverse = recoilReverseEnabled(values)
     if self.recoilPitchReverseButton then
-        self.recoilPitchReverseButton:setTitle("RecoilPitchReverse?: " .. (reverse and "SI" or "NO"))
+        self.recoilPitchReverseButton:setTitle("RecoilPitchYawReverse?: " .. (reverse and "SI" or "NO"))
         self.recoilPitchReverseButton:setVisible(not self.editGlobal)
     end
 end
@@ -246,13 +278,14 @@ function PVADSGaelSliderWindow:onRecoilPitchReverse()
         return
     end
     PVADS.User[key] = PVADS.User[key] or {}
-    local enabled = tonumber(PVADS.User[key].recoilPitchReverse) ~= 1
-    PVADS.User[key].recoilPitchReverse = enabled and 1 or nil
+    if PVADS.GaelDeletedProfileKeys then PVADS.GaelDeletedProfileKeys[key] = nil end
+    local enabled = not recoilReverseEnabled(PVADS.User[key])
+    PVADS.User[key].recoilPitchReverse = enabled and 1 or 0
     PVADS.Controller.refresh(true)
     self:syncRecoilPitchReverse()
     self.message = enabled
-        and "Pitch del recoil invertido para este perfil (pulsa Save para guardar)"
-        or "Pitch del recoil normal para este perfil (pulsa Save para guardar)"
+        and "Pitch y yaw del recoil invertidos para este perfil (pulsa Save para guardar)"
+        or "Pitch y yaw del recoil normales para este perfil (pulsa Save para guardar)"
     self.saveButton:setTitle("Save")
 end
 
@@ -370,6 +403,7 @@ function PVADSGaelSliderWindow:applyChoice(field, choice)
     local allowed = field == "mode" and PVADS.GaelVisualModes or PVADS.GaelVisualReticles
     if choice ~= "auto" and not allowed[choice] then return end
     PVADS.User[key] = PVADS.User[key] or {}
+    if PVADS.GaelDeletedProfileKeys then PVADS.GaelDeletedProfileKeys[key] = nil end
     if choice == "auto" then
         PVADS.User[key][field] = nil
     else
@@ -419,6 +453,32 @@ function PVADSGaelSliderWindow:applyTyped(box)
     end
 end
 
+function PVADSGaelSliderWindow:onSightArrowKey(key, stepMultiplier)
+    if not self:isVisible() or self.isCollapsed then return end
+    for _, row in ipairs(self.rows) do
+        if row.entry:isFocused() then return end
+    end
+
+    local row, direction
+    if key == Keyboard.KEY_LEFT then
+        row, direction = self.rows[1], -1 -- Sight X: left decreases.
+    elseif key == Keyboard.KEY_RIGHT then
+        row, direction = self.rows[1], 1 -- Sight X: right increases.
+    elseif key == Keyboard.KEY_UP then
+        row, direction = self.rows[3], -1 -- Sight Z: up decreases.
+    elseif key == Keyboard.KEY_DOWN then
+        row, direction = self.rows[3], 1 -- Sight Z: down increases.
+    else
+        return
+    end
+
+    if not row then return end
+    stepMultiplier = math.max(1, math.min(8, tonumber(stepMultiplier) or 1))
+    local value = current(row.field, self.editGlobal) + direction * row.field[3] * stepMultiplier
+    self:rangeFor(row, value)
+    row.slider:setCurrentValue(value)
+end
+
 function PVADSGaelSliderWindow:onRange()
     self.rangeLevel = self.rangeLevel % #RANGES + 1
     self.rangeButton:setTitle("Range x" .. RANGES[self.rangeLevel])
@@ -454,6 +514,8 @@ function PVADSGaelSliderWindow:onReset()
     if not key then return end
     local savedScale = self.editGlobal and markerScale() or nil
     PVADS.User[key] = nil
+    PVADS.GaelDeletedProfileKeys = PVADS.GaelDeletedProfileKeys or {}
+    PVADS.GaelDeletedProfileKeys[key] = true
     if savedScale then PVADS.User[key] = { markerScale = savedScale } end
     if self.editGlobal then self.globalDirty = true end
     PVADS.Controller.refresh(true)
@@ -625,6 +687,25 @@ local function install()
         end
     end
     pushMarkerScale()
+    if not Cal.gaelSightArrowKeysInstalled then
+        Cal.gaelSightArrowKeysInstalled = true
+        Cal.gaelSightArrowRepeatCount = {}
+        Events.OnKeyPressed.Add(function(key)
+            Cal.gaelSightArrowRepeatCount[key] = 0
+            local window = Cal.gaelSliderWindow
+            if window and window.onSightArrowKey then window:onSightArrowKey(key) end
+        end)
+        Events.OnKeyKeepPressed.Add(function(key)
+            if key ~= Keyboard.KEY_LEFT and key ~= Keyboard.KEY_RIGHT
+                and key ~= Keyboard.KEY_UP and key ~= Keyboard.KEY_DOWN then return end
+            local window = Cal.gaelSliderWindow
+            if not window or not window.onSightArrowKey or not window:isVisible() then return end
+            local counts = Cal.gaelSightArrowRepeatCount
+            counts[key] = (counts[key] or 0) + 1
+            local multiplier = math.min(8, 1 + math.floor(counts[key] / 4))
+            window:onSightArrowKey(key, multiplier)
+        end)
+    end
     if not Cal.gaelSliderInstalled then
     Cal.gaelSliderInstalled = true
     local originalToggle = Cal.toggle
