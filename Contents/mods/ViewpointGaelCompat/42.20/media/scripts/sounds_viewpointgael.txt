@@ -1,0 +1,32 @@
+module Base
+{
+    sound ViewpointGaelHeadImpact1
+    {
+        category = Zombie,
+        clip
+        {
+            file = media/sound/ViewpointGaelHeadImpact1.wav,
+            distanceMax = 16,
+        }
+    }
+
+    sound ViewpointGaelHeadImpact2
+    {
+        category = Zombie,
+        clip
+        {
+            file = media/sound/ViewpointGaelHeadImpact2.wav,
+            distanceMax = 16,
+        }
+    }
+
+    sound ViewpointGaelHeadImpact3
+    {
+        category = Zombie,
+        clip
+        {
+            file = media/sound/ViewpointGaelHeadImpact3.wav,
+            distanceMax = 16,
+        }
+    }
+}

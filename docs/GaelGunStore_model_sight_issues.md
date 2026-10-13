@@ -58,4 +58,10 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 52 | QBS09 | `Base.QBS09` (#329) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
 | 53 | Saiga-12 | `Base.Saiga12` (#340) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
 
-Para cada caso: confirmar el defecto con el arma sin óptica, inspeccionar el modelo y sus puntos de mira, corregir el recurso 3D o sus anexos si corresponde y volver a comprobar ADS. Mantener las calibraciones manuales existentes hasta verificar la corrección visual en juego.
+## Ópticas
+
+| Óptica | ID | Problema | Estado |
+|---|---|---|---|
+| SIG Sauer Romeo3 | `Base.SigSauerRomeo3` | Problemático: modelo 3D inexistente. Es una de las dos entradas Romeo3 registradas; la otra es `Base.Romeo3`. | [ ] Pendiente |
+
+Para las armas: confirmar el defecto sin óptica, inspeccionar el modelo y sus puntos de mira y volver a comprobar ADS tras la corrección. Para las ópticas: comprobar el recurso 3D y su montaje sobre un arma compatible. Mantener las calibraciones manuales existentes hasta verificar la corrección visual en juego.

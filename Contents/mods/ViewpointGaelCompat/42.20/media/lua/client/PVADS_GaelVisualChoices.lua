@@ -18,6 +18,61 @@ if not PVADS.gaelVisualChoicesInstalled then
     PVADS.GaelVisualModes = modes
     PVADS.GaelVisualReticles = reticles
 
+    -- Global numeric deltas are applied after the personal weapon/optic override.
+    -- Keep them in the same profile file under a reserved, non-weapon key.
+    local globalKey = "__GaelGlobalOffsets__|"
+    local globalFields = {
+        adjX = true, adjY = true, adjZ = true,
+        adjPitch = true, adjYaw = true, adjRoll = true,
+        relief = true, fovMul = true, opticHeight = true,
+        lensScale = true, adsTime = true,
+        pipX = true, pipY = true, pipZ = true,
+        pipScale = true, pipZoom = true,
+        pipRetX = true, pipRetY = true, pipDepth = true,
+    }
+    local unitDefaults = { lensScale = true, pipScale = true, pipZoom = true }
+    PVADS.GaelGlobalKey = globalKey
+    PVADS.GaelGlobalFields = globalFields
+    function PVADS.GaelGlobalValue(name)
+        local offsets = PVADS.User and PVADS.User[globalKey]
+        local value = offsets and offsets[name]
+        return globalFields[name] and type(value) == "number" and value or 0
+    end
+
+    function PVADS.GaelGlobalOnlyAvailable()
+        local offsets = PVADS.User and PVADS.User[globalKey]
+        return offsets and offsets.onlyAvailable == 1 or false
+    end
+
+    local function explicitlyCalibrated(profile, name)
+        local id, opticId = profile.weaponId, profile.opticId or ""
+        local user = PVADS.User and PVADS.User[id .. "|" .. opticId]
+        local weaponOptics = PVADS.WeaponOptic and PVADS.WeaponOptic[id]
+        local specific = weaponOptics and weaponOptics[opticId]
+        local weapon = PVADS.Weapons and PVADS.Weapons[id]
+        return (user and user[name] ~= nil)
+            or (specific and specific[name] ~= nil)
+            or (weapon and weapon[name] ~= nil)
+    end
+
+    function PVADS.GaelEffectiveGlobalValue(profile, name)
+        if not profile then return 0 end
+        if PVADS.GaelGlobalOnlyAvailable() and explicitlyCalibrated(profile, name) then return 0 end
+        return PVADS.GaelGlobalValue(name)
+    end
+
+    local originalResolveProfile = PVADS.ResolveProfile
+    PVADS.ResolveProfile = function(weapon)
+        local profile = originalResolveProfile(weapon)
+        for name in pairs(globalFields) do
+            local delta = PVADS.GaelEffectiveGlobalValue(profile, name)
+            if delta ~= 0 then
+                profile[name] = (tonumber(profile[name]) or (unitDefaults[name] and 1 or 0)) + delta
+            end
+        end
+        return profile
+    end
+
     function PVADS.loadUserProfiles()
         PVADS.User = {}
         local reader = getFileReader(FILE, false)

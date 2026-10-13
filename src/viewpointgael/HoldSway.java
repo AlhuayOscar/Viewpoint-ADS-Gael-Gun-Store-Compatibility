@@ -8,6 +8,7 @@ import zombie.inventory.InventoryItem;
 /** Small procedural rotation of the held gun and arms after ADS has solved its calibrated pose. */
 public final class HoldSway {
     private static final float LIMIT = 25f;
+    private static final float POST_ALIGNMENT_FOLLOW_THROUGH = 0.25f;
     private static final long MAX_AGE_NS = 500_000_000L;
     private static volatile State state;
     private static boolean reported;
@@ -39,7 +40,8 @@ public final class HoldSway {
             IsoPlayer player = IsoPlayer.players[0];
             InventoryItem weapon = player == null ? null : player.getPrimaryHandItem();
             if (weapon == null || !current.weaponId.equals(weapon.getFullType())) return;
-            rotatePose(eye, direction, current.yaw, current.pitch, progress, pose);
+            rotatePose(eye, direction, current.yaw * POST_ALIGNMENT_FOLLOW_THROUGH,
+                    current.pitch * POST_ALIGNMENT_FOLLOW_THROUGH, progress, pose);
             if (!reported) {
                 reported = true;
                 System.out.println("[ViewpointGael] post-alignment hold sway active for " + current.weaponId);
@@ -56,7 +58,12 @@ public final class HoldSway {
         s.right.set(direction).cross(0f, 1f, 0f);
         if (s.right.lengthSquared() < 1e-6f) s.right.set(1f, 0f, 0f);
         else s.right.normalize();
-        s.pivot.set(eye).fma(-0.20f, direction);
+        // A fixed rear pivot translates the entire sight too far during a
+        // long automatic burst. Keep the barrel angle, but shorten that lever
+        // as the angle grows so the weapon stays close to its ADS position.
+        float largestAngle = Math.max(Math.abs(yaw), Math.abs(pitch));
+        float pivotBack = 0.20f * Math.min(1f, 8f / Math.max(8f, largestAngle));
+        s.pivot.set(eye).fma(-pivotBack, direction);
         float fade = Math.min(1f, progress);
         s.rotation.identity().translate(s.pivot)
                 .rotate((float) Math.toRadians(yaw * fade), 0f, 1f, 0f)

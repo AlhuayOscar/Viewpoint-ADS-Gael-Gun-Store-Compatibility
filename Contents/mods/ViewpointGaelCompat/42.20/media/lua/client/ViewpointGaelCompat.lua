@@ -35,10 +35,21 @@ local function centerMarker(playerObj)
     local panel = panels[playerObj:getPlayerNum()]
     local state = panel and panel.state
     if not state then return end
-    state.aimOffsetX = 0
-    state.aimOffsetY = 0
-    state.shotAimOffsetX = 0
-    state.shotAimOffsetY = 0
+    local aim = api()
+    local height = panel.getHeight and panel:getHeight() or 0
+    local scale = math.max(0.65, math.min(1.50,
+        math.min(panel:getWidth(), height) / 1080))
+    local x, y = 0, 0
+    if height > 0 and aim and aim.recoilScreenX and aim.recoilScreenY then
+        local okX, offsetX = pcall(aim.recoilScreenX, height)
+        local okY, offsetY = pcall(aim.recoilScreenY, height)
+        if okX and okY then
+            x = (tonumber(offsetX) or 0) / scale
+            y = (tonumber(offsetY) or 0) / scale
+        end
+    end
+    state.aimOffsetX, state.aimOffsetY = x, y
+    state.shotAimOffsetX, state.shotAimOffsetY = x, y
 end
 
 local function installCrosshair()
