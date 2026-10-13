@@ -858,11 +858,12 @@ function PVADS_GaelIronFocus_updateSneezeJolt(player, now)
     local active = sneezeState ~= 0
     if active and not sneezeWasActive then
         sneezeJoltStartedAt = now
+        local sneezeScale = 2.0 + ZombRand(151) / 100
         sneezeJoltPitch = (ZombRand(2) == 0 and -1 or 1)
-            * (SNEEZE_JOLT_PITCH + ZombRand(18) / 100)
+            * (SNEEZE_JOLT_PITCH + ZombRand(18) / 100) * sneezeScale
         sneezeJoltYaw = (ZombRand(2) == 0 and -1 or 1)
-            * (SNEEZE_JOLT_YAW + ZombRand(13) / 100)
-        print(string.format("[ViewpointGaelCompat][sneeze] jolt started state=%d pitch=%.2f yaw=%.2f", sneezeState, sneezeJoltPitch, sneezeJoltYaw))
+            * (SNEEZE_JOLT_YAW + ZombRand(13) / 100) * sneezeScale
+        print(string.format("[ViewpointGaelCompat][sneeze] jolt started state=%d scale=%.2fx pitch=%.2f yaw=%.2f", sneezeState, sneezeScale, sneezeJoltPitch, sneezeJoltYaw))
     end
     sneezeWasActive = active
     if not sneezeJoltStartedAt then return 0, 0, false end
