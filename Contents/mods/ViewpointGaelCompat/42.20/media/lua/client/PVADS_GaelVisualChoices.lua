@@ -187,10 +187,9 @@ if not PVADS.gaelVisualChoicesInstalled then
             and rdsLensSizeDefaults[profile.weaponId] then
             local key = tostring(profile.weaponId) .. "|Base.RDS"
             local user = PVADS.User and PVADS.User[key]
-            if not user or user.lensScale == nil then
-                profile.lensScale = 2.00000
-                if profile.userWeapon then profile.userWeapon.lensScale = 2.00000 end
-            end
+            local lensScale = user and tonumber(user.lensScale) or 2.00000
+            profile.lensScale = lensScale
+            if profile.userWeapon then profile.userWeapon.lensScale = lensScale end
         end
         -- Small scope-style lens for x1 reflex optics that need a separate
         -- sight window. Keep the selected reticle and user lens-size tuning.
@@ -213,7 +212,9 @@ if not PVADS.gaelVisualChoicesInstalled then
             for _, name in ipairs({ "pipScale", "pipZoom", "pipX", "pipY", "pipZ", "pipRetX", "pipRetY", "pipDepth" }) do
                 if opticUser[name] ~= nil then profile[name] = tonumber(opticUser[name]) or profile[name] end
             end
-            if opticUser.lensScale ~= nil and profile.mode == "scope" then
+            if opticUser.lensScale ~= nil and (profile.mode == "scope"
+                or (profile.opticId == "Base.RDS" and profile.weaponId
+                    and rdsLensSizeDefaults[profile.weaponId])) then
                 profile.lensScale = tonumber(opticUser.lensScale) or profile.lensScale
             end
         end
