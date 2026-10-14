@@ -197,7 +197,7 @@ PVADS.RegisterADSAdapter("GaelRifleMagnifiedOptics", function(weapon, p, part)
     p.mode = "scope"
     p.lensScale = 0.8
     if mag <= 2 then
-        p.zoomLevels = { 2 }
+        p.zoomLevels = { 1, 2 }
     elseif mag <= 4 then
         p.zoomLevels = { 2, mag }
     else
@@ -206,3 +206,20 @@ PVADS.RegisterADSAdapter("GaelRifleMagnifiedOptics", function(weapon, p, part)
     local minRelief = mag >= 4 and 0.22 or 0.17
     p.relief = math.max(p.relief or 0, minRelief)
 end)
+
+-- Start variable scopes at their lowest step so wheel-up always has a visible
+-- zoom-in step. Keep remembered zoom choices for the rest of the session.
+local scope = PVADS.Scope
+if scope and type(scope.onProfile) == "function" and not scope._gaelZoomStartWrapped then
+    local onProfile = scope.onProfile
+    scope.onProfile = function(profile, weapon)
+        if profile and profile.mode == "scope" and scope.zoomLevelsFor and scope.mem then
+            local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId or "")
+            if not scope.mem[key] and scope.zoomLevelsFor(profile) then
+                scope.mem[key] = { zi = 1 }
+            end
+        end
+        return onProfile(profile, weapon)
+    end
+    scope._gaelZoomStartWrapped = true
+end

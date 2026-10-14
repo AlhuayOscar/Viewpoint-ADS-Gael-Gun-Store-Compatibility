@@ -44,7 +44,7 @@ The companion panel also has **Retícula** and **Modo ADS** selectors for the eq
 
 In ADS, guns with a valid model muzzle attachment publish the physical barrel origin and direction as their sight ray. The HUD draws a thin line from PVADS' visible sight window toward that barrel direction. The purple square at its end exaggerates the angular miss according to target distance (0.65x to 3x, using 60 m when no depth hit is available), so a longer shot shows how yaw and pitch accumulate lateral error. This square is an aim-error guide, not a literal impact pixel. Viewpoint True Ballistics uses the unscaled barrel ray for the shot; if a model has no valid muzzle attachment, the existing PVADS sight ray remains in use. Ballistic zero, spread and projectile drop still affect individual impacts. The cyan cross remains the camera-centre reference. Temporary motion clears when ADS ends and does not change saved calibration values.
 
-`Base.ZaMiniRDS` and `Base.MiniRedDot` default to Viewpoint's 1x clear-lens PiP mode. Their sight models remain around the lens, while the centre shows the unobstructed world and dot without scope magnification. The usual numeric calibration for each weapon carrying either optic is retained.
+`Base.MiniRedDot` defaults to `ScopeRedDotALT` on every weapon that carries it, unless a weapon/optic profile explicitly selects another ADS mode. `Base.ZaMiniRDS` defaults to Reflex. Weapon-specific numeric calibrations remain independent.
 
 ## Weapon status
 

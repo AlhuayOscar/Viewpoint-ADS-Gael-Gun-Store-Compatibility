@@ -7,10 +7,13 @@ if not PVADS._gaelOpticFovWrapped then
     PVADS.ResolveProfile = function(weapon)
         local profile = resolveProfile(weapon)
         local fov = profile and tonumber(profile.fovMul)
-        if profile and profile.opticId and fov and fov >= 0.8 then
+        if profile and profile.opticId and fov then
             local mag = tonumber(profile.mag) or 1
             local onePower = profile.mode == "reflex" or mag <= 1.01
-            profile.fovMul = math.max(0.3, fov - (onePower and 0.2 or 0.3))
+            -- Keep a little more view for 1x sights and give magnified optics
+            -- stronger ADS zoom. Scale every calibrated FOV so low saved
+            -- values still receive the same optic treatment as iron sights.
+            profile.fovMul = math.max(0.3, fov * (onePower and 0.8 or 0.7))
         end
         return profile
     end

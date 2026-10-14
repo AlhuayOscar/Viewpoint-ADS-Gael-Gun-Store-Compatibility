@@ -6,7 +6,7 @@ if not PVADS.gaelVisualChoicesInstalled then
     PVADS.gaelVisualChoicesInstalled = true
 
     local FILE = "PVADS_UserProfiles.txt"
-    local modes = { iron = true, reflex = true, scope = true }
+    local modes = { iron = true, reflex = true, scope = true, scopeg36 = true, scopereddotalt = true }
     local reticles = {
         none = true, dot = true, holo = true, okp7 = true,
         okp7_ring = true, okp7_rings = true,
@@ -31,6 +31,59 @@ if not PVADS.gaelVisualChoicesInstalled then
         pipRetX = true, pipRetY = true, pipDepth = true,
     }
     local unitDefaults = { lensScale = true, pipScale = true, pipZoom = true }
+    local okp7DefaultProfile = {
+        pipX = 0.00000, pipY = 0.00000, pipZ = 0.00000,
+        pipScale = 0.46000, pipZoom = 1.00000,
+        pipRetX = 0.00000, pipRetY = -0.16500, pipDepth = 0.00000,
+    }
+    -- Add new bolt-action sniper IDs here so Carcano lens copying and the
+    -- calibrator's sniper-only copy button include them automatically.
+    PVADS.GaelSniperCopyWeaponIds = {
+        "Base.M24", "Base.Springfield_sniper", "Base.Enfield", "Base.SR338", "Base.CS5",
+        "Base.GOL", "Base.JNG90", "Base.L115A", "Base.L96", "Base.M200",
+        "Base.M40", "Base.M98B", "Base.Scout_elite", "Base.SV98", "Base.AWS",
+    }
+    -- Bolt-action sniper and historical rifle IDs that should default these
+    -- four small optics to the scope/PiP ADS renderer.
+    local boltActionScopeWeapons = {
+        ["Base.Carcano"] = true, ["Base.CarcanoCarbine1891"] = true,
+        ["Base.Enfield"] = true, ["Base.Enfield1917"] = true,
+        ["Base.Kark98"] = true, ["Base.MannlicherM1895"] = true,
+        ["Base.MannlicherM1895_long"] = true, ["Base.MartiniHenry"] = true,
+        ["Base.MAS36"] = true, ["Base.Mauser98"] = true,
+        ["Base.Mosin"] = true, ["Base.MosinNagant1891"] = true,
+        ["Base.RossMK3"] = true, ["Base.Springfield1903"] = true,
+        ["Base.TankgewehrM1918"] = true, ["Base.VarmintRifle"] = true,
+        ["Base.HuntingRifle"] = true, ["Base.DeLisle"] = true,
+        ["Base.M24"] = true, ["Base.Springfield_sniper"] = true,
+        ["Base.SR338"] = true, ["Base.CS5"] = true, ["Base.GOL"] = true,
+        ["Base.JNG90"] = true, ["Base.L115A"] = true, ["Base.L96"] = true,
+        ["Base.M200"] = true, ["Base.M40"] = true, ["Base.M98B"] = true,
+        ["Base.Scout_elite"] = true, ["Base.SV98"] = true, ["Base.AWS"] = true,
+    }
+    local scopeADSOptics = {
+        ["Base.SLDG"] = true, ["Base.PKA"] = true,
+        ["Base.CP1"] = true, ["Base.MicroT1"] = true,
+    }
+    local redDotAltDefaults = {
+        ["Base.AK74"] = true,
+        ["Base.AUG_A3"] = true,
+    }
+    local rdsLensSizeDefaults = {
+        ["Base.AK47"] = true,
+        ["Base.AUG_A3"] = true,
+    }
+    local carcanoSniperLensFields = {
+        "adjX", "adjY", "adjZ", "lensScale", "pipX", "pipY", "pipZ",
+        "pipScale", "pipZoom", "pipRetX", "pipRetY", "pipDepth",
+    }
+    -- Copy Carcano optic presentation to the AK-74 once. Keep weapon-specific
+    -- recoil/alignment fields (pitch, yaw, roll, relief) untouched.
+    local carcanoAK74OpticFields = {
+        "adjX", "adjY", "adjZ", "lensScale", "pipX", "pipY", "pipZ",
+        "pipScale", "pipZoom", "pipRetX", "pipRetY", "pipDepth",
+        "mode", "reticle", "fovMul", "opticHeight", "adsTime",
+    }
     PVADS.GaelGlobalKey = globalKey
     PVADS.GaelGlobalFields = globalFields
     function PVADS.GaelGlobalValue(name)
@@ -65,7 +118,7 @@ if not PVADS.gaelVisualChoicesInstalled then
     local lastResolvedProfileDiagnostic = {}
     local function diagnosticValues(values)
         if not values then return "none" end
-        local fields = { "adjX", "adjY", "adjZ", "adjPitch", "adjYaw", "adjRoll", "fovMul", "relief", "adsTime", "mode", "reticle", "recoilPitchReverse" }
+        local fields = { "adjX", "adjY", "adjZ", "adjPitch", "adjYaw", "adjRoll", "fovMul", "relief", "lensScale", "pipScale", "pipZoom", "adsTime", "mode", "reticle", "pipAlt", "recoilPitchReverse" }
         local out = {}
         for _, name in ipairs(fields) do
             local value = values[name]
@@ -75,6 +128,95 @@ if not PVADS.gaelVisualChoicesInstalled then
     end
     PVADS.ResolveProfile = function(weapon)
         local profile = originalResolveProfile(weapon)
+        -- Default OKP-7 presentation for any weapon, including combinations
+        -- without a user profile. Personal values remain intact once saved.
+        if profile.opticId == "Base.OKP7" then
+            local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId)
+            local user = PVADS.User and PVADS.User[key]
+            if not user then
+                profile.mode = "scopereddotalt"
+                for name, value in pairs(okp7DefaultProfile) do
+                    profile[name] = value
+                    if profile.userWeapon then profile.userWeapon[name] = value end
+                end
+            end
+        end
+        -- MiniRedDot is a small reflex optic that needs the alternate scope
+        -- window. Use it for every weapon carrying this optic unless the user
+        -- explicitly selected a different ADS mode for that weapon/optic.
+        if profile.opticId == "Base.MiniRedDot" then
+            local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId)
+            local user = PVADS.User and PVADS.User[key]
+            if not user or user.mode == nil then
+                profile.mode = "scopereddotalt"
+            end
+            -- 0.095 is the old accidentally shrunken PiP value. Migrate it
+            -- in memory and use the intended shared size; leave other manual
+            -- per-weapon sizes untouched.
+            if user and tonumber(user.pipScale) == 0.095 then
+                user.pipScale = 1.94000
+                profile.pipScale = 1.94000
+                if profile.userWeapon then profile.userWeapon.pipScale = 1.94000 end
+            elseif not user or user.pipScale == nil then
+                if profile.userWeapon then profile.userWeapon.pipScale = 1.94000 end
+                profile.pipScale = 1.94000
+            end
+        end
+        -- The G36 carry-handle optic needs the stock scope renderer and reticle.
+        -- Keep a named choice in the calibrator, but pass native values to ADS.
+        if profile.weaponId == "Base.G36" and profile.mode == "scopeg36" then
+            profile.mode = "scope"
+            profile.reticle = "eastern"
+        end
+        if profile.weaponId and profile.opticId
+            and boltActionScopeWeapons[profile.weaponId] and scopeADSOptics[profile.opticId] then
+            local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId)
+            local user = PVADS.User and PVADS.User[key]
+            if not user or user.mode == nil then profile.mode = "scope" end
+        end
+        -- RedDot defaults for the AK-74 and AUG A3, with the same low sight
+        -- height and alternate scope-style ADS. Preserve explicit user tuning.
+        if profile.weaponId and profile.opticId == "Base.RedDot"
+            and redDotAltDefaults[profile.weaponId] then
+            local key = tostring(profile.weaponId) .. "|Base.RedDot"
+            local user = PVADS.User and PVADS.User[key]
+            if not user or user.mode == nil then profile.mode = "scopereddotalt" end
+            if not user or user.adjZ == nil then profile.adjZ = -0.01700 end
+        end
+        if profile.weaponId and profile.opticId == "Base.RDS"
+            and rdsLensSizeDefaults[profile.weaponId] then
+            local key = tostring(profile.weaponId) .. "|Base.RDS"
+            local user = PVADS.User and PVADS.User[key]
+            if not user or user.lensScale == nil then
+                profile.lensScale = 2.00000
+                if profile.userWeapon then profile.userWeapon.lensScale = 2.00000 end
+            end
+        end
+        -- Small scope-style lens for x1 reflex optics that need a separate
+        -- sight window. Keep the selected reticle and user lens-size tuning.
+        if profile.mode == "scopereddotalt" then
+            local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId or "")
+            local user = PVADS.User and PVADS.User[key]
+            profile.mode = "scope"
+            -- PVADS routes optic fields into userWeapon, so p.lensScale can
+            -- still be the optic default (often 1.0) after ResolveProfile.
+            -- Promote the saved calibration for this renderer explicitly.
+            profile.lensScale = user and tonumber(user.lensScale) or 0.20
+        end
+        -- Since PVADS 1.8, optic calibrations are moved to userWeapon so the
+        -- Java optic renderer can apply them. Its PiP lens-size path still
+        -- reads the resolved top-level value in some update states, briefly
+        -- falling back to the optic default (1.0). Keep the resolved value
+        -- stable for both render paths.
+        local opticUser = profile.userWeapon
+        if opticUser then
+            for _, name in ipairs({ "pipScale", "pipZoom", "pipX", "pipY", "pipZ", "pipRetX", "pipRetY", "pipDepth" }) do
+                if opticUser[name] ~= nil then profile[name] = tonumber(opticUser[name]) or profile[name] end
+            end
+            if opticUser.lensScale ~= nil and profile.mode == "scope" then
+                profile.lensScale = tonumber(opticUser.lensScale) or profile.lensScale
+            end
+        end
         for name in pairs(globalFields) do
             local delta = PVADS.GaelEffectiveGlobalValue(profile, name)
             if delta ~= 0 then
@@ -96,6 +238,9 @@ if not PVADS.gaelVisualChoicesInstalled then
         PVADS.User = {}
         PVADS.GaelDeletedProfileKeys = {}
         local loaded = 0
+        local migratedMiniRedDotPipSizes = 0
+        local migratedOKP7Profiles = 0
+        local migratedCarcanoSniperProfiles = 0
         local reader = getFileReader(FILE, false)
         if not reader then
             print("[ViewpointGaelCompat][profiles] load: file not found; starting empty")
@@ -117,12 +262,92 @@ if not PVADS.gaelVisualChoicesInstalled then
                         profile.reticle = value
                     end
                 end
+                if string.match(key, "|Base%.MiniRedDot$") and tonumber(profile.pipScale) == 0.095 then
+                    profile.pipScale = 1.94000
+                    migratedMiniRedDotPipSizes = migratedMiniRedDotPipSizes + 1
+                end
+                if string.match(key, "|Base%.OKP7$") and tonumber(profile.okp7DefaultVersion) ~= 2 then
+                    profile.mode = "scopereddotalt"
+                    for name, value in pairs(okp7DefaultProfile) do profile[name] = value end
+                    profile.okp7DefaultVersion = 2
+                    migratedOKP7Profiles = migratedOKP7Profiles + 1
+                end
                 PVADS.User[key] = profile
                 loaded = loaded + 1
             end
         end
         reader:close()
+        -- Reuse Carcano's saved Sight XYZ and lens/PiP presentation for each
+        -- sniper rifle and optic. Keep pitch/yaw and other weapon alignment.
+        -- The marker makes this a one-time override, so later manual edits stay.
+        for key, sourceProfile in pairs(PVADS.User) do
+            local opticId = string.match(key, "^Base%.Carcano|(.+)$")
+            if opticId and opticId ~= "" then
+                for _, weaponId in ipairs(PVADS.GaelSniperCopyWeaponIds) do
+                    local targetKey = weaponId .. "|" .. opticId
+                    local targetProfile = PVADS.User[targetKey] or {}
+                    if tonumber(targetProfile.carcanoSniperLensVersion) ~= 2 then
+                        local copied = false
+                        for _, name in ipairs(carcanoSniperLensFields) do
+                            if sourceProfile[name] ~= nil then
+                                targetProfile[name] = sourceProfile[name]
+                                copied = true
+                            end
+                        end
+                        if copied then
+                            targetProfile.carcanoSniperLensVersion = 2
+                            PVADS.User[targetKey] = targetProfile
+                            migratedCarcanoSniperProfiles = migratedCarcanoSniperProfiles + 1
+                        end
+                    end
+                end
+            end
+        end
+        -- One-time Carcano optic-profile copy for the AK-74. Unlike the
+        -- sniper-only UI copy action, this covers every saved Carcano optic
+        -- combination and preserves AK-74-specific recoil/alignment values.
+        for key, sourceProfile in pairs(PVADS.User) do
+            local opticId = string.match(key, "^Base%.Carcano|(.+)$")
+            if opticId and opticId ~= "" then
+                local targetKey = "Base.AK74|" .. opticId
+                local targetProfile = PVADS.User[targetKey] or {}
+                if tonumber(targetProfile.carcanoAK74OpticVersion) ~= 1 then
+                    local copied = false
+                    for _, name in ipairs(carcanoAK74OpticFields) do
+                        if sourceProfile[name] ~= nil then
+                            targetProfile[name] = sourceProfile[name]
+                            copied = true
+                        end
+                    end
+                    if copied then
+                        targetProfile.carcanoAK74OpticVersion = 1
+                        PVADS.User[targetKey] = targetProfile
+                        migratedCarcanoAK74Profiles = (migratedCarcanoAK74Profiles or 0) + 1
+                    end
+                end
+            end
+        end
         print(string.format("[ViewpointGaelCompat][profiles] loaded %d user profiles from %s", loaded, FILE))
+        if migratedMiniRedDotPipSizes > 0 and PVADS.saveUserProfiles then
+            local saved = PVADS.saveUserProfiles()
+            print(string.format("[ViewpointGaelCompat][profiles] migrated %d MiniRedDot PiP sizes from 0.095 to 1.94 (saved=%s)",
+                migratedMiniRedDotPipSizes, tostring(saved)))
+        end
+        if migratedOKP7Profiles > 0 and PVADS.saveUserProfiles then
+            local saved = PVADS.saveUserProfiles()
+            print(string.format("[ViewpointGaelCompat][profiles] applied OKP-7 defaults to %d saved profiles (saved=%s)",
+                migratedOKP7Profiles, tostring(saved)))
+        end
+        if migratedCarcanoSniperProfiles > 0 and PVADS.saveUserProfiles then
+            local saved = PVADS.saveUserProfiles()
+            print(string.format("[ViewpointGaelCompat][profiles] copied Carcano Sight XYZ/lens values to %d sniper/optic profiles (saved=%s)",
+                migratedCarcanoSniperProfiles, tostring(saved)))
+        end
+        if migratedCarcanoAK74Profiles and migratedCarcanoAK74Profiles > 0 and PVADS.saveUserProfiles then
+            local saved = PVADS.saveUserProfiles()
+            print(string.format("[ViewpointGaelCompat][profiles] copied Carcano optic settings to %d AK-74/optic profiles (saved=%s)",
+                migratedCarcanoAK74Profiles, tostring(saved)))
+        end
     end
 
     function PVADS.saveUserProfiles()
@@ -160,6 +385,9 @@ if not PVADS.gaelVisualChoicesInstalled then
         if not writer then return false end
         writer:write("# Project Viewpoint ADS - personal calibration. Format: weapon|optic=>key=value;...\r\n")
         for key, profile in pairs(PVADS.User) do
+            if string.match(key, "|Base%.OKP7$") and profile.okp7DefaultVersion == nil then
+                profile.okp7DefaultVersion = 2
+            end
             local fields = {}
             for name, value in pairs(profile) do
                 if type(value) == "number" then

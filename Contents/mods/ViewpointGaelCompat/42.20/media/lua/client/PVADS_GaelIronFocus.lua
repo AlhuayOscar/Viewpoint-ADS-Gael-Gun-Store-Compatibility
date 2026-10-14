@@ -512,8 +512,7 @@ function PVADS_GaelIronFocus_updateWeaponSway(player, controller, profile)
     end
     local dt = math.max(0, math.min(0.25, (now - swayAt) / 1000))
     swayAt = now
-    local focusedStill = wheelFocused == true and profile.mode == "iron"
-        and not profile.opticId and not profile.noIrons and not player:isPlayerMoving()
+    local focusedStill = wheelFocused == true and not player:isPlayerMoving()
     focusSwayScale = PVADS_GaelIronFocus_approach(focusSwayScale, focusedStill and 0.30 or 1.00, dt * 2.80)
     if sightMotionEnabled then
         PVADS_GaelIronFocus_updateSightSway(player, now, dt)
@@ -902,8 +901,10 @@ function PVADS_GaelIronFocus_updateIronFocus(player)
     end
 
     local crouchEnabled, wheelEnabled, multiplier = PVADS_GaelIronFocus_settings()
+    -- Focus is available with every weapon while the player is aiming.
+    local focusAvailable = controller.lastWant and player:isAiming()
     local iron = profile.mode == "iron" and not profile.opticId and not profile.noIrons
-    if not controller.lastWant or not wheelEnabled or not iron then
+    if not focusAvailable or not wheelEnabled then
         PVADS_GaelIronFocus_stopManualFocus(focusNow)
         wheelFocused = nil
         focusDeniedUntil = nil
@@ -914,18 +915,18 @@ function PVADS_GaelIronFocus_updateIronFocus(player)
         focusDeniedUntil = nil
     end
     local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
-    PVADS_GaelIronFocus_updateFocusBlur(player, wheelFocused == true and iron and wheelEnabled
+    PVADS_GaelIronFocus_updateFocusBlur(player, wheelFocused == true and focusAvailable and wheelEnabled
         and controller.lastWant and (not vars or vars.FocusSearchBlur ~= false))
     if focusBar then
-        focusBar:setVisible(not not (iron and controller.lastWant and wheelEnabled
+        focusBar:setVisible(not not (focusAvailable and wheelEnabled
             and (wheelFocused == true or focusDeniedUntil and focusNow < focusDeniedUntil)))
     end
     local baseFov = tonumber(profile.fovMul) or 0.93
     local desiredFocusFov = nil
-    if iron then
+    if focusAvailable then
         if wheelFocused == true then
             desiredFocusFov = math.max(MIN_FOV_MULTIPLIER, baseFov - 0.30)
-        elseif wheelFocused == nil and crouchEnabled and player:isSneaking() then
+        elseif wheelFocused == nil and iron and crouchEnabled and player:isSneaking() then
             desiredFocusFov = math.max(MIN_FOV_MULTIPLIER, baseFov * multiplier)
         end
     end
@@ -1017,8 +1018,7 @@ function PVADS_GaelIronFocus_setManualFocus(focused)
     local controller = PVADS and PVADS.Controller
     local profile = controller and controller.profile
     if not player or not controller or not controller.ready or not controller.lastWant
-        or not player:isAiming() or not profile
-        or profile.mode ~= "iron" or profile.opticId or profile.noIrons then return end
+        or not player:isAiming() or not profile then return end
     local now = getTimestampMs()
     PVADS_GaelIronFocus_updateFocusCharge(player, now)
     if focused then
@@ -1101,6 +1101,21 @@ function PVADS_GaelIronFocus_onRightMouseUp(x, y) PVADS_GaelIronFocus_logMouseIn
 
 function PVADS_GaelIronFocus_onWheel(wheel)
     wheel = tonumber(wheel) or 0
+    local controller = PVADS and PVADS.Controller
+    local profile = controller and controller.profile
+    if wheel ~= 0 and profile and profile.mode == "scope" then
+        local state, lensUp = {}, "unknown"
+        if PVADS_getState then
+            local ok = pcall(PVADS_getState, state)
+            if ok then lensUp = tostring(state.lensUp == true) end
+        end
+        local scope = PVADS.Scope
+        print(string.format("[ViewpointGaelCompat][scope-wheel] dir=%s weapon=%s optic=%s mag=%s levels=%s index=%s lensUp=%s wheelZoom=%s",
+            wheel > 0 and "in" or "out", tostring(profile.weaponId), tostring(profile.opticId),
+            tostring(profile.mag), tostring(scope and scope.zooms and #scope.zooms or 0),
+            tostring(scope and scope.zi), lensUp,
+            tostring(PVADS.Settings and PVADS.Settings.wheelZoom)))
+    end
     if wheel ~= 0 then PVADS_GaelIronFocus_setManualFocus(wheel > 0) end
 end
 
@@ -1278,6 +1293,10 @@ end
 
 function PVADS_GaelIronFocus_onWeaponFired(player, weapon)
     if player ~= getSpecificPlayer(0) or not weapon or not weapon:isRanged() then return end
+    local xp = player:getXp()
+    if xp and xp.AddXP then
+        xp:AddXP(Perks.Strength, 65, false, false, false, false)
+    end
     local controller = PVADS and PVADS.Controller
     if controller and controller.ready and controller.lastWant then
         shotResetPending = true

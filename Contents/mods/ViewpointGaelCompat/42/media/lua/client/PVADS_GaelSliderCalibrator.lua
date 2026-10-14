@@ -24,8 +24,19 @@ local FIELDS = {
     {"pipZoom", "PiP zoom", 0.01, 1}, {"pipRetX", "PiP reticle X", 0.005},
     {"pipRetY", "PiP reticle Y", 0.005}, {"pipDepth", "PiP depth", 0.002},
 }
+-- Shared lens presentation and sight XYZ values copied between sniper rifles.
+-- Pitch/yaw, relief and optic height stay specific to each weapon.
+local SHARED_LENS_FIELDS = {
+    "adjX", "adjY", "adjZ", "lensScale", "pipX", "pipY", "pipZ",
+    "pipScale", "pipZoom", "pipRetX", "pipRetY", "pipDepth",
+}
 local RANGES = { 1, 5, 20 }
 local WEAPONS = PVADS_GaelWeaponCatalog or {}
+-- Bulk lens copy is temporarily restricted to bolt-action sniper rifles.
+-- Add newly released Gael sniper IDs here to include them in future copies.
+local SNIPER_COPY_WEAPON_IDS = PVADS.GaelSniperCopyWeaponIds or {}
+local SNIPER_COPY_SOURCE_WEAPON_SET = { ["Base.Carcano"] = true }
+for _, weaponId in ipairs(SNIPER_COPY_WEAPON_IDS) do SNIPER_COPY_SOURCE_WEAPON_SET[weaponId] = true end
 local PREVIEW_SCOPE_ITEMS
 local PREVIEW_MOUNT_ITEMS
 local RETICLES = {
@@ -42,6 +53,8 @@ local RETICLES = {
 local MODES = {
     {"Auto (optic default)", "auto"}, {"Iron", "iron"},
     {"Reflex", "reflex"}, {"Scope / PiP", "scope"},
+    {"Scope G36 (ADS)", "scopeg36"},
+    {"ScopeRedDotALT (ADS)", "scopereddotalt"},
 }
 
 local function findOwned(container, itemId)
@@ -161,6 +174,9 @@ local function current(field, global)
     if global then return PVADS.GaelGlobalValue(field[1]) end
     local p = PVADS.Controller.profile
     local n = p and p[field[1]]
+    if p and p.userWeapon and p.userWeapon[field[1]] ~= nil then
+        n = p.userWeapon[field[1]]
+    end
     local value = n == nil and (field[4] or 0) or n
     return PVADS.GaelGlobalOnlyAvailable() and value
         or value - PVADS.GaelEffectiveGlobalValue(p, field[1])
@@ -216,7 +232,11 @@ end
 function PVADSGaelSliderWindow:rangeFor(row, centre)
     row.centre = centre
     local span = row.field[3] * 200 * RANGES[self.rangeLevel]
-    row.slider:setValues(centre - span, centre + span, row.field[3], row.field[3], true)
+    local minimum = centre - span
+    if row.field[1] == "lensScale" or row.field[1] == "pipScale" or row.field[1] == "pipZoom" then
+        minimum = math.max(0.001, minimum)
+    end
+    row.slider:setValues(minimum, centre + span, row.field[3], row.field[3], true)
     row.slider:setCurrentValue(centre, true)
 end
 
@@ -310,7 +330,9 @@ function PVADSGaelSliderWindow:createChildren()
     button(8, "Probe", PVADSGaelSliderWindow.onProbe)
     button(106, "Validate", PVADSGaelSliderWindow.onValidate)
     self.realTimeDotButton = button(204, PVADS.GaelRealTimeDot and "RealTimeDot: ON" or "RealTimeDot: OFF", PVADSGaelSliderWindow.onRealTimeDot, 140)
-    button(498, "Close", PVADSGaelSliderWindow.close)
+    self.copyLensButton = button(350, "Copiar lente", PVADSGaelSliderWindow.onCopyLens, 96)
+    self.pipAltButton = button(450, "PiP ALT", PVADSGaelSliderWindow.onPipAlt, 76)
+    button(530, "Close", PVADSGaelSliderWindow.close, 76)
     self.infoY = y + bh + 10
     self:addMarkerScaleControl()
 end
@@ -543,6 +565,7 @@ function PVADSGaelSliderWindow:setEditGlobal(global)
         and "[Solo disponibles: SI]" or "Solo disponibles: NO")
     self.reticleCombo:setVisible(not global)
     self.modeCombo:setVisible(not global)
+    if self.pipAltButton then self.pipAltButton:setVisible(not global) end
     self.attachmentPrevButton:setVisible(not global)
     self.attachmentNextButton:setVisible(not global)
     self:syncRecoilPitchReverse()
@@ -591,6 +614,11 @@ function PVADSGaelSliderWindow:applyChoice(field, choice)
     if self.updatingChoices or self.editGlobal then return end
     local key = selected()
     if not key then return end
+    if field == "mode" and choice == "scopeg36" and not string.match(key, "^Base%.G36|") then
+        self.message = "Scope G36 (ADS) solo se aplica al G36"
+        self:syncChoices()
+        return
+    end
     local allowed = field == "mode" and PVADS.GaelVisualModes or PVADS.GaelVisualReticles
     if choice ~= "auto" and not allowed[choice] then return end
     PVADS.User[key] = PVADS.User[key] or {}
@@ -601,7 +629,13 @@ function PVADSGaelSliderWindow:applyChoice(field, choice)
         PVADS.User[key][field] = choice
     end
     PVADS.Controller.refresh(true)
-    self.message = field .. " = " .. (choice == "auto" and "optic default" or choice)
+    if field == "mode" and choice == "scopereddotalt" then
+        local saved = PVADS.saveUserProfiles()
+        self.message = saved and "ScopeRedDotALT guardado para esta arma y mira"
+            or "ScopeRedDotALT aplicado; no se pudo guardar"
+    else
+        self.message = field .. " = " .. (choice == "auto" and "optic default" or choice)
+    end
 end
 
 function PVADSGaelSliderWindow:onReticleChosen()
@@ -610,6 +644,31 @@ end
 
 function PVADSGaelSliderWindow:onModeChosen()
     self:applyChoice("mode", self.modeCombo:getSelectedData())
+end
+
+-- Fallback for integrated scopes that have no measurable eyepiece: draw a
+-- collimated dot on the weapon's projected sight axis instead of the PiP pass.
+function PVADSGaelSliderWindow:onPipAlt()
+    if self.editGlobal then return end
+    local key = selected()
+    if not key then
+        self.message = "Equipa un arma con scope para aplicar PiP ALT"
+        return
+    end
+    PVADS.User[key] = PVADS.User[key] or {}
+    if PVADS.GaelDeletedProfileKeys then PVADS.GaelDeletedProfileKeys[key] = nil end
+    local profile = PVADS.User[key]
+    profile.mode = "reflex"
+    profile.reticle = "none"
+    profile.pipAlt = 1
+    profile.pipZ = -0.08000
+    profile.pipRetX = 0
+    profile.pipRetY = 0
+    PVADS.Controller.refresh(true)
+    self:syncChoices()
+    print("[ViewpointGaelCompat][PiP ALT] applied key=" .. tostring(key) .. " overlayDot=red mode=reflex")
+    self.message = "PiP ALT: punto rojo propio sobre el eje del arma; pulsa Save"
+    if self.saveButton then self.saveButton:setTitle("Save") end
 end
 
 function PVADSGaelSliderWindow:onSlide(amount, slider)
@@ -666,8 +725,17 @@ function PVADSGaelSliderWindow:onSightArrowKey(key, stepMultiplier)
     if not row then return end
     stepMultiplier = math.max(1, math.min(8, tonumber(stepMultiplier) or 1))
     local value = current(row.field, self.editGlobal) + direction * row.field[3] * stepMultiplier
-    self:rangeFor(row, value)
-    row.slider:setCurrentValue(value)
+    if apply(row.field, value, self.editGlobal) then
+        self:rangeFor(row, value)
+        row.slider:setCurrentValue(value, true)
+        row.entry:setText(string.format("%.5f", value))
+        if self.editGlobal then
+            self.globalDirty = true
+            self.saveButton:setTitle("Confirmar?")
+        end
+        self.message = (self.editGlobal and "Global +/- " or "Local ")
+            .. row.field[2] .. " = " .. string.format("%.5f", value)
+    end
 end
 
 function PVADSGaelSliderWindow:onRange()
@@ -723,6 +791,128 @@ function PVADSGaelSliderWindow:onCopy()
     local snippet = Cal.snippet()
     Clipboard.setClipboard(snippet)
     self.message = "Copied current profile"
+end
+
+local function canOpticFitWeapon(player, weaponId, opticId, mounts)
+    local testWeapon = instanceItem(weaponId)
+    local optic = instanceItem(opticId)
+    if not testWeapon or not optic then return false end
+    local ok, canAttach = pcall(function() return optic:canAttach(player, testWeapon) end)
+    if ok and canAttach then return true end
+
+    for _, mountDef in ipairs(mounts or {}) do
+        local mount = instanceItem(mountDef.id)
+        local mountedWeapon = instanceItem(weaponId)
+        if mount and mountedWeapon then
+            local mountOK, mountAllowed = pcall(function() return mount:canAttach(player, mountedWeapon) end)
+            if mountOK and mountAllowed then
+                local attachOK = pcall(function() mountedWeapon:attachWeaponPart(player, mount) end)
+                if attachOK then
+                    local opticOK, opticAllowed = pcall(function() return optic:canAttach(player, mountedWeapon) end)
+                    if opticOK and opticAllowed then return true end
+                end
+            end
+        end
+    end
+    return false
+end
+
+function PVADSGaelSliderWindow:onCopyLens()
+    local sourceKey = selected()
+    local profile = PVADS.Controller and PVADS.Controller.profile
+    if not sourceKey or not profile or not profile.opticId then
+        self.message = "Equipa el arma y la mira que usaras como origen"
+        return
+    end
+    local player = getSpecificPlayer(0)
+    if not player then self.message = "Jugador no disponible"; return end
+
+    local sourceWeaponId, opticId = string.match(sourceKey, "^([^|]*)|(.*)$")
+    if not sourceWeaponId or opticId == "" or opticId ~= tostring(profile.opticId) then
+        self.message = "No se pudo identificar la mira del perfil actual"
+        return
+    end
+    if not SNIPER_COPY_SOURCE_WEAPON_SET[sourceWeaponId] then
+        self.message = "Para copiar, equipa un rifle francotirador de cerrojo"
+        return
+    end
+
+    local values = {}
+    for _, name in ipairs(SHARED_LENS_FIELDS) do
+        local field
+        for _, candidate in ipairs(FIELDS) do
+            if candidate[1] == name then field = candidate; break end
+        end
+        if field then
+            if self.editGlobal then
+                local value = tonumber(profile[name])
+                if value == nil and profile.userWeapon then value = tonumber(profile.userWeapon[name]) end
+                if value == nil then value = field[4] or 0 end
+                -- Unrestricted offsets still apply after saving the copied
+                -- local values, so subtract them. In only-available mode the
+                -- copied explicit field blocks the global offset and needs the
+                -- full currently previewed value.
+                if not PVADS.GaelGlobalOnlyAvailable() then
+                    value = value - PVADS.GaelEffectiveGlobalValue(profile, name)
+                end
+                values[name] = value
+            else
+                values[name] = current(field, false)
+            end
+        end
+    end
+
+    local _, mounts = previewPartDefinitions()
+    local targetKeys, seen = {}, {}
+    local function addTarget(weaponId)
+        local key = tostring(weaponId) .. "|" .. opticId
+        if not seen[key] then seen[key] = true; targetKeys[#targetKeys + 1] = key end
+    end
+    for _, weaponId in ipairs(SNIPER_COPY_WEAPON_IDS) do
+        if weaponId ~= sourceWeaponId and canOpticFitWeapon(player, weaponId, opticId, mounts) then
+            addTarget(weaponId)
+        end
+    end
+
+    local globalCopy = self.editGlobal
+    self.pendingLensCopy = { sourceKey = sourceKey, opticId = opticId, keys = targetKeys, values = values, global = globalCopy }
+    local modal = ISModalDialog:new(0, 0, 540, 150,
+        string.format("Copiar ajustes a %d francotiradores compatibles con %s%s?",
+            #targetKeys, tostring(profile.opticId), globalCopy and " (incluye monturas)" or ""), true,
+        self, PVADSGaelSliderWindow.onConfirmCopyLens)
+    modal.gaelInfo = string.format("Mira: %s. Se copian Sight XYZ y ajustes de lente/PiP; Pitch/Yaw, Relief y altura quedan propios.", opticId)
+    modal.prerender = function(dialog)
+        ISModalDialog.prerender(dialog)
+        dialog:drawText(dialog.gaelInfo, 18, 48, 0.9, 0.85, 0.55, 1, UIFont.Small)
+        dialog:drawText("Sight XYZ, Lens size, PiP X/Y/Z, PiP size/zoom, reticle offsets y depth se sobrescribiran.",
+            18, 68, 0.9, 0.9, 0.9, 1, UIFont.Small)
+    end
+    modal:initialise(); modal:addToUIManager()
+end
+
+function PVADSGaelSliderWindow:onConfirmCopyLens(button)
+    local pending = self.pendingLensCopy
+    self.pendingLensCopy = nil
+    if not pending then return end
+    if button.internal ~= "YES" then
+        self.message = "Copia de lente cancelada"
+        return
+    end
+    for _, key in ipairs(pending.keys) do
+        PVADS.User[key] = PVADS.User[key] or {}
+        if PVADS.GaelDeletedProfileKeys then PVADS.GaelDeletedProfileKeys[key] = nil end
+        for name, value in pairs(pending.values) do
+            PVADS.User[key][name] = value
+        end
+    end
+    local saved = PVADS.saveUserProfiles()
+    PVADS.Controller.refresh(true)
+    print(string.format("[ViewpointGaelCompat][copy-lens] source=%s optic=%s targets=%d saved=%s fields=%s",
+        pending.sourceKey, pending.opticId, #pending.keys, tostring(saved), table.concat(SHARED_LENS_FIELDS, ",")))
+    self.message = saved
+        and string.format("Ajustes de %s copiados a %d combinaciones compatibles%s", pending.opticId, #pending.keys,
+            pending.global and " (desde Global)" or "")
+        or "Copia aplicada pero no se pudo guardar"
 end
 
 function PVADSGaelSliderWindow:onSave()
@@ -997,6 +1187,17 @@ local function install()
                         end
                         self:drawRect(dotX - 3, dotY - 3, 7, 7, 0.9, 1, 0, 1)
                     end
+                end
+            end
+            local profile = PVADS.Controller and PVADS.Controller.profile
+            if profile and tonumber(profile.pipAlt) == 1 and profile.mode == "reflex" and PVADS_getState then
+                PVADS_getState(sightState)
+                local dotX, dotY = tonumber(sightState.dotX), tonumber(sightState.dotY)
+                if sightState.visible and dotX and dotY and dotX > -9000 and dotY > -9000
+                    and dotX < self.width + 9000 and dotY < self.height + 9000 then
+                    -- Our own HUD dot, independent from the addon's PiP reticle render pass.
+                    self:drawRect(dotX - 5, dotY - 5, 11, 11, 0.95, 0.02, 0.02, 0.02)
+                    self:drawRect(dotX - 2, dotY - 2, 5, 5, 1.0, 1.0, 0.08, 0.06)
                 end
             end
         end
