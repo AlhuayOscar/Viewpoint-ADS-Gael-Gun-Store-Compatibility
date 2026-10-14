@@ -67,11 +67,11 @@ if not PVADS.gaelVisualChoicesInstalled then
     }
     local redDotAltDefaults = {
         ["Base.AK74"] = true,
-        ["Base.AUG_A3"] = true,
+        ["Base.AUG_A2"] = true,
     }
     local rdsLensSizeDefaults = {
         ["Base.AK47"] = true,
-        ["Base.AUG_A3"] = true,
+        ["Base.AUG_A2"] = true,
     }
     local carcanoSniperLensFields = {
         "adjX", "adjY", "adjZ", "lensScale", "pipX", "pipY", "pipZ",
