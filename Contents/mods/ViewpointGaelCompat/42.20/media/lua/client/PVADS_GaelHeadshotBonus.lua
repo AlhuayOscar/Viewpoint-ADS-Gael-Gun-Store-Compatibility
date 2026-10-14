@@ -16,7 +16,7 @@ local function onHitZombie(zombie, attacker, bodyPart, weapon)
     local soundManager = getSoundManager()
     if soundManager then
         soundManager:PlayWorldSound("ViewpointGaelHeadImpact" .. variant,
-            square, 0, 16, 1, false)
+            square, 0, 24, 1, false)
     end
 end
 

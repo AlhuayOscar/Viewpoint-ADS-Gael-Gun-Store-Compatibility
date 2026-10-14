@@ -26,6 +26,8 @@ local FIELDS = {
 }
 local RANGES = { 1, 5, 20 }
 local WEAPONS = PVADS_GaelWeaponCatalog or {}
+local PREVIEW_SCOPE_ITEMS
+local PREVIEW_MOUNT_ITEMS
 local RETICLES = {
     {"Auto (optic default)", "auto"}, {"None", "none"},
     {"Dot", "dot"}, {"Holo circle", "holo"},
@@ -55,6 +57,67 @@ local function findOwned(container, itemId)
         end
     end
     return nil
+end
+
+local function previewPartDefinitions()
+    if PREVIEW_SCOPE_ITEMS then return PREVIEW_SCOPE_ITEMS, PREVIEW_MOUNT_ITEMS end
+    PREVIEW_SCOPE_ITEMS, PREVIEW_MOUNT_ITEMS = {}, {}
+    local ok, all = pcall(getAllItems)
+    if not ok or not all then return PREVIEW_SCOPE_ITEMS, PREVIEW_MOUNT_ITEMS end
+    for i = 0, all:size() - 1 do
+        local scriptItem = all:get(i)
+        local valid, category, fullType, displayName, hidden, obsolete = pcall(function()
+            return scriptItem:getDisplayCategory(), scriptItem:getFullName(),
+                scriptItem:getDisplayName(), scriptItem:isHidden(), scriptItem:getObsolete()
+        end)
+        if valid and category == "WeaponPart" and fullType and not hidden and not obsolete then
+            local part = instanceItem(fullType)
+            if part then
+                local partType = tostring(part:getPartType() or "")
+                local entry = { id = fullType, name = displayName or fullType, partType = partType }
+                if partType == "Scope" then
+                    PREVIEW_SCOPE_ITEMS[#PREVIEW_SCOPE_ITEMS + 1] = entry
+                elseif string.find(string.lower(partType), "mount", 1, true)
+                    or string.find(string.lower(partType), "rail", 1, true) then
+                    PREVIEW_MOUNT_ITEMS[#PREVIEW_MOUNT_ITEMS + 1] = entry
+                end
+            end
+        end
+    end
+    table.sort(PREVIEW_SCOPE_ITEMS, function(a, b)
+        if a.name == b.name then return a.id < b.id end
+        return a.name < b.name
+    end)
+    table.sort(PREVIEW_MOUNT_ITEMS, function(a, b) return a.id < b.id end)
+    return PREVIEW_SCOPE_ITEMS, PREVIEW_MOUNT_ITEMS
+end
+
+local function ensureInventoryPart(player, fullType)
+    local item = findOwned(player:getInventory(), fullType)
+    if item then return item end
+    if not ScriptManager.instance:getItem(fullType) then return nil end
+    return player:getInventory():AddItem(fullType)
+end
+
+local function replaceWeaponPart(player, weapon, fullType, partType)
+    if not player or not weapon or not fullType then return false end
+    local currentPart = weapon:getWeaponPart(partType)
+    if currentPart and currentPart:getFullType() == fullType then return true end
+    if currentPart then
+        weapon:detachWeaponPart(player, currentPart)
+        player:getInventory():AddItem(currentPart)
+    end
+    local part = ensureInventoryPart(player, fullType)
+    if not part then return false end
+    local attached = pcall(function() weapon:attachWeaponPart(player, part) end)
+    local installed = weapon:getWeaponPart(partType)
+    if not attached or not installed or installed:getFullType() ~= fullType then
+        player:getInventory():Remove(part)
+        return false
+    end
+    player:getInventory():Remove(part)
+    if syncHandWeaponFields then pcall(syncHandWeaponFields, player, weapon) end
+    return true
 end
 
 local function selected()
@@ -198,6 +261,14 @@ function PVADSGaelSliderWindow:createChildren()
         self.modeCombo:addOptionWithData(option[1], option[2])
     end
     self:addChild(self.modeCombo)
+    y = y + bh + 6
+    self.attachmentY = y
+    self.attachmentPrevButton = ISButton:new(120, y, 30, bh, "<", self,
+        PVADSGaelSliderWindow.onPrevAttachment)
+    self.attachmentPrevButton:initialise(); self:addChild(self.attachmentPrevButton)
+    self.attachmentNextButton = ISButton:new(566, y, 30, bh, ">", self,
+        PVADSGaelSliderWindow.onNextAttachment)
+    self.attachmentNextButton:initialise(); self:addChild(self.attachmentNextButton)
     self.choiceInfoY = y + bh + 4
     y = y + bh + 23
     self.recoilPitchReverseButton = ISButton:new(8, y, 220, bh,
@@ -325,10 +396,12 @@ function PVADSGaelSliderWindow:equipSelected()
         PVADS.Controller.refresh(true)
         self.message = "Ready: " .. itemId .. "; hold Ctrl to aim"
     end
+    return item
 end
 
 function PVADSGaelSliderWindow:onWeaponChosen()
-    self:equipSelected()
+    local weapon = self:equipSelected()
+    self:syncAttachmentOptions(weapon)
 end
 
 function PVADSGaelSliderWindow:stepWeapon(delta)
@@ -337,11 +410,127 @@ function PVADSGaelSliderWindow:stepWeapon(delta)
     local index = self.weaponCombo:getSelected()
     if not index or index < 1 then index = 1 end
     self.weaponCombo:setSelected((index - 1 + delta + count) % count + 1)
-    self:equipSelected()
+    self:onWeaponChosen()
 end
 
 function PVADSGaelSliderWindow:onPrevWeapon() self:stepWeapon(-1) end
 function PVADSGaelSliderWindow:onNextWeapon() self:stepWeapon(1) end
+
+function PVADSGaelSliderWindow:syncAttachmentOptions(weapon)
+    local itemId = self.weaponCombo and self.weaponCombo:getSelectedData()
+    if not itemId then
+        self.attachments, self.attachmentIndex = {}, 1
+        return
+    end
+    if self.attachmentWeaponId == itemId and self.attachments then return end
+    self.attachmentWeaponId = itemId
+    self.attachments = { { id = false, name = "Sin mira" } }
+    self.attachmentIndex = 1
+    local player = getSpecificPlayer(0)
+    weapon = weapon or (player and findOwned(player:getInventory(), itemId))
+    if not player or not weapon or not weapon.getWeaponPart then return end
+
+    local scopes, mounts = previewPartDefinitions()
+    local inventory = player:getInventory()
+    local screwdriver = findOwned(inventory, "Base.Screwdriver")
+    local temporaryScrewdriver = not screwdriver
+    if temporaryScrewdriver then screwdriver = inventory:AddItem("Base.Screwdriver") end
+    local seen = {}
+    for _, optic in ipairs(scopes) do
+        if optic.id ~= itemId then
+            local testWeapon = instanceItem(itemId)
+            local part = instanceItem(optic.id)
+            local compatible = testWeapon and part and pcall(function()
+                return part:canAttach(player, testWeapon)
+            end)
+            if compatible then
+                local ok, canAttach = pcall(function() return part:canAttach(player, testWeapon) end)
+                compatible = ok and canAttach
+            end
+            local mountId
+            if not compatible and testWeapon and part then
+                for _, mount in ipairs(mounts) do
+                    local testMount = instanceItem(mount.id)
+                    if testMount then
+                        local okMount, canMount = pcall(function() return testMount:canAttach(player, testWeapon) end)
+                        if okMount and canMount then
+                            local attachedMount = pcall(function() testWeapon:attachWeaponPart(player, testMount) end)
+                            if attachedMount then
+                                local okOptic, canAttach = pcall(function() return part:canAttach(player, testWeapon) end)
+                                if okOptic and canAttach then mountId = mount.id; break end
+                            end
+                        end
+                    end
+                end
+            end
+            if (compatible or mountId) and not seen[optic.id] then
+                seen[optic.id] = true
+                self.attachments[#self.attachments + 1] = {
+                    id = optic.id, name = optic.name, mountId = mountId,
+                }
+            end
+        end
+    end
+    if temporaryScrewdriver and screwdriver then inventory:Remove(screwdriver) end
+    table.sort(self.attachments, function(a, b)
+        if a.id == false then return true end
+        if b.id == false then return false end
+        if a.name == b.name then return a.id < b.id end
+        return a.name < b.name
+    end)
+    local currentPart = weapon:getWeaponPart("Scope")
+    if currentPart then
+        for i, attachment in ipairs(self.attachments) do
+            if attachment.id == currentPart:getFullType() then self.attachmentIndex = i; break end
+        end
+    end
+end
+
+function PVADSGaelSliderWindow:applyAttachmentSelection()
+    local options = self.attachments or {}
+    local attachment = options[self.attachmentIndex]
+    local itemId = self.weaponCombo and self.weaponCombo:getSelectedData()
+    local player = getSpecificPlayer(0)
+    local weapon = player and itemId and findOwned(player:getInventory(), itemId)
+    if not attachment or not player or not weapon then
+        self.message = "Equipa el arma seleccionada antes de cambiar su mira"
+        return
+    end
+    if attachment.mountId then
+        local mount = instanceItem(attachment.mountId)
+        local partType = mount and mount:getPartType()
+        if partType and not replaceWeaponPart(player, weapon, attachment.mountId, partType) then
+            self.message = "No se pudo instalar la montura " .. attachment.mountId
+            return
+        end
+    end
+    if attachment.id then
+        if not replaceWeaponPart(player, weapon, attachment.id, "Scope") then
+            self.message = "No se pudo instalar la mira " .. attachment.id
+            return
+        end
+    else
+        local currentPart = weapon:getWeaponPart("Scope")
+        if currentPart then
+            weapon:detachWeaponPart(player, currentPart)
+            player:getInventory():AddItem(currentPart)
+            if syncHandWeaponFields then pcall(syncHandWeaponFields, player, weapon) end
+        end
+    end
+    PVADS.Controller.refresh(true)
+    self.message = attachment.id and ("Mira de prueba: " .. attachment.id)
+        or "Mira retirada para probar los hierros"
+end
+
+function PVADSGaelSliderWindow:stepAttachment(delta)
+    local options = self.attachments or {}
+    if #options == 0 then return end
+    self.attachmentIndex = (self.attachmentIndex - 1 + delta + #options) % #options + 1
+    self:applyAttachmentSelection()
+end
+
+function PVADSGaelSliderWindow:onPrevAttachment() self:stepAttachment(-1) end
+function PVADSGaelSliderWindow:onNextAttachment() self:stepAttachment(1) end
 
 function PVADSGaelSliderWindow:setEditGlobal(global)
     if self.editGlobal == global then return end
@@ -354,6 +543,8 @@ function PVADSGaelSliderWindow:setEditGlobal(global)
         and "[Solo disponibles: SI]" or "Solo disponibles: NO")
     self.reticleCombo:setVisible(not global)
     self.modeCombo:setVisible(not global)
+    self.attachmentPrevButton:setVisible(not global)
+    self.attachmentNextButton:setVisible(not global)
     self:syncRecoilPitchReverse()
     self:onCenter()
     self.message = global and "Global: 0 = sin cambio; los valores se SUMAN a todas las armas y miras"
@@ -615,6 +806,8 @@ function PVADSGaelSliderWindow:render()
         self:syncRecoilPitchReverse()
         local itemId = key and string.match(key, "^[^|]+")
         if itemId then self.weaponCombo:setSelectedData(itemId) end
+        self.attachmentWeaponId = nil
+        self:syncAttachmentOptions()
     end
     local choices = key and PVADS.User[key]
     self:syncRecoilPitchReverse()
@@ -633,6 +826,10 @@ function PVADSGaelSliderWindow:render()
     else
         self:drawText("Retícula", 8, self.choiceY, 1, 1, 1, 1, UIFont.Small)
         self:drawText("Modo ADS", 306, self.choiceY, 1, 1, 1, 1, UIFont.Small)
+        self:drawText("Mira / attachment", 8, self.attachmentY + 3, 1, 1, 1, 1, UIFont.Small)
+        local attachment = self.attachments and self.attachments[self.attachmentIndex]
+        self:drawText(attachment and attachment.name or "Selecciona un arma", 158, self.attachmentY + 3,
+            0.8, 0.9, 1, 1, UIFont.Small)
     end
     local profile = PVADS.Controller.profile
     if profile then

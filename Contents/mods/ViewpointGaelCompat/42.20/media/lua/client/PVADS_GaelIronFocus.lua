@@ -75,7 +75,7 @@ local ANGULAR_DEVIATION_SCALE = 1.50
 local SIGHT_POSITION_SCALE = 0.50
 local AUTO_RECOIL_MIN_DIVISOR = 8
 local AUTO_RECOIL_MAX_DIVISOR = 24
-local STRENGTH_RECOIL_EFFECT = 1.30
+local STRENGTH_RECOIL_EFFECT = 5.20
 local BURST_RESET_MS = 1000
 local LONG_BURST_RECOIL_SHOTS = 20
 local LONG_BURST_RECOIL_BONUS = 3.0
@@ -165,7 +165,8 @@ end
 function PVADS_GaelIronFocus_strengthMultiplier(player)
     local strength = tonumber(player and player:getPerkLevel(Perks.Strength)) or 5
     strength = math.max(0, math.min(10, strength))
-    return 1 + (5 - strength) * 0.10
+    if strength >= 5 then return 0.60 ^ (strength - 5) end
+    return 1 + (5 - strength) * 0.40
 end
 
 function PVADS_GaelIronFocus_enduranceMultiplier(player)
@@ -250,7 +251,7 @@ end
 function PVADS_GaelIronFocus_aimingRecoveryMultiplier(player)
     local aiming = tonumber(player and player:getPerkLevel(Perks.Aiming)) or 0
     aiming = math.max(0, math.min(10, aiming))
-    return 1 + aiming * 0.08
+    return 1 + aiming * 0.204
 end
 
 function PVADS_GaelIronFocus_focusTimeMs(player)
@@ -1143,8 +1144,10 @@ function PVADS_GaelIronFocus_prepareShotRecoil(player, weapon, shotAt)
                 end
             end
             releaseRegripAt, releaseRegripYaw, releaseRegripPitch = nil, 0, 0
+            local strengthLevel = math.max(0, math.min(10, tonumber(player:getPerkLevel(Perks.Strength)) or 5))
+            local assistedBurstShots = 5 + strengthLevel
             local burstScale = burstShotCount <= 3 and 0.50
-                or (burstShotCount <= 5 and 0.75 or 1.00)
+                or (burstShotCount <= assistedBurstShots and 0.75 or 1.00)
             local longBurstBonus = automatic and burstShotCount > LONG_BURST_RECOIL_SHOTS
                 and LONG_BURST_RECOIL_BONUS or 0
             recoilLongBurst = longBurstBonus > 0
