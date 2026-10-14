@@ -42,9 +42,9 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 36 | R5 | `Base.R5` (#172) | Modelo visual | Error visual. | [ ] Pendiente |
 | 37 | VSK | `Base.VSK` (#181) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
 | 38 | VZ. 58 | `Base.VZ58` (#184) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
-| 39 | G27 (HK417) | `Base.G27` (#195) | Modelo visual | Error visual. | [ ] Pendiente |
-| 40 | G3A3 | `Base.G3A3` (#196) | Modelo visual | Error visual. | [ ] Pendiente |
-| 41 | Mauser Selbstlader M1916 | `Base.MauserSelbstladerM1916` (#208) | Modelo visual | Error visual. | [ ] Pendiente |
+| 39 | G27 (HK417) | `Base.G27` (#195) | Modelo visual | Error visual. Se aprobó y copió el perfil de 42 ópticas; queda pendiente revisar el modelo visual. | [ ] Pendiente visual |
+| 40 | G3A3 | `Base.G3A3` (#196) | Modelo visual | Error visual. Se aprobó y copió el perfil de 42 ópticas; queda pendiente revisar el modelo visual. | [ ] Pendiente visual |
+| 41 | Mauser Selbstlader M1916 | `Base.MauserSelbstladerM1916` (#208) | Modelo visual | Error visual. Se aprobó y copió el perfil de 42 ópticas; queda pendiente revisar el modelo visual. | [ ] Pendiente visual |
 | 42 | Mosin-Nagant | `Base.Mosin` (#252) | Modelo visual | Error visual. | [ ] Pendiente |
 | 43 | S&W Model 1854 | `Base.SWM1854` (#257) | Modelo visual | Error visual. | [ ] Pendiente |
 | 44 | S&W Model 1894 | `Base.SWM1894` (#258) | Mira frontal | Revisar la geometría o ubicación de la mira frontal. | [ ] Pendiente |
@@ -57,6 +57,7 @@ Checklist de revisión visual. Los números entre paréntesis corresponden al ca
 | 51 | RMB-93 | `Base.RMB93` (#307) | Modelo visual | Error visual. | [ ] Pendiente |
 | 52 | QBS09 | `Base.QBS09` (#329) | Miras de hierro | Revisar la geometría o ubicación de la mira. | [ ] Pendiente |
 | 53 | Saiga-12 | `Base.Saiga12` (#340) | Modelo y miras de hierro | Error visual y de la mira. | [ ] Pendiente |
+| 54 | SIG-553 | `Base.SIG_553` (#176) | Modelo visual / geometría ADS | Problemática: requiere rework del modelo antes de confiar en la alineación de sus miras. Excluida de la copia automática del grupo 2. | [ ] Pendiente |
 
 ## Ópticas
 

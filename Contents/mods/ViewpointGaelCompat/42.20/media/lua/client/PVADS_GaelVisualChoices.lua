@@ -72,18 +72,7 @@ if not PVADS.gaelVisualChoicesInstalled then
     local rdsLensSizeDefaults = {
         ["Base.AK47"] = true,
     }
-    local carcanoSniperLensFields = {
-        "adjX", "adjY", "adjZ", "lensScale", "pipX", "pipY", "pipZ",
-        "pipScale", "pipZoom", "pipRetX", "pipRetY", "pipDepth",
-    }
-    -- Copy Carcano optic presentation to the AK-74 once. Keep weapon-specific
-    -- recoil/alignment fields (pitch, yaw, roll, relief) untouched.
-    local carcanoAK74OpticFields = {
-        "adjX", "adjY", "adjZ", "lensScale", "pipX", "pipY", "pipZ",
-        "pipScale", "pipZoom", "pipRetX", "pipRetY", "pipDepth",
-        "mode", "reticle", "fovMul", "opticHeight", "adsTime",
-    }
-    local ak74AUGA2OpticFields = carcanoAK74OpticFields
+    -- Completed one-time profile migrations are archived in docs/archive/PVADS_GaelVisualChoices.pre-checkpoint.lua.txt.
     PVADS.GaelGlobalKey = globalKey
     PVADS.GaelGlobalFields = globalFields
     function PVADS.GaelGlobalValue(name)
@@ -241,8 +230,6 @@ if not PVADS.gaelVisualChoicesInstalled then
         local loaded = 0
         local migratedMiniRedDotPipSizes = 0
         local migratedOKP7Profiles = 0
-        local migratedCarcanoSniperProfiles = 0
-        local migratedAK74AUGA2Profiles = 0
         local reader = getFileReader(FILE, false)
         if not reader then
             print("[ViewpointGaelCompat][profiles] load: file not found; starting empty")
@@ -279,82 +266,7 @@ if not PVADS.gaelVisualChoicesInstalled then
             end
         end
         reader:close()
-        -- Reuse Carcano's saved Sight XYZ and lens/PiP presentation for each
-        -- sniper rifle and optic. Keep pitch/yaw and other weapon alignment.
-        -- The marker makes this a one-time override, so later manual edits stay.
-        for key, sourceProfile in pairs(PVADS.User) do
-            local opticId = string.match(key, "^Base%.Carcano|(.+)$")
-            if opticId and opticId ~= "" then
-                for _, weaponId in ipairs(PVADS.GaelSniperCopyWeaponIds) do
-                    local targetKey = weaponId .. "|" .. opticId
-                    local targetProfile = PVADS.User[targetKey] or {}
-                    if tonumber(targetProfile.carcanoSniperLensVersion) ~= 2 then
-                        local copied = false
-                        for _, name in ipairs(carcanoSniperLensFields) do
-                            if sourceProfile[name] ~= nil then
-                                targetProfile[name] = sourceProfile[name]
-                                copied = true
-                            end
-                        end
-                        if copied then
-                            targetProfile.carcanoSniperLensVersion = 2
-                            PVADS.User[targetKey] = targetProfile
-                            migratedCarcanoSniperProfiles = migratedCarcanoSniperProfiles + 1
-                        end
-                    end
-                end
-            end
-        end
-        -- One-time Carcano optic-profile copy for the AK-74. Unlike the
-        -- sniper-only UI copy action, this covers every saved Carcano optic
-        -- combination and preserves AK-74-specific recoil/alignment values.
-        for key, sourceProfile in pairs(PVADS.User) do
-            local opticId = string.match(key, "^Base%.Carcano|(.+)$")
-            if opticId and opticId ~= "" then
-                local targetKey = "Base.AK74|" .. opticId
-                local targetProfile = PVADS.User[targetKey] or {}
-                if tonumber(targetProfile.carcanoAK74OpticVersion) ~= 1 then
-                    local copied = false
-                    for _, name in ipairs(carcanoAK74OpticFields) do
-                        if sourceProfile[name] ~= nil then
-                            targetProfile[name] = sourceProfile[name]
-                            copied = true
-                        end
-                    end
-                    if copied then
-                        targetProfile.carcanoAK74OpticVersion = 1
-                        PVADS.User[targetKey] = targetProfile
-                        migratedCarcanoAK74Profiles = (migratedCarcanoAK74Profiles or 0) + 1
-                    end
-                end
-            end
-        end
-        -- Copy every AK-74 optic profile onto AUG A2 once, matching all
-        -- sight/lens/ADS calibration fields while retaining weapon recoil.
-        for key, sourceProfile in pairs(PVADS.User) do
-            local opticId = string.match(key, "^Base%.AK74|(.+)$")
-            if opticId and opticId ~= "" then
-                local targetKey = "Base.AUG_A2|" .. opticId
-                local targetProfile = PVADS.User[targetKey] or {}
-                if tonumber(targetProfile.ak74AUGA2OpticVersion) ~= 1 then
-                    for _, name in ipairs(ak74AUGA2OpticFields) do
-                        targetProfile[name] = nil
-                    end
-                    local copied = false
-                    for _, name in ipairs(ak74AUGA2OpticFields) do
-                        if sourceProfile[name] ~= nil then
-                            targetProfile[name] = sourceProfile[name]
-                            copied = true
-                        end
-                    end
-                    if copied then
-                        targetProfile.ak74AUGA2OpticVersion = 1
-                        PVADS.User[targetKey] = targetProfile
-                        migratedAK74AUGA2Profiles = migratedAK74AUGA2Profiles + 1
-                    end
-                end
-            end
-        end
+        -- Completed batch copies are deliberately inactive now; see the archived migration source.
         print(string.format("[ViewpointGaelCompat][profiles] loaded %d user profiles from %s", loaded, FILE))
         if migratedMiniRedDotPipSizes > 0 and PVADS.saveUserProfiles then
             local saved = PVADS.saveUserProfiles()
@@ -365,21 +277,6 @@ if not PVADS.gaelVisualChoicesInstalled then
             local saved = PVADS.saveUserProfiles()
             print(string.format("[ViewpointGaelCompat][profiles] applied OKP-7 defaults to %d saved profiles (saved=%s)",
                 migratedOKP7Profiles, tostring(saved)))
-        end
-        if migratedCarcanoSniperProfiles > 0 and PVADS.saveUserProfiles then
-            local saved = PVADS.saveUserProfiles()
-            print(string.format("[ViewpointGaelCompat][profiles] copied Carcano Sight XYZ/lens values to %d sniper/optic profiles (saved=%s)",
-                migratedCarcanoSniperProfiles, tostring(saved)))
-        end
-        if migratedCarcanoAK74Profiles and migratedCarcanoAK74Profiles > 0 and PVADS.saveUserProfiles then
-            local saved = PVADS.saveUserProfiles()
-            print(string.format("[ViewpointGaelCompat][profiles] copied Carcano optic settings to %d AK-74/optic profiles (saved=%s)",
-                migratedCarcanoAK74Profiles, tostring(saved)))
-        end
-        if migratedAK74AUGA2Profiles > 0 and PVADS.saveUserProfiles then
-            local saved = PVADS.saveUserProfiles()
-            print(string.format("[ViewpointGaelCompat][profiles] copied AK-74 optic settings to %d AUG A2/optic profiles (saved=%s)",
-                migratedAK74AUGA2Profiles, tostring(saved)))
         end
     end
 
