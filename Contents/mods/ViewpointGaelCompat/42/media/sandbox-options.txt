@@ -1,19 +1,11 @@
 VERSION = 1,
 
-option ViewpointGaelCompat.ThirdPersonCrosshair
+option ViewpointGaelCompat.InputDiagnostics
 {
     type = boolean,
     default = true,
     page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_ThirdPersonCrosshair,
-}
-
-option ViewpointGaelCompat.ShotCenteringAssist
-{
-    type = boolean,
-    default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_ShotCenteringAssist,
+    translation = ViewpointGaelCompat_InputDiagnostics,
 }
 
 option ViewpointGaelCompat.CrouchIronFocus
@@ -66,6 +58,22 @@ option ViewpointGaelCompat.NerfLongDistances
     translation = ViewpointGaelCompat_NerfLongDistances,
 }
 
+option ViewpointGaelCompat.HeadshotDamageBonus
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_HeadshotDamageBonus,
+}
+
+option ViewpointGaelCompat.HeadshotImpactSound
+{
+    type = boolean,
+    default = true,
+    page = ViewpointGaelCompat,
+    translation = ViewpointGaelCompat_HeadshotImpactSound,
+}
+
 option ViewpointGaelCompat.NoReferenceHoldSway
 {
     type = boolean,
@@ -96,16 +104,6 @@ option ViewpointGaelCompat.ShotRecoilAffectsAim
     default = true,
     page = ViewpointGaelCompat,
     translation = ViewpointGaelCompat_ShotRecoilAffectsAim,
-}
-
-option ViewpointGaelCompat.ShotMotionCarry
-{
-    type = double,
-    min = 0.00,
-    max = 2.00,
-    default = 0.35,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_ShotMotionCarry,
 }
 
 option ViewpointGaelCompat.BoltPitchMotion

@@ -15,6 +15,11 @@ function ImpactMarker:isMouseOver()
     return false
 end
 
+function ImpactMarker:instantiate()
+    ISPanel.instantiate(self)
+    self.javaObject:setConsumeMouseEvents(false)
+end
+
 function ImpactMarker:onMouseDown()
     return false
 end
@@ -56,10 +61,31 @@ local function installImpactMarker()
     local marker = ImpactMarker:new()
     marker:initialise()
     marker:instantiate()
-    marker:setAlwaysOnTop(true)
+    -- Keep this full-screen drawing panel behind real UI windows. Click-through
+    -- alone is insufficient because the UI hover test also considers z-order.
+    marker:setAlwaysOnTop(false)
     marker:addToUIManager()
+    marker:backMost()
+    marker:setVisible(false)
     PVADS = PVADS or {}
     PVADS.gaelImpactMarker = marker
 end
 
+local function updateImpactMarkerVisibility()
+    local marker = PVADS and PVADS.gaelImpactMarker
+    if not marker then return end
+    local root = rawget(_G, "ViewpointGael")
+    local aim = root and root.Aim
+    local shouldShow = false
+    if aim and aim.impactVisible then
+        local ok, visible = pcall(aim.impactVisible)
+        shouldShow = ok and visible == true
+    end
+    if marker:isVisible() ~= shouldShow then
+        marker:setVisible(shouldShow)
+        if shouldShow then marker:backMost() end
+    end
+end
+
 Events.OnGameStart.Add(installImpactMarker)
+Events.OnTick.Add(updateImpactMarkerVisibility)

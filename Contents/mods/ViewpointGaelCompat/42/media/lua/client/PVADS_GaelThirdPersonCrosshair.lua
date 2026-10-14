@@ -22,6 +22,16 @@ local function aimingInThirdPerson(player)
     return safeCall(weapon, "isRanged") == true
 end
 
+local function updateCrosshairVisibility()
+    local panel = PVADS and PVADS.gaelThirdPersonCrosshair
+    if not panel then return end
+    local shouldShow = aimingInThirdPerson(getSpecificPlayer(0))
+    if panel:isVisible() ~= shouldShow then
+        panel:setVisible(shouldShow)
+        if shouldShow then panel:backMost() end
+    end
+end
+
 local function armPenalty(player)
     local body = safeCall(player, "getBodyDamage")
     local bodyTypes = BodyPartType
@@ -59,6 +69,11 @@ end
 
 function ThirdPersonCrosshair:isMouseOver()
     return false
+end
+
+function ThirdPersonCrosshair:instantiate()
+    ISPanel.instantiate(self)
+    self.javaObject:setConsumeMouseEvents(false)
 end
 
 function ThirdPersonCrosshair:onMouseDown()
@@ -130,10 +145,15 @@ local function installThirdPersonCrosshair()
     local crosshair = ThirdPersonCrosshair:new()
     crosshair:initialise()
     crosshair:instantiate()
-    crosshair:setAlwaysOnTop(true)
+    -- Keep this full-screen drawing panel behind real UI windows. Click-through
+    -- alone is insufficient because the UI hover test also considers z-order.
+    crosshair:setAlwaysOnTop(false)
     crosshair:addToUIManager()
+    crosshair:backMost()
+    crosshair:setVisible(false)
     PVADS = PVADS or {}
     PVADS.gaelThirdPersonCrosshair = crosshair
 end
 
 Events.OnGameStart.Add(installThirdPersonCrosshair)
+Events.OnTick.Add(updateCrosshairVisibility)

@@ -2,7 +2,6 @@ package viewpointgael;
 
 import me.zed_0xff.zombie_buddy.Exposer;
 import pvads.GaelBarrelRay;
-import pvads.GaelDynamicProfile;
 import pvads.GaelRecoilAim;
 import pvads.GaelSightProjection;
 import pvads.GaelWeaponMotion;
@@ -52,7 +51,21 @@ public final class AimProbe {
     }
 
     public static boolean setDynamicProfile(String string, double d, double d2, double d3, double d4, double d5, double d6, double d7) {
-        return GaelDynamicProfile.set(string, d, d2, d3, d4, d5, d6, d7);
+        // Project Viewpoint ADS revisions do not all ship GaelDynamicProfile.
+        // A direct symbolic reference makes the bridge throw NoClassDefFoundError
+        // on every player update when that optional class is absent.
+        try {
+            Class<?> profile = Class.forName("pvads.GaelDynamicProfile");
+            return (Boolean) profile.getMethod("set", String.class,
+                    double.class, double.class, double.class, double.class,
+                    double.class, double.class, double.class)
+                    .invoke(null, string, d, d2, d3, d4, d5, d6, d7);
+        } catch (ClassNotFoundException missingOptionalApi) {
+            return false;
+        } catch (ReflectiveOperationException | ClassCastException error) {
+            System.err.println("[ViewpointGael] Dynamic ADS profile API failed: " + error);
+            return false;
+        }
     }
 
     public static void setRecoilAim(String string, double d, double d2, boolean bl) {

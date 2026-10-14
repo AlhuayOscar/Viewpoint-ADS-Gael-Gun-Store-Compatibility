@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Seated handgun aim at floor; upper-body pose remains on the driving lower-body clip. -->
+<animNode>
+	<m_Name>aim_down_handgun</m_Name>
+	<m_Priority>4</m_Priority>
+	<m_AnimName>Bob_PVADS_SeatedHgunAimDown</m_AnimName>
+	<m_BlendTime>0.30</m_BlendTime>
+	<m_SpeedScale>IdleSpeed</m_SpeedScale>
+	<m_maxTorsoTwist>15.00</m_maxTorsoTwist>
+	<m_Conditions x_name="7d3cdd45-abff-43c4-9557-f302b7eb7a40"><m_Name>bAimAtFloor</m_Name><m_Type>BOOL</m_Type><m_Value>true</m_Value></m_Conditions>
+	<m_Conditions x_name="b72b8640-f696-4cfa-9466-3dc8d876b5cd"><m_Name>Weapon</m_Name><m_Type>STRING</m_Type><m_Value>handgun</m_Value></m_Conditions>
+</animNode>
