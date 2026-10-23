@@ -1,6 +1,6 @@
 version=1
 id=3815134719
-title=70% WIP [IRON SIGHTS!] Viewpoint Gael Compatibility Patch
-description=[h1]Viewpoint Gael Compatibility[/h1] Compatibility for GaelGunStore firearms with Viewpoint and Project Viewpoint ADS. The mod improves weapon and sight alignment, includes an in-game calibration tool, and saves adjustments for each weapon and optic. It also adds experimental aiming, sway, recoil, fatigue, and iron-sight focus features that can be adjusted in Sandbox Settings. With Viewpoint True Ballistics, shot markers help show where projectiles end or what they hit. Compatibility for Gael projectile launchers is also in development, including Viewpoint aiming, trajectory previews, and impact-based detonations in first and third person. Weapon and optic calibration is ongoing. Some combinations may still need adjustment. [h1]Development status[/h1] [list] [*]Most iron sights are working, though some have known issues. [*]Grenade and rocket launchers are still being reworked and are only partially functional. [/list] [h1]Requirements[/h1] Requires Viewpoint, GaelGunStore_B42, ProjectViewpointADS, and Viewpoint True Ballistics. For Project Zomboid Build 42.21. This Workshop package contains one mod: ViewpointGaelCompat. Restart the game after installing or updating.
-tags=Build 42;Weapons
+title=70% WIP [Still working on] Viewpoint Gael Compatibility Patch
+description=Updated PVADS integration. Requires Viewpoint, Gael Gun Store and ZombieBuddy. Incompatible with the standalone Project Viewpoint ADS, Advanced Throwables and True Ballistics mods, whose functions are integrated here. Checkout for Bluesky ADS Mod, This is based on that. Credits to Bluesky
+tags=Build 42
 visibility=public

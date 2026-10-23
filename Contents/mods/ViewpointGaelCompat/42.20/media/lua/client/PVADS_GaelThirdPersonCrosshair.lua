@@ -9,7 +9,7 @@ local function safeCall(object, method, ...)
 end
 
 local function aimingInThirdPerson(player)
-    local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
+    local vars = SandboxVars and SandboxVars.PVADSGAEL2
     if vars and vars.ThirdPersonCrosshair == false then return false end
     local root = rawget(_G, "ViewpointGael")
     local aim = root and root.Aim

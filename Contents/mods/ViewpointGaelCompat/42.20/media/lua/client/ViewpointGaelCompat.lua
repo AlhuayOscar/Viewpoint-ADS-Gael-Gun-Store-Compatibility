@@ -5,9 +5,16 @@
 if isServer() and not isClient() then return end
 
 local ZS = 2.44949
+local MIN_UPWARD_LAUNCHER_RANGE = 8.0 -- outside Gael's largest standalone blast radius
 local installedCrosshair = false
 local installedArchery = false
+local installedLauncherAim = false
+local installedLauncherPreview = false
+local installedTracerPreview = false
+local installedLauncherImpactTarget = false
 local warned = false
+local originalLauncherPreviewActive
+local originalLauncherImpactResolver
 
 local function api()
     local root = rawget(_G, "ViewpointGael")
@@ -25,17 +32,23 @@ end
 GGS_ViewpointLauncherMode = GGS_ViewpointLauncherMode or {}
 function GGS_ViewpointLauncherMode.active(playerObj)
     if playerObj and playerObj.isLocalPlayer and not playerObj:isLocalPlayer() then return false end
-    return looking()
+    if looking() then return true end
+    -- Third-person Viewpoint can release mouse capture while its camera is still
+    -- active. The launcher profile/aiming guard is checked by the caller.
+    local aim = api()
+    if aim and type(aim.isThirdPerson) == "function" then
+        local ok, thirdPerson = pcall(aim.isThirdPerson)
+        if ok and thirdPerson == true then return true end
+    end
+    return false
 end
 
 function GGS_ViewpointLauncherMode.target(playerObj, maxDistance)
     if not GGS_ViewpointLauncherMode.active(playerObj) then return nil end
     local aim = api()
     if not (aim and aim.aimX and aim.aimY and aim.aimZ) then return nil end
-    local requestedRange = tonumber(aim.sightTargetDistance and aim.sightTargetDistance())
-    -- The sight bridge clamps foreground/self hits (such as the RPG model) to
-    -- 2 tiles. Treat that as an invalid aim pick and continue along Viewpoint's
-    -- live look ray instead of detonating beside the shooter.
+    local sightRange = tonumber(aim.sightTargetDistance and aim.sightTargetDistance())
+    local requestedRange = sightRange
     if not requestedRange or requestedRange ~= requestedRange or requestedRange == math.huge
         or requestedRange <= 2.75 then
         requestedRange = tonumber(maxDistance) or 60
@@ -52,7 +65,12 @@ function GGS_ViewpointLauncherMode.target(playerObj, maxDistance)
         dx, dy, dz = 0, 0, 0
     end
     local distance = math.sqrt(dx * dx + dy * dy)
-    if distance < 2.75 then
+    -- aimX/Y/Z are the camera ray's actual MousePick hit. Keep valid close hits:
+    -- replacing every hit within 2.75 tiles with the fallback range sent rockets
+    -- far beyond nearby targets. Only synthesize a forward point when the ray
+    -- has no usable hit (or lands on the shooter's own origin).
+    local validHit = okX and okY and okZ and tonumber(hitX) and tonumber(hitY) and tonumber(hitZ)
+    if not validHit or distance < 0.25 then
         local yaw = tonumber(aim.yaw and aim.yaw()) or 0
         local pitch = tonumber(aim.pitch and aim.pitch()) or 0
         local reach = requestedRange
@@ -60,6 +78,16 @@ function GGS_ViewpointLauncherMode.target(playerObj, maxDistance)
         dx, dy, dz = math.cos(yaw) * flat * reach,
             math.sin(yaw) * flat * reach, math.sin(pitch) * reach / 2.44949
         distance = math.sqrt(dx * dx + dy * dy)
+        -- Gael's fire request only accepts a ground square. Looking high into
+        -- empty sky makes the ray's ground projection collapse back onto the
+        -- shooter, so its impact fuse can explode at the launcher's feet. Keep
+        -- that fallback safely downrange; Gael still simulates the flight and
+        -- resolves an earlier wall/window collision on the server.
+        if pitch > 0.25 and distance < MIN_UPWARD_LAUNCHER_RANGE then
+            dx, dy = math.cos(yaw) * MIN_UPWARD_LAUNCHER_RANGE,
+                math.sin(yaw) * MIN_UPWARD_LAUNCHER_RANGE
+            distance = MIN_UPWARD_LAUNCHER_RANGE
+        end
     end
     -- In first person, preserve the real rendered Gael weapon axis (including
     -- ADS recoil/sway) and use the camera hit only to choose launch distance.
@@ -78,6 +106,154 @@ function GGS_ViewpointLauncherMode.target(playerObj, maxDistance)
     end
     if distance <= 0.01 then return nil end
     return px + dx, py + dy, pz + dz
+end
+
+-- Gael's standalone RPG/grenade-launcher handler keeps pickTargetSquare() local,
+-- and converts the pinned mouse position directly with IsoUtils.XToIso/YToIso.
+-- Redirect only that exact mouse conversion while a supported launcher is aimed
+-- in Viewpoint mode. Gael then sends this camera-ray point to its normal server
+-- projectile simulator, which still resolves walls and the final impact square.
+local realXToIso, realYToIso
+local function isGaelLauncherAiming()
+    local preview = rawget(_G, "GGS_StandaloneTrajectoryPreview")
+    local player = getPlayer and getPlayer() or nil
+    local activeFn = originalLauncherPreviewActive or (preview and preview.active)
+    if not (player and type(activeFn) == "function") then return false end
+    local ok, active = pcall(activeFn, player)
+    return ok and active == true and GGS_ViewpointLauncherMode.active(player)
+end
+
+local function installLauncherPreview()
+    if installedLauncherPreview then return true end
+    local preview = rawget(_G, "GGS_StandaloneTrajectoryPreview")
+    if not (preview and type(preview.active) == "function") then return false end
+    originalLauncherPreviewActive = preview.active
+    preview.active = function(playerObj)
+        -- Hide Gael's isometric arc while Viewpoint owns aiming. The launcher
+        -- still fires through Gael; only its screen-space preview is suppressed.
+        if GGS_ViewpointLauncherMode.active(playerObj) then return false end
+        return originalLauncherPreviewActive(playerObj)
+    end
+    installedLauncherPreview = true
+    print("[ViewpointGael] isometric launcher preview hidden in Viewpoint modes")
+    return true
+end
+
+-- Gael's shared tracer overlay has a second preview path for underbarrel
+-- launchers. Hide only its predicted arc while Viewpoint owns the camera aim;
+-- keep live projectile trails visible after firing.
+local function installTracerPreviewFilter()
+    local tracer = rawget(_G, "GGS_LauncherTracer")
+    local panel = tracer and tracer.panel
+    if not panel then return false end
+    if panel.__viewpointPreviewFilter then
+        installedTracerPreview = true
+        return true
+    end
+    local drawPreview = panel.preview
+    if type(drawPreview) ~= "function" then return false end
+    panel.preview = function(self, state)
+        local playerObj = getPlayer and getPlayer() or nil
+        if playerObj and GGS_ViewpointLauncherMode.active(playerObj) then return end
+        return drawPreview(self, state)
+    end
+    panel.__viewpointPreviewFilter = true
+    installedTracerPreview = true
+    print("[ViewpointGael] predicted launcher arc hidden in Viewpoint modes")
+    return true
+end
+
+-- Replace the isometric target right before Gael resolves the standalone
+-- launcher impact. Its resolver still checks intervening walls and schedules
+-- the explosion at the final square.
+local function installLauncherImpactTarget()
+    if installedLauncherImpactTarget then return true end
+    local resolver = rawget(_G, "ggsGLResolveImpactSquare")
+    if type(resolver) ~= "function" then return false end
+    originalLauncherImpactResolver = resolver
+    _G.ggsGLResolveImpactSquare = function(startX, startY, startZ, targetSquare, ...)
+        local playerObj = getPlayer and getPlayer() or nil
+        local activeFn = originalLauncherPreviewActive
+        local active = false
+        if playerObj and type(activeFn) == "function" then
+            local ok, result = pcall(activeFn, playerObj)
+            active = ok and result == true
+        end
+        if active and GGS_ViewpointLauncherMode.active(playerObj) then
+            local tx, ty, tz = GGS_ViewpointLauncherMode.target(playerObj, 24)
+            if tx and ty then
+                local dx, dy = tx - startX, ty - startY
+                local distance = math.sqrt(dx * dx + dy * dy)
+                local maxDistance = 24
+                if distance > maxDistance then
+                    local scale = maxDistance / distance
+                    tx, ty = startX + dx * scale, startY + dy * scale
+                end
+                local cell = getCell and getCell() or nil
+                local gx, gy = math.floor(tx), math.floor(ty)
+                local gz = math.floor(tonumber(tz) or tonumber(startZ) or 0)
+                local cameraSquare = cell and cell:getGridSquare(gx, gy, gz) or nil
+                if not cameraSquare and cell then cameraSquare = cell:getGridSquare(gx, gy, 0) end
+                if cameraSquare then
+                    local isoX = targetSquare and targetSquare:getX() or -1
+                    local isoY = targetSquare and targetSquare:getY() or -1
+                    targetSquare = cameraSquare
+                    print(string.format("[ViewpointGael] launcher impact target iso=%d,%d camera=%d,%d,%d range=%.2f",
+                        isoX, isoY, gx, gy, gz, distance))
+                else
+                    print(string.format("[ViewpointGael] camera impact square missing at %d,%d,%d; retaining Gael target",
+                        gx, gy, gz))
+                end
+            end
+        end
+        return originalLauncherImpactResolver(startX, startY, startZ, targetSquare, ...)
+    end
+    installedLauncherImpactTarget = true
+    print("[ViewpointGael] standalone launcher impact uses the camera target; Gael resolves walls and detonation")
+    return true
+end
+
+local function installLauncherAim()
+    if installedLauncherAim then return true end
+    local iso = rawget(_G, "IsoUtils")
+    if not (iso and type(iso.XToIso) == "function" and type(iso.YToIso) == "function") then
+        return false
+    end
+    realXToIso, realYToIso = iso.XToIso, iso.YToIso
+
+    local function mousePoint(x, y, playerNum)
+        if not isGaelLauncherAiming() then return nil end
+        local mx, my = getMouseX and getMouseX() or nil, getMouseY and getMouseY() or nil
+        if not (mx and my) then return nil end
+        local player = getPlayer and getPlayer() or nil
+        local pn = player and player.getPlayerNum and player:getPlayerNum() or playerNum or 0
+        local core = getCore and getCore() or nil
+        local zoom = core and core.getZoom and core:getZoom(pn) or 1
+        zoom = tonumber(zoom) or 1
+        if zoom <= 0 then zoom = 1 end
+        -- Do not affect other isometric conversions (inventory/UI/world picking).
+        if math.abs((tonumber(x) or 0) - mx * zoom) > 0.01
+            or math.abs((tonumber(y) or 0) - my * zoom) > 0.01 then
+            return nil
+        end
+        local tx, ty = GGS_ViewpointLauncherMode.target(player, 60)
+        if tx and ty then return tx, ty end
+        return nil
+    end
+
+    iso.XToIso = function(x, y, z, playerNum)
+        local tx = mousePoint(x, y, playerNum)
+        if tx then return tx end
+        return realXToIso(x, y, z)
+    end
+    iso.YToIso = function(x, y, z, playerNum)
+        local _, ty = mousePoint(x, y, playerNum)
+        if ty then return ty end
+        return realYToIso(x, y, z)
+    end
+    installedLauncherAim = true
+    print("[ViewpointGael] standalone launchers use the Viewpoint camera-ray impact target")
+    return true
 end
 
 local function setSuppress(on)
@@ -256,11 +432,16 @@ local function install()
     warned = false
     installCrosshair()
     installArchery()
+    installLauncherAim()
+    installLauncherPreview()
+    installTracerPreviewFilter()
+    installLauncherImpactTarget()
 end
 
 local function tick()
     install()
-    if installedCrosshair and installedArchery then
+    if installedCrosshair and installedArchery and installedLauncherAim
+        and installedLauncherPreview and installedTracerPreview and installedLauncherImpactTarget then
         Events.OnTick.Remove(tick)
     end
 end

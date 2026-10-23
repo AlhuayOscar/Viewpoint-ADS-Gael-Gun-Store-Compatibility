@@ -27,8 +27,9 @@ if not PVADS.gaelVisualChoicesInstalled then
         relief = true, fovMul = true, opticHeight = true,
         lensScale = true, adsTime = true,
         pipX = true, pipY = true, pipZ = true,
-        pipScale = true, pipZoom = true,
+        pipScale = true, pipZoom = true, pipSpeed = true, pipMove = true,
         pipRetX = true, pipRetY = true, pipDepth = true,
+        pipAnchorX = true, pipAnchorY = true, pipAnchorZ = true,
     }
     local unitDefaults = { lensScale = true, pipScale = true, pipZoom = true }
     local okp7DefaultProfile = {
@@ -108,7 +109,7 @@ if not PVADS.gaelVisualChoicesInstalled then
     local lastResolvedProfileDiagnostic = {}
     local function diagnosticValues(values)
         if not values then return "none" end
-        local fields = { "adjX", "adjY", "adjZ", "adjPitch", "adjYaw", "adjRoll", "fovMul", "relief", "lensScale", "pipScale", "pipZoom", "adsTime", "mode", "reticle", "pipAlt", "recoilPitchReverse" }
+        local fields = { "adjX", "adjY", "adjZ", "adjPitch", "adjYaw", "adjRoll", "fovMul", "relief", "lensScale", "pipScale", "pipZoom", "pipDepth", "pipAnchorX", "pipAnchorY", "pipAnchorZ", "pipAnchorClip", "pipAnchorScale", "pipCropX", "pipCropY", "pipSpeed", "pipMove", "pipFixed", "pip2DBackup", "adsTime", "mode", "reticle", "pipAlt", "recoilPitchReverse" }
         local out = {}
         for _, name in ipairs(fields) do
             local value = values[name]
@@ -118,6 +119,49 @@ if not PVADS.gaelVisualChoicesInstalled then
     end
     PVADS.ResolveProfile = function(weapon)
         local profile = originalResolveProfile(weapon)
+        -- The Java anchored-glass fallback requires a weapon-space reference
+        -- point (genMuzzle*) and an explicit enable flag. The stock resolver
+        -- only forwarded genMuzzleY, so the Glass tab's Anchor toggle had no
+        -- effect for generated profiles. Forward the full point when present.
+        local generated = PVADS.Generated and PVADS.Generated.weapons
+            and PVADS.Generated.weapons[profile.weaponId]
+        if generated then
+            local muzzle = generated.muzzle or generated.muzzleEstimated
+            if muzzle and (tonumber(profile.pipAnchorClip) or 0) > 0.5 then
+                profile.genMuzzleX = tonumber(muzzle[1]) or 0
+                profile.genMuzzleY = tonumber(muzzle[2]) or profile.genMuzzleY or 0
+                profile.genMuzzleZ = tonumber(muzzle[3]) or 0
+                profile.genMuzzleAnchor = true
+            end
+        end
+
+        -- GaelGunStore's Base.M4 uses its own AR/AssaultRifles|M4 mesh. Its
+        -- model script defines real muzzle and Scope attachments; use those
+        -- points instead of borrowing/scaling the unrelated vanilla M4A1
+        -- profile. Saved per-optic anchor offsets still apply on top and are
+        -- never overwritten.
+        if profile.weaponId == "Base.M4" and profile.opticId == "Base.x2Scope" then
+            -- Enable this known-good fallback for the screenshot's exact
+            -- weapon/optic pair unless the player explicitly saved it OFF.
+            if profile.pipAnchorClip == nil then profile.pipAnchorClip = 1 end
+            local muzzle = { 0.0000, 0.3543, 0.0314 }
+            local mount = { 0.0000, 0.0715, 0.0486 }
+            if (tonumber(profile.pipAnchorClip) or 0) > 0.5 then
+                profile.genMuzzleX = muzzle[1]
+                profile.genMuzzleY = muzzle[2]
+                profile.genMuzzleZ = muzzle[3]
+                profile.genMuzzleAnchor = true
+                if profile.pipAnchorX == nil then
+                    profile.pipAnchorX = mount[1] - muzzle[1]
+                end
+                if profile.pipAnchorY == nil then
+                    profile.pipAnchorY = mount[2] - muzzle[2]
+                end
+                if profile.pipAnchorZ == nil then
+                    profile.pipAnchorZ = mount[3] - muzzle[3]
+                end
+            end
+        end
         -- Default OKP-7 presentation for any weapon, including combinations
         -- without a user profile. Personal values remain intact once saved.
         if profile.opticId == "Base.OKP7" then
@@ -199,7 +243,7 @@ if not PVADS.gaelVisualChoicesInstalled then
         -- stable for both render paths.
         local opticUser = profile.userWeapon
         if opticUser then
-            for _, name in ipairs({ "pipScale", "pipZoom", "pipX", "pipY", "pipZ", "pipRetX", "pipRetY", "pipDepth" }) do
+            for _, name in ipairs({ "pipScale", "pipZoom", "pipX", "pipY", "pipZ", "pipRetX", "pipRetY", "pipDepth", "pipAnchorX", "pipAnchorY", "pipAnchorZ", "pipAnchorClip", "pipAnchorScale", "pipCropX", "pipCropY", "pipSpeed", "pipMove", "pipFixed" }) do
                 if opticUser[name] ~= nil then profile[name] = tonumber(opticUser[name]) or profile[name] end
             end
             if opticUser.lensScale ~= nil and (profile.mode == "scope"
@@ -216,7 +260,19 @@ if not PVADS.gaelVisualChoicesInstalled then
         end
         local key = tostring(profile.weaponId) .. "|" .. tostring(profile.opticId or "")
         local user = PVADS.User and PVADS.User[key]
-        local diagnostic = string.format("[ViewpointGaelCompat][profiles][resolve] key=%s user={%s} opticFields={%s} final={%s}",
+        if user and user.pipFixed ~= nil then profile.pipFixed = tonumber(user.pipFixed) or 0 end
+        local backup = user and tonumber(user.pip2DBackup)
+        if backup == nil then backup = profile.opticId and profile.opticId ~= "" and 1 or 0 end
+        profile.pip2DBackup = backup
+        if backup > 0.5 then
+            profile.pipFixed = 0
+            profile.pipAnchorClip = 0
+            if profile.userWeapon then
+                profile.userWeapon.pipFixed = 0
+                profile.userWeapon.pipAnchorClip = 0
+            end
+        end
+        local diagnostic = string.format("[PVADSGAEL2][profiles][resolve] key=%s user={%s} opticFields={%s} final={%s}",
             key, diagnosticValues(user), diagnosticValues(profile.userWeapon), diagnosticValues(profile))
         if lastResolvedProfileDiagnostic[key] ~= diagnostic then
             lastResolvedProfileDiagnostic[key] = diagnostic
@@ -233,7 +289,7 @@ if not PVADS.gaelVisualChoicesInstalled then
         local migratedOKP7Profiles = 0
         local reader = getFileReader(FILE, false)
         if not reader then
-            print("[ViewpointGaelCompat][profiles] load: file not found; starting empty")
+            print("[PVADSGAEL2][profiles] load: file not found; starting empty")
             return
         end
         while true do
@@ -268,15 +324,15 @@ if not PVADS.gaelVisualChoicesInstalled then
         end
         reader:close()
         -- Completed batch copies are deliberately inactive now; see the archived migration source.
-        print(string.format("[ViewpointGaelCompat][profiles] loaded %d user profiles from %s", loaded, FILE))
+        print(string.format("[PVADSGAEL2][profiles] loaded %d user profiles from %s", loaded, FILE))
         if migratedMiniRedDotPipSizes > 0 and PVADS.saveUserProfiles then
             local saved = PVADS.saveUserProfiles()
-            print(string.format("[ViewpointGaelCompat][profiles] migrated %d MiniRedDot PiP sizes from 0.095 to 1.94 (saved=%s)",
+            print(string.format("[PVADSGAEL2][profiles] migrated %d MiniRedDot PiP sizes from 0.095 to 1.94 (saved=%s)",
                 migratedMiniRedDotPipSizes, tostring(saved)))
         end
         if migratedOKP7Profiles > 0 and PVADS.saveUserProfiles then
             local saved = PVADS.saveUserProfiles()
-            print(string.format("[ViewpointGaelCompat][profiles] applied OKP-7 defaults to %d saved profiles (saved=%s)",
+            print(string.format("[PVADSGAEL2][profiles] applied OKP-7 defaults to %d saved profiles (saved=%s)",
                 migratedOKP7Profiles, tostring(saved)))
         end
     end
@@ -336,7 +392,7 @@ if not PVADS.gaelVisualChoicesInstalled then
         local saved = 0
         for _ in pairs(PVADS.User) do saved = saved + 1 end
         PVADS.GaelDeletedProfileKeys = {}
-        print(string.format("[ViewpointGaelCompat][profiles] saved %d user profiles to %s (restored %d missing in-memory entries)", saved, FILE, preserved))
+        print(string.format("[PVADSGAEL2][profiles] saved %d user profiles to %s (restored %d missing in-memory entries)", saved, FILE, preserved))
         return true
     end
 

@@ -55,6 +55,32 @@ for _, row in ipairs(optics) do
         relief = longScopeRelief[name],
     })
 end
+
+-- Use the actual Gael x2Scope rear glass mesh, matching the model transform so
+-- the PiP aperture is drawn at the optic and can be occluded by its housing.
+PVADS.RegisterOpticProfile("Base.x2Scope", {
+    glassVariants = {
+        {
+            mesh = "Scope/Scopes|x2Scope",
+            glass = { -0.007602, 0.007504, -0.030470, -0.015373, -0.0259 },
+            poly = {
+                -0.007602, -0.022922, -0.007345, -0.024912,
+                -0.006594, -0.026695, -0.005393, -0.028274,
+                -0.003827, -0.029509, -0.002003, -0.030265,
+                -0.000031, -0.030470,  0.001906, -0.030265,
+                 0.003730, -0.029509,  0.005295, -0.028274,
+                 0.006496, -0.026695,  0.007248, -0.024912,
+                 0.007504, -0.022922,  0.007248, -0.021000,
+                 0.006496, -0.019147,  0.005295, -0.017568,
+                 0.003730, -0.016401,  0.001906, -0.015647,
+                -0.000031, -0.015373, -0.002003, -0.015647,
+                -0.003827, -0.016401, -0.005393, -0.017568,
+                -0.006594, -0.019147, -0.007345, -0.021000,
+            },
+        },
+    },
+})
+
 -- These two mini red-dot meshes have an opaque-looking centre when the dot is
 -- only overlaid on top. PVADS's 1x scope mode cuts the sight model out of the
 -- PiP lens without magnifying the scene. Preserve the normal reflex eye relief
@@ -121,7 +147,7 @@ local function registerShapes()
         PVADS_setOpticShape(model, 0.03, 0.12, 0.018)
     end
     if PVADS.Controller and PVADS.Controller.ready then PVADS.Controller.refresh(true) end
-    print("[ViewpointGaelCompat] Registered " .. #optics .. " Gael optics")
+    print("[PVADSGAEL2] Registered " .. #optics .. " Gael optics")
 end
 
 Events.OnGameStart.Add(registerShapes)

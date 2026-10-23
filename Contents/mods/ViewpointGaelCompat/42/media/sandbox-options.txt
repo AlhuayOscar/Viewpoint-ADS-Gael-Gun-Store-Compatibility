@@ -1,115 +1,617 @@
 VERSION = 1,
 
-option ViewpointGaelCompat.InputDiagnostics
+VERSION = 1,
+
+option PVADSGAEL2.InputDiagnostics
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_InputDiagnostics,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_InputDiagnostics,
 }
 
-option ViewpointGaelCompat.CrouchIronFocus
+option PVADSGAEL2.CrouchIronFocus
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_CrouchIronFocus,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_CrouchIronFocus,
 }
 
-option ViewpointGaelCompat.CrouchIronFocusMultiplier
+option PVADSGAEL2.CrouchIronFocusMultiplier
 {
     type = double,
     min = 0.30,
     max = 1.00,
     default = 0.70,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_CrouchIronFocusMultiplier,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_CrouchIronFocusMultiplier,
 }
 
-option ViewpointGaelCompat.WheelIronFocus
+option PVADSGAEL2.WheelIronFocus
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_WheelIronFocus,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_WheelIronFocus,
 }
 
-option ViewpointGaelCompat.FocusSearchBlur
+option PVADSGAEL2.FocusSearchBlur
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_FocusSearchBlur,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_FocusSearchBlur,
 }
 
-option ViewpointGaelCompat.ExperimentalExtendedRange
+option PVADSGAEL2.ExperimentalExtendedRange
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_ExperimentalExtendedRange,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_ExperimentalExtendedRange,
 }
 
-option ViewpointGaelCompat.NerfLongDistances
+option PVADSGAEL2.NerfLongDistances
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_NerfLongDistances,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_NerfLongDistances,
 }
 
-option ViewpointGaelCompat.HeadshotDamageBonus
+option PVADSGAEL2.HeadshotDamageBonus
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_HeadshotDamageBonus,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_HeadshotDamageBonus,
 }
 
-option ViewpointGaelCompat.HeadshotImpactSound
+option PVADSGAEL2.HeadshotImpactSound
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_HeadshotImpactSound,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_HeadshotImpactSound,
 }
 
-option ViewpointGaelCompat.NoReferenceHoldSway
+option PVADSGAEL2.NoReferenceHoldSway
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_NoReferenceHoldSway,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_NoReferenceHoldSway,
 }
 
-option ViewpointGaelCompat.SightMotion
+option PVADSGAEL2.SightMotion
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_SightMotion,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_SightMotion,
 }
 
-option ViewpointGaelCompat.ShotPitchRecoil
+option PVADSGAEL2.ShotPitchRecoil
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_ShotPitchRecoil,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_ShotPitchRecoil,
 }
 
-option ViewpointGaelCompat.ShotRecoilAffectsAim
+option PVADSGAEL2.ShotRecoilAffectsAim
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_ShotRecoilAffectsAim,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_ShotRecoilAffectsAim,
 }
 
-option ViewpointGaelCompat.BoltPitchMotion
+option PVADSGAEL2.BoltPitchMotion
 {
     type = boolean,
     default = true,
-    page = ViewpointGaelCompat,
-    translation = ViewpointGaelCompat_BoltPitchMotion,
+    page = PVADSGAEL2,
+    translation = PVADSGAEL2_BoltPitchMotion,
 }
+
+// Rebuilding Knox options are included here because this mod overrides sandbox-options.txt later in load order.
+option RebuildingKnoxDemo.ExperimentalWholeMapScan
+{
+    type = boolean,
+    default = false,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_ExperimentalWholeMapScan,
+    _tooltip = RebuildingKnoxDemo_ExperimentalWholeMapScan_tooltip,
+}
+
+option RebuildingKnoxDemo.SpawnWithRevolver
+{
+    type = boolean,
+    default = true,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_SpawnWithRevolver,
+    _tooltip = RebuildingKnoxDemo_SpawnWithRevolver_tooltip,
+}
+
+option RebuildingKnoxDemo.SpawnRevolverAmmoCount
+{
+    type = integer,
+    min = 0,
+    max = 1000,
+    default = 400,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_SpawnRevolverAmmoCount,
+    _tooltip = RebuildingKnoxDemo_SpawnRevolverAmmoCount_tooltip,
+}
+
+option RebuildingKnoxDemo.SpawnWithShelterKit
+{
+    type = boolean,
+    default = true,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_SpawnWithShelterKit,
+    _tooltip = RebuildingKnoxDemo_SpawnWithShelterKit_tooltip,
+}
+
+option VTB.Enabled
+{
+    type = boolean,
+    default = true,
+    page = VTB,
+    translation = VTB_Enabled,
+}
+
+option VTB.UseInIsoView
+{
+    type = boolean,
+    default = false,
+    page = VTB,
+    translation = VTB_UseInIsoView,
+}
+
+option VTB.VelocityScale
+{
+    type = double,
+    min = 0.05,
+    max = 3.0,
+    default = 0.4,
+    page = VTB,
+    translation = VTB_VelocityScale,
+}
+
+option VTB.GravityScale
+{
+    type = double,
+    min = 0.0,
+    max = 10.0,
+    default = 1.0,
+    page = VTB,
+    translation = VTB_GravityScale,
+}
+
+option VTB.DragScale
+{
+    type = double,
+    min = 0.0,
+    max = 10.0,
+    default = 1.0,
+    page = VTB,
+    translation = VTB_DragScale,
+}
+
+option VTB.DamageFalloff
+{
+    type = double,
+    min = 0.0,
+    max = 1.0,
+    default = 0.5,
+    page = VTB,
+    translation = VTB_DamageFalloff,
+}
+
+option VTB.ProjectileLifetime
+{
+    type = double,
+    min = 0.2,
+    max = 20.0,
+    default = 3.0,
+    page = VTB,
+    translation = VTB_ProjectileLifetime,
+}
+
+option VTB.MaxDistanceMultiplier
+{
+    type = double,
+    min = 1.0,
+    max = 20.0,
+    default = 3.0,
+    page = VTB,
+    translation = VTB_MaxDistanceMultiplier,
+}
+
+option VTB.MaxDistanceCap
+{
+    type = double,
+    min = 10.0,
+    max = 1000.0,
+    default = 200.0,
+    page = VTB,
+    translation = VTB_MaxDistanceCap,
+}
+
+option VTB.ZeroDistance
+{
+    type = double,
+    min = 0.0,
+    max = 1000.0,
+    default = 0.0,
+    page = VTB,
+    translation = VTB_ZeroDistance,
+}
+
+option VTB.SpreadScale
+{
+    type = double,
+    min = 0.0,
+    max = 10.0,
+    default = 1.0,
+    page = VTB,
+    translation = VTB_SpreadScale,
+}
+
+option VTB.Penetration
+{
+    type = boolean,
+    default = true,
+    page = VTB,
+    translation = VTB_Penetration,
+}
+
+option VTB.HitLocations
+{
+    type = boolean,
+    default = true,
+    page = VTB,
+    translation = VTB_HitLocations,
+}
+
+option VTB.FurnitureCollision
+{
+    type = boolean,
+    default = true,
+    page = VTB,
+    translation = VTB_FurnitureCollision,
+}
+
+option VTB.ServerValidation
+{
+    type = boolean,
+    default = true,
+    page = VTB,
+    translation = VTB_ServerValidation,
+}
+
+option ViewpointThrowables.Enabled
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_Enabled,
+}
+
+option ViewpointThrowables.StrengthMultiplier
+{
+    type = double,
+    min = 0.25,
+    max = 3.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_StrengthMultiplier,
+}
+
+option ViewpointThrowables.MinThrowSpeed
+{
+    type = double,
+    min = 0.5,
+    max = 20.0,
+    default = 5.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_MinThrowSpeed,
+}
+
+option ViewpointThrowables.MaxThrowSpeed
+{
+    type = double,
+    min = 2.0,
+    max = 40.0,
+    default = 16.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_MaxThrowSpeed,
+}
+
+option ViewpointThrowables.ChargeTime
+{
+    type = double,
+    min = 0.1,
+    max = 6.0,
+    default = 1.1,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ChargeTime,
+}
+
+option ViewpointThrowables.EnableUnderhand
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_EnableUnderhand,
+}
+
+option ViewpointThrowables.EnableRolling
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_EnableRolling,
+}
+
+option ViewpointThrowables.MomentumInfluence
+{
+    type = double,
+    min = 0.0,
+    max = 1.5,
+    default = 0.6,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_MomentumInfluence,
+}
+
+option ViewpointThrowables.ImpactDamage
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ImpactDamage,
+}
+
+option ViewpointThrowables.ImpactDamageMultiplier
+{
+    type = double,
+    min = 0.0,
+    max = 5.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ImpactDamageMultiplier,
+}
+
+option ViewpointThrowables.PlayerImpactDamage
+{
+    type = boolean,
+    default = false,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_PlayerImpactDamage,
+}
+
+option ViewpointThrowables.ZombieDistraction
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ZombieDistraction,
+}
+
+option ViewpointThrowables.DistractionMultiplier
+{
+    type = double,
+    min = 0.0,
+    max = 4.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_DistractionMultiplier,
+}
+
+option ViewpointThrowables.ObjectThrowing
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ObjectThrowing,
+}
+
+option ViewpointThrowables.MaxObjectWeight
+{
+    type = double,
+    min = 0.1,
+    max = 10.0,
+    default = 3.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_MaxObjectWeight,
+}
+
+option ViewpointThrowables.GrenadeBounceMultiplier
+{
+    type = double,
+    min = 0.0,
+    max = 2.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_GrenadeBounceMultiplier,
+}
+
+option ViewpointThrowables.ObjectBounceMultiplier
+{
+    type = double,
+    min = 0.0,
+    max = 2.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ObjectBounceMultiplier,
+}
+
+option ViewpointThrowables.WindowBreaking
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_WindowBreaking,
+}
+
+option ViewpointThrowables.ServerValidation
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ServerValidation,
+}
+
+option ViewpointThrowables.MaxPreview
+{
+    type = enum,
+    numValues = 3,
+    default = 3,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_MaxPreview,
+}
+
+option ViewpointThrowables.AllowCooking
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_AllowCooking,
+}
+
+option ViewpointThrowables.MaxActivePerPlayer
+{
+    type = integer,
+    min = 1,
+    max = 50,
+    default = 6,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_MaxActivePerPlayer,
+}
+
+option ViewpointThrowables.ThrowCooldown
+{
+    type = double,
+    min = 0.0,
+    max = 3.0,
+    default = 0.35,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_ThrowCooldown,
+}
+
+option ViewpointThrowables.GravityMultiplier
+{
+    type = double,
+    min = 0.2,
+    max = 3.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_GravityMultiplier,
+}
+
+option ViewpointThrowables.DebugLogging
+{
+    type = boolean,
+    default = false,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_DebugLogging,
+}
+
+option ViewpointThrowables.AllowDebugDraw
+{
+    type = boolean,
+    default = false,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_AllowDebugDraw,
+}
+
+option ViewpointThrowables.FlashbangBlinds
+{
+    type = boolean,
+    default = true,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_FlashbangBlinds,
+}
+
+option ViewpointThrowables.FlashbangRange
+{
+    type = double,
+    min = 4.0,
+    max = 40.0,
+    default = 16.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_FlashbangRange,
+}
+
+option ViewpointThrowables.FireDamageMultiplier
+{
+    type = double,
+    min = 0.0,
+    max = 5.0,
+    default = 1.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_FireDamageMultiplier,
+}
+
+option ViewpointThrowables.LauncherSpeed
+{
+    type = double,
+    min = 10.0,
+    max = 90.0,
+    default = 32.0,
+    page = ViewpointThrowables,
+    translation = ViewpointThrowables_LauncherSpeed,
+}
+
+// Rebuilding Knox resource HUD appearance
+option RebuildingKnoxDemo.HudInactiveOpacity
+{
+    type = integer,
+    min = 10,
+    max = 100,
+    default = 30,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_HudInactiveOpacity,
+}
+
+option RebuildingKnoxDemo.HudActiveOpacity
+{
+    type = integer,
+    min = 10,
+    max = 100,
+    default = 100,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_HudActiveOpacity,
+}
+
+option RebuildingKnoxDemo.HudLowResourceThreshold
+{
+    type = integer,
+    min = 0,
+    max = 100000,
+    default = 0,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_HudLowResourceThreshold,
+}
+
+option RebuildingKnoxDemo.HudUnitsPerColorStep
+{
+    type = integer,
+    min = 1,
+    max = 10000,
+    default = 5,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_HudUnitsPerColorStep,
+}
+
+option RebuildingKnoxDemo.HudReactivateColor
+{
+    type = boolean,
+    default = true,
+    page = RebuildingKnoxDemo,
+    translation = RebuildingKnoxDemo_HudReactivateColor,
+}
+

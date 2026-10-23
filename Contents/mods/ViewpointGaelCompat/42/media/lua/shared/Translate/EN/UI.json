@@ -1,0 +1,12 @@
+{
+  "UI_PVADSGAEL2_Language": "en",
+  "UI_optionscreen_binding_PVADSGAEL2": "Project Viewpoint ADS",
+  "UI_optionscreen_binding_PVADSGAEL2:ADS": "ADS key (hold / toggle modes)",
+  "UI_optionscreen_binding_PVADSGAEL2:ZoomIn": "Scope zoom in",
+  "UI_optionscreen_binding_PVADSGAEL2:ZoomOut": "Scope zoom out",
+  "UI_optionscreen_binding_PVADSGAEL2:ZeroUp": "Zeroing up",
+  "UI_optionscreen_binding_PVADSGAEL2:ZeroDown": "Zeroing down",
+  "UI_optionscreen_binding_PVADSGAEL2:Calibrator": "ADS calibrator (developer mode)",
+  "UI_optionscreen_binding_PVADSGAEL2:Steady": "Steady aim (hold, sights up)",
+  "UI_optionscreen_binding_PVADSGAEL2:Bipod": "Bipod deploy / fold"
+}

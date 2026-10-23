@@ -1,0 +1,20 @@
+module Base
+{
+    model PVADSGAEL_45Clip12_TestGround
+    {
+        mesh = Ammo/WorldItems|45Clip25,
+        texture = GunTexture/45Clip25_tex,
+    }
+
+    model Clip_45Clip
+    {
+        mesh = Mags/MAGS|45Clip25,
+        texture = GunTexture/45Clip25_tex,
+        cullFace = None,
+    }
+
+    item 45Clip
+    {
+        WorldStaticModel = PVADSGAEL_45Clip12_TestGround,
+    }
+}

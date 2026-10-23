@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animNode>
+	<m_Name>VATThrowUnder</m_Name>
+	<m_AnimName>Bob_AttackThrowMolotov</m_AnimName>
+	<m_Looped>false</m_Looped>
+	<m_BlendTime>0.12</m_BlendTime>
+	<m_SpeedScale>1.35</m_SpeedScale>
+	<m_Conditions x_name="c343a861-da3b-5ac3-af8c-0122fed16664">
+		<m_Name>PerformingAction</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>VATThrow</m_Value>
+	</m_Conditions>
+	<m_Conditions x_name="f6d3f6bc-97ef-5c29-9fa8-0261b77bf618">
+		<m_Name>VATThrowPhase</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>under</m_Value>
+	</m_Conditions>
+	<m_Events x_name="9a410f34-ce09-56dd-ac07-aafb98de9f3b">
+		<m_EventName>VATRelease</m_EventName>
+		<m_TimePc>0.28</m_TimePc>
+		<m_ParameterValue></m_ParameterValue>
+	</m_Events>
+	<m_Events x_name="28040edf-3e17-5085-a055-49e47f15d3fe">
+		<m_EventName>VATThrowDone</m_EventName>
+		<m_TimePc>0.85</m_TimePc>
+		<m_ParameterValue></m_ParameterValue>
+	</m_Events>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Spine</boneName>
+		<weight>0.40</weight>
+		<includeDescendants>false</includeDescendants>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Spine1</boneName>
+		<weight>0.60</weight>
+		<includeDescendants>false</includeDescendants>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

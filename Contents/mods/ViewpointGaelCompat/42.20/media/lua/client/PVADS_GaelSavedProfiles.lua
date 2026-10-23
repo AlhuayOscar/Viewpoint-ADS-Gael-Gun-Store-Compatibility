@@ -247,8 +247,3 @@ PVADS.RegisterWeaponOpticOverride("Base.Taurus_RT85", "Base.Romeo3", { adjZ = -0
 PVADS.RegisterWeaponOpticOverride("Base.Webley_MK_snub", "Base.Romeo3", { adjZ = -0.01500 })
 PVADS.RegisterWeaponOpticOverride("Base.Webley_Revolver", "Base.Romeo3", { adjZ = -0.01500 })
 PVADS.RegisterWeaponOpticOverride("Base.Rhino60DS", "Base.Romeo3", { adjZ = -0.01500 })
-
--- Disabled: the debug status overlay in Gael's K attachment picker produced
--- console errors while browsing/selecting optics. Keep its source file for
--- reference, but leave Gael's native picker and install flow unmodified.
--- require "PVADS_GaelAttachmentPanel"

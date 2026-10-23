@@ -4,8 +4,8 @@ require "PVADS/PVADS_Options"
 -- Main Options -> (Mods) even when running with Viewpoint's Java integration.
 -- Also exposes Viewpoint Gael Gun Store Compatibility settings.
 
-local ID = "ProjectViewpointADS"
-local GAEL_ID = "ViewpointGaelCompat"
+local ID = "PVADSGAEL2"
+local GAEL_ID = "PVADSGAEL2_Gael"
 
 local optsPVADS
 local optsGael
@@ -102,20 +102,20 @@ local function applyPVADSOptions()
         })
     end
     if PVADS_setDeveloper then PVADS_setDeveloper(s.developer and true or false) end
-    if PVADS_setClickAim then PVADS_setClickAim(s.mode == 4) end
+    if tonumber(s.mode) == 4 or tonumber(s.mode) == nil then s.mode = 1 end
+    if PVADS_setClickAim then PVADS_setClickAim(false) end
 end
 
 local function buildPVADSModOptions()
     if not (PZAPI and PZAPI.ModOptions) or optsPVADS then return end
-    optsPVADS = PZAPI.ModOptions:create(ID, "Project Viewpoint ADS")
+    optsPVADS = PZAPI.ModOptions:create(ID, "PVADSGAEL2 - ADS & Recoil")
     local s = PVADS and PVADS.Settings or {}
 
     optsPVADS:addTitle("Aim down sights")
-    local m = optsPVADS:addComboBox("adsControl", "ADS control", "How sights are raised with a firearm. DayZ style: click the aim button (right mouse) to bring the sights up and keep them there, click again to lower them; hold it for ordinary hip aiming.")
-    m:addItem("Aim (right mouse) raises the sights", (s.mode or 4) == 1)
-    m:addItem("Hold the ADS key while aiming", (s.mode or 4) == 2)
-    m:addItem("Hip fire; ADS key toggles sights (remembered)", (s.mode or 4) == 3)
-    m:addItem("DayZ: click right mouse = sights, hold = hip fire", (s.mode or 4) == 4)
+    local m = optsPVADS:addComboBox("adsControl", "ADS control", "Choose how the sights are raised.")
+    m:addItem("Aim (right mouse) raises the sights", (s.mode or 1) == 1)
+    m:addItem("Hold the ADS key while aiming", (s.mode or 1) == 2)
+    m:addItem("Hip fire; ADS key toggles sights (remembered)", (s.mode or 1) == 3)
     optsPVADS:addKeyBind("key", "ADS key", s.key or Keyboard.KEY_V, "Used by the hold and toggle modes.")
     optsPVADS:addTickBox("aimPriority", "Aiming takes priority over menus", s.aimPriority ~= false)
     optsPVADS:addTickBox("thirdAds", "ADS from third person switches to first person", s.thirdAds ~= false)
@@ -181,30 +181,30 @@ end
 
 local function buildGaelModOptions()
     if not (PZAPI and PZAPI.ModOptions) or optsGael then return end
-    optsGael = PZAPI.ModOptions:create(GAEL_ID, "Viewpoint GGS ADS Patch")
+    optsGael = PZAPI.ModOptions:create(GAEL_ID, "PVADSGAEL2 - Gael options")
 
-    optsGael:addTitle("Calibración y Control de Miras")
-    optsGael:addKeyBind("gaelCalibKey", "Abrir HUD Calibrador (Ñ por defecto)", Keyboard.KEY_SEMICOLON, "Abre el calibrador PVGADS; puedes cambiar la tecla aquí.")
-    optsGael:addTickBox("forceDeveloper", "Activar herramientas de desarrollo y calibración", true, "Deja disponible el calibrador durante el desarrollo del parche.")
+    optsGael:addTitle("Calibration and Sight Controls")
+    optsGael:addKeyBind("gaelCalibKey", "Open Calibration HUD (semicolon by default)", Keyboard.KEY_SEMICOLON, "Opens the PVADS calibrator; change the key here.")
+    optsGael:addTickBox("forceDeveloper", "Enable developer and calibration tools", true, "Keeps the calibrator available for development.")
 
-    optsGael:addTitle("Retroceso y Comportamiento Balístico")
-    optsGael:addTickBox("shotPitchRecoil", "Retroceso vertical por disparo", true, "Simula el retroceso del cañón y la elevación al disparar.")
-    optsGael:addTickBox("shotRecoilAffectsAim", "El retroceso afecta el punto de impacto", true, "Desplaza la línea de disparo junto con el movimiento del cañón.")
-    optsGael:addTickBox("boltPitchMotion", "Movimiento mecánico del cerrojo", true, "Simula la oscilación al ciclar el arma de cerrojo o corredera.")
-    optsGael:addTickBox("holdSway", "Balanceo al apuntar (Hold Sway)", true, "Balanceo natural afectado por fatiga, fuerza y resistencia.")
-    optsGael:addTickBox("sightMotion", "Movimiento de mira al caminar", true, "Desplaza la mira suavemente según el paso y el cansancio.")
-    optsGael:addTickBox("focusSearchBlur", "Desenfoque al buscar foco de mira", true, "Efecto de desenfoque de profundidad al apuntar con miras de hierro.")
+    optsGael:addTitle("Recoil and Ballistic Behavior")
+    optsGael:addTickBox("shotPitchRecoil", "Per-shot vertical recoil", true, "Simulates barrel recoil and muzzle rise when firing.")
+    optsGael:addTickBox("shotRecoilAffectsAim", "Recoil affects point of impact", true, "Moves the shot direction along with the barrel.")
+    optsGael:addTickBox("boltPitchMotion", "Bolt-action mechanism movement", true, "Simulates movement while cycling a bolt-action or pump-action weapon.")
+    optsGael:addTickBox("holdSway", "Aiming sway (Hold Sway)", true, "Natural sway affected by fatigue, strength, and endurance.")
+    optsGael:addTickBox("sightMotion", "Sight movement while walking", true, "Moves the sight smoothly based on walking pace and fatigue.")
+    optsGael:addTickBox("focusSearchBlur", "Focus-search blur", true, "Depth-of-field blur when aiming with iron sights.")
 
-    optsGael:addTitle("Diagnóstico de True Ballistics")
-    optsGael:addTickBox("vtbTracerEveryShot", "Mostrar trazadora en cada proyectil", true, "Activa la trazadora visual de True Ballistics para depurar el recorrido de cada disparo.")
-    optsGael:addTickBox("vtbDrawTrajectory", "Dibujar trayectoria del proyectil", true, "Activa el dibujo de trayectoria de True Ballistics mientras los proyectiles vuelan.")
-    optsGael:addTickBox("vtbDrawImpacts", "Dibujar impactos y colisiones", true, "Muestra marcadores de impacto de True Ballistics.")
+    optsGael:addTitle("True Ballistics Diagnostics")
+    optsGael:addTickBox("vtbTracerEveryShot", "Show a tracer on every projectile", false, "Shows True Ballistics tracers to help debug each shot path.")
+    optsGael:addTickBox("vtbDrawTrajectory", "Draw projectile trajectory", false, "Draws the True Ballistics path while projectiles are in flight.")
+    optsGael:addTickBox("vtbDrawImpacts", "Draw impacts and collisions", false, "Shows True Ballistics impact markers.")
 
     local function applyGaelOptions()
         if not optsGael then return end
         SandboxVars = SandboxVars or {}
-        SandboxVars.ViewpointGaelCompat = SandboxVars.ViewpointGaelCompat or {}
-        local v = SandboxVars.ViewpointGaelCompat
+        SandboxVars.PVADSGAEL2 = SandboxVars.PVADSGAEL2 or {}
+        local v = SandboxVars.PVADSGAEL2
         v.ShotPitchRecoil = val(optsGael, "shotPitchRecoil", true)
         v.ShotRecoilAffectsAim = val(optsGael, "shotRecoilAffectsAim", true)
         v.BoltPitchMotion = val(optsGael, "boltPitchMotion", true)
@@ -229,9 +229,9 @@ applyTrueBallisticsOptions = function()
     local tracerFn = rawget(_G, "VTB_tracers")
     local debugFn = rawget(_G, "VTB_debug")
     if type(tracerFn) ~= "function" or type(debugFn) ~= "function" then return false end
-    local tracerOk = pcall(tracerFn, val(optsGael, "vtbTracerEveryShot", true) and 1 or 0)
-    local trajectoryOk = pcall(debugFn, "trajectories", val(optsGael, "vtbDrawTrajectory", true))
-    local impactOk = pcall(debugFn, "impacts", val(optsGael, "vtbDrawImpacts", true))
+    local tracerOk = pcall(tracerFn, val(optsGael, "vtbTracerEveryShot", false) and 1 or 0)
+    local trajectoryOk = pcall(debugFn, "trajectories", val(optsGael, "vtbDrawTrajectory", false))
+    local impactOk = pcall(debugFn, "impacts", val(optsGael, "vtbDrawImpacts", false))
     return tracerOk and trajectoryOk and impactOk
 end
 

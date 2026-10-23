@@ -8,7 +8,7 @@ local function onHitZombie(zombie, attacker, bodyPart, weapon)
     local ok, bonusApplies = pcall(aim.markHeadshot, zombie, attacker, weapon,
         bodyPart == BodyPartType.Head)
     if not ok or not bonusApplies then return end
-    local vars = SandboxVars and SandboxVars.ViewpointGaelCompat
+    local vars = SandboxVars and SandboxVars.PVADSGAEL2
     if vars and vars.HeadshotImpactSound == false then return end
     local square = zombie:getSquare()
     if not square then return end

@@ -26,4 +26,4 @@ local baseline = {
 for _, id in ipairs(pistolIds) do
     PVADS.RegisterWeaponProfile("Base." .. id, baseline)
 end
-print("[ViewpointGaelCompat] Registered " .. #pistolIds .. " pistol profiles")
+print("[PVADSGAEL2] Registered " .. #pistolIds .. " pistol profiles")
